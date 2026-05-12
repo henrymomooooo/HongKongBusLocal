@@ -80,6 +80,44 @@
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
         }
+
+        let allRoutes = [];
+
+        async function initSearch() {
+            const kmb = await BusAPI.getRouteList('KMB');
+            const ctb = await BusAPI.getRouteList('CTB');
+            allRoutes = [
+                ...kmb.map(r => ({ ...r, co: 'KMB' })),
+                ...ctb.map(r => ({ ...r, co: 'CTB' }))
+            ];
+        }
+
+        document.getElementById('route-input').addEventListener('input', e => {
+            const val = e.target.value.toUpperCase();
+            if (val.length < 1) {
+                renderRouteResults([]);
+                return;
+            }
+            const matches = allRoutes.filter(r => r.route.startsWith(val)).slice(0, 10);
+            renderRouteResults(matches);
+        });
+
+        function renderRouteResults(routes) {
+            const container = document.getElementById('route-results');
+            container.innerHTML = routes.map(r => `
+                <div class="card" onclick="selectRoute('${r.co}', '${r.route}')" style="cursor: pointer;">
+                    <strong>${r.co} ${r.route}</strong> - ${r.dest_tc}
+                </div>
+            `).join('');
+        }
+
+        function selectRoute(co, route) {
+            console.log('Selected', co, route);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSearch();
+        });
     </script>
 </body>
 </html>
