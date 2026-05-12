@@ -17,7 +17,7 @@
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; }
         .section { margin-bottom: 25px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; cursor: pointer; }
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; }
@@ -84,31 +84,45 @@
         let allRoutes = [];
 
         async function initSearch() {
-            const kmb = await BusAPI.getRouteList('KMB');
-            const ctb = await BusAPI.getRouteList('CTB');
-            allRoutes = [
-                ...kmb.map(r => ({ ...r, co: 'KMB' })),
-                ...ctb.map(r => ({ ...r, co: 'CTB' }))
-            ];
+            try {
+                const kmb = await BusAPI.getRouteList('KMB');
+                const ctb = await BusAPI.getRouteList('CTB');
+                allRoutes = [
+                    ...kmb.map(r => ({ ...r, co: 'KMB' })),
+                    ...ctb.map(r => ({ ...r, co: 'CTB' }))
+                ];
+            } catch (error) {
+                console.error('Failed to initialize routes:', error);
+            }
+        }
+
+        function searchRoutes(query, routes) {
+            if (!query) return [];
+            return routes.filter(r => r.route.startsWith(query)).slice(0, 10);
         }
 
         document.getElementById('route-input').addEventListener('input', e => {
             const val = e.target.value.toUpperCase();
-            if (val.length < 1) {
-                renderRouteResults([]);
-                return;
-            }
-            const matches = allRoutes.filter(r => r.route.startsWith(val)).slice(0, 10);
+            const matches = searchRoutes(val, allRoutes);
             renderRouteResults(matches);
         });
 
         function renderRouteResults(routes) {
             const container = document.getElementById('route-results');
-            container.innerHTML = routes.map(r => `
-                <div class="card" onclick="selectRoute('${r.co}', '${r.route}')" style="cursor: pointer;">
-                    <strong>${r.co} ${r.route}</strong> - ${r.dest_tc}
-                </div>
-            `).join('');
+            container.innerHTML = '';
+            routes.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => selectRoute(r.co, r.route);
+                
+                const strong = document.createElement('strong');
+                strong.textContent = `${r.co} ${r.route}`;
+                
+                card.appendChild(strong);
+                card.appendChild(document.createTextNode(` - ${r.dest_tc}`));
+                
+                container.appendChild(card);
+            });
         }
 
         function selectRoute(co, route) {
