@@ -49,6 +49,31 @@
         <div id="eta-display" class="section"></div>
     </div>
     <script>
+        const BusAPI = {
+            KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
+            CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
+            
+            async fetchKMB(endpoint) {
+                const res = await fetch(`${this.KMB_BASE}${endpoint}`);
+                return (await res.json()).data;
+            },
+            
+            async fetchCTB(endpoint) {
+                const res = await fetch(`${this.CTB_BASE}${endpoint}`);
+                return (await res.json()).data;
+            },
+
+            async getRouteList(company) {
+                if (company === 'KMB') return this.fetchKMB('/route/');
+                if (company === 'CTB') return this.fetchCTB('/route/CTB');
+            },
+
+            async getETA(company, stopId, route, serviceType = 1) {
+                if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
+                if (company === 'CTB') return this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
+            }
+        };
+
         function switchTab(event, type) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.currentTarget.classList.add('active');
