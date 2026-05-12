@@ -20,7 +20,7 @@
         .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; }
         .tab.active { background: var(--kmb-red); color: white; }
         .hidden { display: none; }
     </style>
@@ -34,8 +34,8 @@
         </div>
         <div class="section">
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('route')">Search Route</div>
-                <div class="tab" onclick="switchTab('stop')">Search Stop</div>
+                <button class="tab active" onclick="switchTab(event, 'route')">Search Route</button>
+                <button class="tab" onclick="switchTab(event, 'stop')">Search Stop</button>
             </div>
             <div id="route-search-ui">
                 <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X)...">
@@ -49,9 +49,9 @@
         <div id="eta-display" class="section"></div>
     </div>
     <script>
-        function switchTab(type) {
+        function switchTab(event, type) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
         }
