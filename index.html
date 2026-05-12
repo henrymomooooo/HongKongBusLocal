@@ -127,10 +127,101 @@
 
         function selectRoute(co, route) {
             console.log('Selected', co, route);
+            // Demonstration: Add a dummy favorite to show ETA logic.
+            // In a full implementation, this would fetch route stops and let the user pick one.
+            const dummyStopId = co === 'KMB' ? 'BFA7B08B8159114D' : '001174'; 
+            const dummyStopName = 'Sample Stop (' + route + ')';
+            saveFavorite(co, dummyStopId, route, dummyStopName);
+            alert(`Added dummy stop for ${co} ${route} to favorites!`);
+        }
+
+        function saveFavorite(co, stopId, route, stopName) {
+            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
+            // Avoid duplicates
+            if (!favs.find(f => f.co === co && f.stopId === stopId && f.route === route)) {
+                favs.push({ co, stopId, route, stopName });
+                localStorage.setItem('bus_favs', JSON.stringify(favs));
+            }
+            renderFavorites();
+        }
+
+        function removeFavorite(co, stopId, route) {
+            let favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
+            favs = favs.filter(f => !(f.co === co && f.stopId === stopId && f.route === route));
+            localStorage.setItem('bus_favs', JSON.stringify(favs));
+            renderFavorites();
+        }
+
+        function renderFavorites() {
+            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
+            const container = document.getElementById('favorites-list');
+            if (favs.length === 0) {
+                container.innerHTML = '<p>No favorites yet.</p>';
+                return;
+            }
+            container.innerHTML = '';
+            favs.forEach(f => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const title = document.createElement('div');
+                const strong = document.createElement('strong');
+                strong.textContent = `${f.co} ${f.route}`;
+                title.appendChild(strong);
+                title.appendChild(document.createTextNode(` @ ${f.stopName}`));
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Remove';
+                removeBtn.style.float = 'right';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFavorite(f.co, f.stopId, f.route);
+                };
+                title.appendChild(removeBtn);
+
+                const etaDiv = document.createElement('div');
+                etaDiv.id = `eta-${f.co}-${f.stopId}-${f.route}`;
+                etaDiv.textContent = 'Loading...';
+                etaDiv.style.marginTop = '10px';
+                etaDiv.style.color = 'var(--kmb-red)';
+                
+                card.appendChild(title);
+                card.appendChild(etaDiv);
+                container.appendChild(card);
+            });
+            favs.forEach(f => updateETA(f));
+        }
+
+        async function updateETA(f) {
+            try {
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route);
+                const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
+                if (!etaContainer) return;
+
+                if (!etas || etas.length === 0) {
+                    etaContainer.textContent = 'No ETA available';
+                    return;
+                }
+                
+                etaContainer.innerHTML = '';
+                etas.slice(0, 3).forEach((eta, index) => {
+                    const span = document.createElement('span');
+                    span.textContent = eta.eta ? new Date(eta.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                    etaContainer.appendChild(span);
+                    if (index < Math.min(etas.length, 3) - 1) {
+                        etaContainer.appendChild(document.createTextNode(', '));
+                    }
+                });
+            } catch (e) {
+                console.error('Error fetching ETA', e);
+                const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
+                if (etaContainer) etaContainer.textContent = 'Error fetching ETA';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initSearch();
+            renderFavorites();
         });
     </script>
 </body>
