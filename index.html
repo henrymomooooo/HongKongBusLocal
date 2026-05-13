@@ -145,6 +145,16 @@
                     tx.oncomplete = () => resolve();
                     tx.onerror = (e) => reject(e.target.error);
                 });
+            },
+
+            async delete(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.delete(key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e.target.error);
+                });
             }
         };
 
@@ -352,7 +362,7 @@
                     card.className = `card co-${r.co}`;
                     card.innerHTML = `<div class="stop-name">${s.name_tc}</div><div class="dest-name">${s.name_en}</div>`;
                     card.onclick = () => {
-                        saveFavorite(r.co, s.stop, r.route, s.name_tc, r.routeId);
+                        saveFavorite(r, s);
                         showRouteSearch();
                     };
                     stopResults.appendChild(card);
@@ -369,24 +379,31 @@
             document.getElementById('stop-selection-results').classList.add('hidden');
         }
 
-        function saveFavorite(co, stopId, route, stopName, routeId) {
-            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
-            if (!favs.find(f => f.co === co && f.stopId === stopId && f.route === route)) {
-                favs.push({ co, stopId, route, stopName, routeId });
-                localStorage.setItem('bus_favs', JSON.stringify(favs));
+        async function saveFavorite(r, s) {
+            const path_desc = r.orig_tc ? `${r.orig_tc} ↔ ${r.dest_tc}` : r.dest_tc;
+            const fav = {
+                co: r.co,
+                stopId: s.stop,
+                route: r.route,
+                stopName: s.name_tc,
+                routeId: r.routeId,
+                path_desc: path_desc
+            };
+            
+            const favs = await BusDB.getAll('favorites');
+            if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route)) {
+                await BusDB.put('favorites', fav);
             }
             renderFavorites();
         }
 
-        function removeFavorite(co, stopId, route) {
-            let favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
-            favs = favs.filter(f => !(f.co === co && f.stopId === stopId && f.route === route));
-            localStorage.setItem('bus_favs', JSON.stringify(favs));
+        async function removeFavorite(favId) {
+            await BusDB.delete('favorites', favId);
             renderFavorites();
         }
 
-        function renderFavorites() {
-            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
+        async function renderFavorites() {
+            const favs = await BusDB.getAll('favorites');
             const container = document.getElementById('favorites-list');
             if (favs.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:#888;">No favorites yet. Search a route to add one!</p>';
@@ -404,6 +421,7 @@
 
                 const info = document.createElement('div');
                 info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
+                                 <div class="path-info" style="font-size: 12px; color: #777; margin-bottom: 4px;">${f.path_desc || ''}</div>
                                  <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f.stopName}</div>`;
                 
                 const removeBtn = document.createElement('button');
@@ -411,7 +429,7 @@
                 removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if(confirm('Remove this favorite?')) removeFavorite(f.co, f.stopId, f.route);
+                    if(confirm('Remove this favorite?')) removeFavorite(f.favId);
                 };
 
                 header.appendChild(info);
@@ -419,7 +437,7 @@
 
                 const etaDiv = document.createElement('div');
                 etaDiv.className = 'eta-row';
-                etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> Next:</span><div class="eta-list" id="eta-${f.co}-${f.stopId}-${f.route}">Loading...</div>`;
+                etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> Next:</span><div class="eta-list" id="eta-${f.favId}">Loading...</div>`;
                 
                 card.appendChild(header);
                 card.appendChild(etaDiv);
@@ -428,8 +446,8 @@
             refreshAllETAs();
         }
 
-        function refreshAllETAs() {
-            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
+        async function refreshAllETAs() {
+            const favs = await BusDB.getAll('favorites');
             favs.forEach(f => updateETA(f));
             const btn = document.getElementById('refresh-btn');
             if (btn) {
@@ -441,7 +459,7 @@
         async function updateETA(f) {
             try {
                 const etas = await BusAPI.getETA(f.co, f.stopId, f.route, 1, f.routeId);
-                const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
+                const etaContainer = document.getElementById(`eta-${f.favId}`);
                 if (!etaContainer) return;
 
                 if (!etas || etas.length === 0) {
@@ -473,8 +491,26 @@
                 });
             } catch (e) {
                 console.error('Error fetching ETA', e);
-                const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
+                const etaContainer = document.getElementById(`eta-${f.favId}`);
                 if (etaContainer) etaContainer.textContent = 'Error';
+            }
+        }
+
+        async function migrateFavorites() {
+            const oldFavsJson = localStorage.getItem('bus_favs');
+            if (oldFavsJson) {
+                try {
+                    const oldFavs = JSON.parse(oldFavsJson);
+                    for (const f of oldFavs) {
+                        // For migrated favorites, we don't have path_desc
+                        if (!f.path_desc) f.path_desc = ''; 
+                        await BusDB.put('favorites', f);
+                    }
+                    localStorage.removeItem('bus_favs');
+                    console.log('Successfully migrated favorites to IndexedDB');
+                } catch (e) {
+                    console.error('Migration failed', e);
+                }
             }
         }
 
@@ -486,6 +522,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await BusDB.init();
+            await migrateFavorites();
             syncRoutes();
             renderFavorites();
         });
