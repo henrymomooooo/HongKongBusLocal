@@ -133,6 +133,17 @@
                     const store = tx.objectStore(storeName);
                     store.clear();
                     tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async putAll(storeName, dataArray) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    dataArray.forEach(item => store.put(item));
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e.target.error);
                 });
             }
         };
@@ -165,8 +176,7 @@
                     return data.routes.map(r => ({
                         route: r.routeNo,
                         dest_tc: r.routeName_c,
-                        routeId: r.routeId,
-                        co: 'NLB'
+                        routeId: r.routeId
                     }));
                 }
             },
@@ -220,22 +230,39 @@
 
         let allRoutes = [];
 
+        function sortRoutes(routes) {
+            return routes.sort((a, b) => {
+                // Alphanumeric sort for route numbers
+                const res = a.route.localeCompare(b.route, undefined, { numeric: true, sensitivity: 'base' });
+                if (res !== 0) return res;
+                return a.co.localeCompare(b.co);
+            });
+        }
+
         async function syncRoutes(force = false) {
             const cached = await BusDB.getAll('routes');
             const now = Date.now();
             const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
             if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) {
-                allRoutes = cached;
+                allRoutes = sortRoutes(cached);
                 return;
             }
 
             console.log('Syncing routes from API...');
-            const [kmb, ctb, nlb] = await Promise.all([
+            const results = await Promise.allSettled([
                 BusAPI.getRouteList('KMB'),
                 BusAPI.getRouteList('CTB'),
                 BusAPI.getRouteList('NLB')
             ]);
+
+            const kmb = results[0].status === 'fulfilled' ? results[0].value : [];
+            const ctb = results[1].status === 'fulfilled' ? results[1].value : [];
+            const nlb = results[2].status === 'fulfilled' ? results[2].value : [];
+
+            if (results.some(r => r.status === 'rejected')) {
+                console.warn('Some bus companies failed to sync:', results.filter(r => r.status === 'rejected').map(r => r.reason));
+            }
 
             const timestamp = Date.now();
             const processedRoutes = [
@@ -244,11 +271,14 @@
                 ...nlb.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: timestamp }))
             ];
 
-            await BusDB.clear('routes');
-            for (const r of processedRoutes) {
-                await BusDB.put('routes', r);
+            if (processedRoutes.length > 0) {
+                const sorted = sortRoutes(processedRoutes);
+                await BusDB.clear('routes');
+                await BusDB.putAll('routes', sorted);
+                allRoutes = sorted;
+            } else if (cached.length > 0) {
+                allRoutes = sortRoutes(cached);
             }
-            allRoutes = processedRoutes;
         }
 
         function searchRoutes(query, routes) {
