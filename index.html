@@ -66,8 +66,11 @@
                 <button class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> Stop</button>
             </div>
             <div id="route-search-ui">
-                <div id="search-input-area">
+                <div id="search-input-area" style="display: flex; gap: 10px; align-items: flex-start;">
                     <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X, 3M)...">
+                    <button onclick="syncRoutes(true)" class="tab" style="flex: 0 0 auto; width: auto; padding: 12px;" title="Refresh Route Cache">
+                        <i class="fas fa-sync"></i>
+                    </button>
                 </div>
                 <div id="route-results" class="results-list"></div>
                 <div id="stop-selection-results" class="results-list hidden"></div>
@@ -217,21 +220,35 @@
 
         let allRoutes = [];
 
-        async function initSearch() {
-            try {
-                const [kmb, ctb, nlb] = await Promise.all([
-                    BusAPI.getRouteList('KMB'),
-                    BusAPI.getRouteList('CTB'),
-                    BusAPI.getRouteList('NLB')
-                ]);
-                allRoutes = [
-                    ...kmb.map(r => ({ ...r, co: 'KMB' })),
-                    ...ctb.map(r => ({ ...r, co: 'CTB' })),
-                    ...nlb
-                ];
-            } catch (error) {
-                console.error('Failed to initialize routes:', error);
+        async function syncRoutes(force = false) {
+            const cached = await BusDB.getAll('routes');
+            const now = Date.now();
+            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+            if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) {
+                allRoutes = cached;
+                return;
             }
+
+            console.log('Syncing routes from API...');
+            const [kmb, ctb, nlb] = await Promise.all([
+                BusAPI.getRouteList('KMB'),
+                BusAPI.getRouteList('CTB'),
+                BusAPI.getRouteList('NLB')
+            ]);
+
+            const timestamp = Date.now();
+            const processedRoutes = [
+                ...kmb.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: timestamp })),
+                ...ctb.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: timestamp })),
+                ...nlb.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: timestamp }))
+            ];
+
+            await BusDB.clear('routes');
+            for (const r of processedRoutes) {
+                await BusDB.put('routes', r);
+            }
+            allRoutes = processedRoutes;
         }
 
         function searchRoutes(query, routes) {
@@ -437,8 +454,9 @@
             refreshAllETAs();
         }, 60000);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initSearch();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await BusDB.init();
+            syncRoutes();
             renderFavorites();
         });
     </script>
