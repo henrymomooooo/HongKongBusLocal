@@ -48,6 +48,23 @@
 
         .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .back-btn { background: none; border: none; color: var(--kmb-red); cursor: pointer; font-size: 16px; font-weight: bold; padding: 5px 0; }
+
+        .station-card { display: flex; flex-direction: column; padding: 0 !important; }
+        .station-main { display: flex; align-items: center; padding: 15px; width: 100%; box-sizing: border-box; }
+        .station-info { flex-grow: 1; }
+        .fav-star { font-size: 20px; color: #ccc; padding: 10px; cursor: pointer; transition: color 0.2s; }
+        .fav-star.active { color: #ffc107; }
+
+        .eta-drawer { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.3s ease-out; 
+            background: #f9f9f9; 
+            border-top: 1px solid #eee;
+        }
+        .eta-drawer.open { max-height: 200px; padding: 10px 15px; }
+        .eta-content { font-size: 14px; }
+        .eta-status { font-size: 11px; color: #999; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -163,6 +180,17 @@
             CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
             NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
             _ctbStopCache: new Map(),
+            _kmbStopCache: new Map(),
+
+            async getKMBStops() {
+                if (this._kmbStopCache.size === 0) {
+                    const data = await this.fetchKMB('/stop');
+                    if (data) {
+                        data.forEach(s => this._kmbStopCache.set(s.stop, s));
+                    }
+                }
+                return this._kmbStopCache;
+            },
 
             async getCTBStops() {
                 return this._ctbStopCache;
@@ -214,8 +242,14 @@
             },
 
             async fetchNLB(endpoint) {
-                const res = await fetch(`${this.NLB_BASE}/${endpoint}`);
-                return (await res.json());
+                try {
+                    const res = await fetch(`${this.NLB_BASE}/${endpoint}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                } catch (e) {
+                    console.error('NLB Fetch Error:', e);
+                    return null;
+                }
             },
 
             async getRouteList(company) {
@@ -223,6 +257,7 @@
                 if (company === 'CTB') return this.fetchCTB('/route/CTB');
                 if (company === 'NLB') {
                     const data = await this.fetchNLB('route.php?action=list');
+                    if (!data || !data.routes) return [];
                     return data.routes.map(r => ({
                         route: r.routeNo,
                         dest_tc: r.routeName_c,
@@ -234,25 +269,37 @@
             async getStops(company, route, direction, serviceType, routeId) {
                 if (company === 'KMB') {
                     const dir = direction === 'outbound' ? 'outbound' : 'inbound';
-                    return this.fetchKMB(`/route-stop/${route}/${dir}/${serviceType || 1}`);
+                    const stops = await this.fetchKMB(`/route-stop/${route}/${dir}/${serviceType || 1}`);
+                    if (!stops) return [];
+                    const allStops = await this.getKMBStops();
+                    return stops.map(s => {
+                        const info = allStops.get(s.stop);
+                        return { 
+                            stop: s.stop, 
+                            name_tc: info ? info.name_tc : s.stop, 
+                            name_en: info ? info.name_en : s.stop 
+                        };
+                    });
                 }
                 if (company === 'CTB') {
                     const dir = direction === 'outbound' ? 'outbound' : 'inbound';
                     const stops = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`);
                     if (!stops) return [];
                     // Fetch stop names for CTB
-                    const stopData = await Promise.all(stops.slice(0, 20).map(async s => {
+                    const stopData = await Promise.all(stops.map(async s => {
                         const info = await this.getCTBStopInfo(s.stop);
+                        if (!info) return null;
                         return { 
                             stop: s.stop, 
-                            name_tc: info ? info.name_tc : 'Unknown Stop', 
-                            name_en: info ? info.name_en : 'Unknown Stop' 
+                            name_tc: info.name_tc, 
+                            name_en: info.name_en 
                         };
                     }));
-                    return stopData;
+                    return stopData.filter(s => s !== null);
                 }
                 if (company === 'NLB') {
-                    const data = await this.fetchNLB(`route.php?action=list_stop&routeId=${routeId}`);
+                    const data = await this.fetchNLB(`stop.php?action=list&routeId=${routeId}`);
+                    if (!data || !data.stops) return [];
                     return data.stops.map(s => ({
                         stop: s.stopId,
                         name_tc: s.stopName_c,
@@ -265,7 +312,8 @@
                 if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
                 if (company === 'CTB') return this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
                 if (company === 'NLB') {
-                    const data = await this.fetchNLB(`stop.php?action=estimated_arrival&routeId=${routeId}&stopId=${stopId}`);
+                    const data = await this.fetchNLB(`stop.php?action=estimatedArrivals&routeId=${routeId}&stopId=${stopId}`);
+                    if (!data || !data.estimatedArrivals) return [];
                     return data.estimatedArrivals;
                 }
             }
@@ -311,9 +359,9 @@
                 BusAPI.getRouteList('NLB')
             ]);
 
-            const kmb = results[0].status === 'fulfilled' ? results[0].value : [];
-            const ctb = results[1].status === 'fulfilled' ? results[1].value : [];
-            const nlb = results[2].status === 'fulfilled' ? results[2].value : [];
+            const kmb = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
+            const ctb = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
+            const nlb = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : [];
 
             if (results.some(r => r.status === 'rejected')) {
                 console.warn('Some bus companies failed to sync:', results.filter(r => r.status === 'rejected').map(r => r.reason));
@@ -382,23 +430,78 @@
         async function selectRoute(r) {
             const inputArea = document.getElementById('search-input-area');
             const routeResults = document.getElementById('route-results');
+            const favSection = document.getElementById('favorites-section');
             const stopResults = document.getElementById('stop-selection-results');
 
             inputArea.classList.add('hidden');
             routeResults.classList.add('hidden');
+            favSection.classList.add('hidden');
             stopResults.classList.remove('hidden');
+            stopResults.innerHTML = '<p style="text-align:center;">Loading directions...</p>';
+
+            try {
+                const header = document.createElement('div');
+                header.className = 'results-header';
+                header.innerHTML = `<button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> Back</button>
+                                   <span style="font-weight:bold;">${r.route} (${r.co})</span>`;
+                
+                const container = document.createElement('div');
+                
+                if (r.co === 'KMB') {
+                    const variants = allRoutes.filter(v => v.co === 'KMB' && v.route === r.route);
+                    variants.forEach(v => {
+                        const card = document.createElement('div');
+                        card.className = 'card co-KMB';
+                        card.innerHTML = `To ${v.dest_tc} <small>(${v.bound === 'O' ? 'Outbound' : 'Inbound'})</small>`;
+                        card.onclick = () => showStops(v);
+                        container.appendChild(card);
+                    });
+                } else if (r.co === 'CTB') {
+                    // Outbound
+                    const d1 = document.createElement('div');
+                    d1.className = 'card co-CTB';
+                    d1.innerHTML = `To ${r.dest_tc} <small>(Outbound)</small>`;
+                    d1.onclick = () => showStops({...r, direction: 'outbound'});
+                    container.appendChild(d1);
+                    // Inbound
+                    const d2 = document.createElement('div');
+                    d2.className = 'card co-CTB';
+                    d2.innerHTML = `To ${r.orig_tc} <small>(Inbound)</small>`;
+                    d2.onclick = () => showStops({...r, direction: 'inbound', dest_tc: r.orig_tc, orig_tc: r.dest_tc});
+                    container.appendChild(d2);
+                } else if (r.co === 'NLB') {
+                    const variants = allRoutes.filter(v => v.co === 'NLB' && v.route === r.route);
+                    variants.forEach(v => {
+                        const card = document.createElement('div');
+                        card.className = 'card co-NLB';
+                        card.innerHTML = `${v.dest_tc}`;
+                        card.onclick = () => showStops(v);
+                        container.appendChild(card);
+                    });
+                }
+                
+                stopResults.innerHTML = '';
+                stopResults.appendChild(header);
+                stopResults.appendChild(container);
+
+            } catch (error) {
+                console.error('Error showing directions:', error);
+                stopResults.innerHTML = '<p style="text-align:center;color:red;">Failed to load directions.</p>';
+            }
+        }
+
+        async function showStops(r) {
+            const stopResults = document.getElementById('stop-selection-results');
             stopResults.innerHTML = '<p style="text-align:center;">Loading stops...</p>';
 
             try {
-                // For KMB/CTB we might need to handle directions. For simplicity, we fetch outbound.
-                // In a full app, we would let user toggle direction.
-                const direction = (r.co === 'KMB') ? (r.bound === 'O' ? 'outbound' : 'inbound') : 'outbound';
+                const direction = (r.co === 'KMB') ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound');
                 const stops = await BusAPI.getStops(r.co, r.route, direction, r.service_type, r.routeId);
                 
                 stopResults.innerHTML = '';
                 const header = document.createElement('div');
                 header.className = 'results-header';
-                header.innerHTML = `<button class="back-btn" onclick="showRouteSearch()"><i class="fas fa-arrow-left"></i> Back</button>
+                header.innerHTML = `<button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> Back</button>
                                    <span style="font-weight:bold;">${r.route} to ${r.dest_tc}</span>`;
                 stopResults.appendChild(header);
 
@@ -408,7 +511,6 @@
                     card.innerHTML = `<div class="stop-name">${s.name_tc}</div><div class="dest-name">${s.name_en}</div>`;
                     card.onclick = () => {
                         saveFavorite(r, s);
-                        showRouteSearch();
                     };
                     stopResults.appendChild(card);
                 });
@@ -418,28 +520,71 @@
             }
         }
 
-        function showRouteSearch() {
+        function showHome() {
             document.getElementById('search-input-area').classList.remove('hidden');
             document.getElementById('route-results').classList.remove('hidden');
+            document.getElementById('favorites-section').classList.remove('hidden');
             document.getElementById('stop-selection-results').classList.add('hidden');
+            renderFavorites();
+        }
+
+        async function goToRouteStopsFromFav(f) {
+            const inputArea = document.getElementById('search-input-area');
+            const routeResults = document.getElementById('route-results');
+            const favSection = document.getElementById('favorites-section');
+            const stopResults = document.getElementById('stop-selection-results');
+
+            inputArea.classList.add('hidden');
+            routeResults.classList.add('hidden');
+            favSection.classList.add('hidden');
+            stopResults.classList.remove('hidden');
+
+            // Reconstruct route object for showStops
+            const r = {
+                co: f.co,
+                route: f.route,
+                service_type: f.serviceType || 1,
+                routeId: f.routeId,
+                bound: f.bound || 'O',
+                direction: f.direction || (f.bound === 'O' ? 'outbound' : 'inbound'),
+                orig_tc: f.orig_tc,
+                dest_tc: f.dest_tc,
+                path_desc: f.path_desc
+            };
+
+            // Fallback for legacy favorites
+            if (!r.orig_tc && f.path_desc) {
+                const parts = f.path_desc.split(' ↔ ');
+                r.orig_tc = parts[0] || '';
+                r.dest_tc = parts[1] || parts[0] || '';
+            }
+
+            showStops(r);
         }
 
         async function saveFavorite(r, s) {
-            const path_desc = r.orig_tc ? `${r.orig_tc} ↔ ${r.dest_tc}` : r.dest_tc;
+            // Priority: r.path_desc -> calculated path -> r.dest_tc
+            const path_desc = r.path_desc || (r.orig_tc ? `${r.orig_tc} ↔ ${r.dest_tc}` : r.dest_tc);
+            
             const fav = {
                 co: r.co,
                 stopId: s.stop,
                 route: r.route,
                 stopName: s.name_tc,
                 routeId: r.routeId,
+                serviceType: r.service_type || 1,
+                bound: r.bound,
+                direction: r.direction,
+                orig_tc: r.orig_tc,
+                dest_tc: r.dest_tc,
                 path_desc: path_desc
             };
             
             const favs = await BusDB.getAll('favorites');
-            if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route)) {
+            if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route && f.serviceType === fav.serviceType)) {
                 await BusDB.put('favorites', fav);
             }
-            renderFavorites();
+            showHome();
         }
 
         async function removeFavorite(favId) {
@@ -458,6 +603,7 @@
             favs.forEach(f => {
                 const card = document.createElement('div');
                 card.className = `card co-${f.co}`;
+                card.onclick = () => goToRouteStopsFromFav(f);
                 
                 const header = document.createElement('div');
                 header.style.display = 'flex';
@@ -503,7 +649,7 @@
 
         async function updateETA(f) {
             try {
-                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, 1, f.routeId);
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId);
                 const etaContainer = document.getElementById(`eta-${f.favId}`);
                 if (!etaContainer) return;
 
