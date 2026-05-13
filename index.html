@@ -123,6 +123,27 @@
         const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
         let _drawerInterval = null;
 
+        let activeDragCard = null;
+        let dragPlaceholder = null;
+        let startY = 0;
+        let initialTop = 0;
+        let dragTimeout = null;
+        let isDragging = false;
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
         const _favoriteStopsCache = new Set();
         function _isFavorited(r, s) {
             const serviceType = r.service_type || 1;
