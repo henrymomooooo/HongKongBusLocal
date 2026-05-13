@@ -65,6 +65,27 @@
         .eta-drawer.open { max-height: 200px; padding: 10px 15px; }
         .eta-content { font-size: 14px; }
         .eta-status { font-size: 11px; color: #999; margin-top: 5px; }
+
+        .card.dragging {
+            opacity: 0.8;
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none; /* Let pointer events pass through to elements below */
+            margin: 0;
+        }
+        .drag-placeholder {
+            background: transparent;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        #favorites-list {
+            position: relative; /* Context for absolute positioning of dragging card */
+            touch-action: none; /* Prevent scrolling while dragging on mobile */
+        }
     </style>
 </head>
 <body>
@@ -631,7 +652,8 @@
                 direction: r.direction,
                 orig_tc: r.orig_tc,
                 dest_tc: r.dest_tc,
-                path_desc: path_desc
+                path_desc: path_desc,
+                sortOrder: Date.now()
             };
             
             const favs = await BusDB.getAll('favorites');
@@ -650,6 +672,7 @@
 
         async function renderFavorites() {
             const favs = await BusDB.getAll('favorites');
+            favs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
             
             _favoriteStopsCache.clear();
             favs.forEach(f => {
@@ -710,6 +733,13 @@
             }
         }
 
+        function getRelativeTime(etaStr) {
+            if (!etaStr) return 'Scheduled';
+            const eta = new Date(etaStr.replace(' ', 'T'));
+            const diffMin = Math.floor((eta - new Date()) / 60000);
+            return diffMin <= 0 ? '0 min' : `${diffMin} min`;
+        }
+
         async function updateETA(f) {
             try {
                 const etaContainer = document.getElementById(`eta-${f.favId}`);
@@ -724,13 +754,7 @@
                         return;
                     }
                     const formattedEtas = etas.slice(0, 3).map(item => {
-                        let timeStr = '';
-                        if (f.co === 'NLB') {
-                            timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
-                        } else {
-                            timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
-                        }
-                        return timeStr;
+                        return getRelativeTime(f.co === 'NLB' ? item.estimatedArrivalTime : item.eta);
                     });
                     etaContainer.innerHTML = '';
                     formattedEtas.forEach((time, index) => {
@@ -796,12 +820,7 @@
                         row.style.justifyContent = 'space-between';
                         row.style.marginBottom = '4px';
 
-                        let timeStr = '';
-                        if (r.co === 'NLB') {
-                            timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
-                        } else {
-                            timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
-                        }
+                        const timeStr = getRelativeTime(r.co === 'NLB' ? item.estimatedArrivalTime : item.eta);
 
                         const timeSpan = document.createElement('span');
                         timeSpan.textContent = timeStr;
