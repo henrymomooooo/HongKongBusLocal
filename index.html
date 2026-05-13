@@ -79,6 +79,61 @@
         </div>
     </div>
     <script>
+        const BusDB = {
+            DB_NAME: 'HKBusDB',
+            DB_VERSION: 1,
+            db: null,
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('routes')) {
+                            db.createObjectStore('routes', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('favorites')) {
+                            db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
+                        }
+                    };
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve();
+                    };
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async put(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.put(data);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async getAll(storeName) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async clear(storeName) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.clear();
+                    tx.oncomplete = () => resolve();
+                });
+            }
+        };
+
         const BusAPI = {
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
             CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
