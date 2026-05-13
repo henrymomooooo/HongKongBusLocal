@@ -99,6 +99,23 @@
         </div>
     </div>
     <script>
+        const _etaFlashCache = new Map();
+        const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+        function getFlashCache(co, stopId, route, serviceType) {
+            const key = `${co}-${stopId}-${route}-${serviceType || 1}`;
+            const cached = _etaFlashCache.get(key);
+            if (cached && (Date.now() - cached.timestamp < FLASH_CACHE_TTL)) {
+                return cached.data;
+            }
+            return null;
+        }
+
+        function setFlashCache(co, stopId, route, serviceType, data) {
+            const key = `${co}-${stopId}-${route}-${serviceType || 1}`;
+            _etaFlashCache.set(key, { data, timestamp: Date.now() });
+        }
+
         const BusDB = {
             DB_NAME: 'HKBusDB',
             DB_VERSION: 1,
