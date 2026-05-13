@@ -162,15 +162,55 @@
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
             CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
             NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
+            _ctbStopCache: new Map(),
+
+            async getCTBStops() {
+                return this._ctbStopCache;
+            },
             
             async fetchKMB(endpoint) {
-                const res = await fetch(`${this.KMB_BASE}${endpoint}`);
-                return (await res.json()).data;
+                try {
+                    const res = await fetch(`${this.KMB_BASE}${endpoint}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    return json.data;
+                } catch (e) {
+                    console.error('KMB Fetch Error:', e);
+                    return null;
+                }
             },
             
             async fetchCTB(endpoint) {
-                const res = await fetch(`${this.CTB_BASE}${endpoint}`);
-                return (await res.json()).data;
+                try {
+                    const res = await fetch(`${this.CTB_BASE}${endpoint}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    return json.data;
+                } catch (e) {
+                    console.error('CTB Fetch Error:', e);
+                    return null;
+                }
+            },
+
+            async getCTBStopInfo(stopId) {
+                if (!stopId) return null;
+                const stops = await this.getCTBStops();
+                if (stops.has(stopId)) return stops.get(stopId);
+                
+                try {
+                    const res = await fetch(`${this.CTB_BASE}/stop/${stopId}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    const data = json.data;
+                    if (data) {
+                        stops.set(stopId, data);
+                        return data;
+                    }
+                    return null;
+                } catch (e) {
+                    console.error('Error fetching CTB stop', stopId, e);
+                    return null;
+                }
             },
 
             async fetchNLB(endpoint) {
@@ -199,10 +239,15 @@
                 if (company === 'CTB') {
                     const dir = direction === 'outbound' ? 'outbound' : 'inbound';
                     const stops = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`);
+                    if (!stops) return [];
                     // Fetch stop names for CTB
                     const stopData = await Promise.all(stops.slice(0, 20).map(async s => {
-                        const info = await this.fetchCTB(`/stop/${s.stop}`);
-                        return { stop: s.stop, name_tc: info.name_tc, name_en: info.name_en };
+                        const info = await this.getCTBStopInfo(s.stop);
+                        return { 
+                            stop: s.stop, 
+                            name_tc: info ? info.name_tc : 'Unknown Stop', 
+                            name_en: info ? info.name_en : 'Unknown Stop' 
+                        };
                     }));
                     return stopData;
                 }
