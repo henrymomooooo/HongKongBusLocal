@@ -97,10 +97,17 @@
                 <div id="stop-results" class="results-list"></div>
             </div>
         </div>
-    </div>
     <script>
         const _etaFlashCache = new Map();
         const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+        let _drawerInterval = null;
+
+        const _favoriteStopsCache = new Set();
+        function _isFavorited(r, s) {
+            const serviceType = r.service_type || 1;
+            const id = `${r.co}-${r.route}-${s.stop}-${serviceType}`;
+            return _favoriteStopsCache.has(id);
+        }
 
         function getFlashCache(co, stopId, route, serviceType) {
             const key = `${co}-${stopId}-${route}-${serviceType || 1}`;
@@ -337,6 +344,10 @@
         };
 
         function switchTab(event, type) {
+            if (_drawerInterval) {
+                clearInterval(_drawerInterval);
+                _drawerInterval = null;
+            }
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.currentTarget.classList.add('active');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
@@ -524,11 +535,33 @@
 
                 stops.forEach(s => {
                     const card = document.createElement('div');
-                    card.className = `card co-${r.co}`;
-                    card.innerHTML = `<div class="stop-name">${s.name_tc}</div><div class="dest-name">${s.name_en}</div>`;
-                    card.onclick = () => {
-                        saveFavorite(r, s);
+                    card.className = `card station-card co-${r.co}`;
+                    card.dataset.stopId = s.stop;
+
+                    const main = document.createElement('div');
+                    main.className = 'station-main';
+                    main.onclick = () => toggleETADrawer(card, r, s);
+
+                    const info = document.createElement('div');
+                    info.className = 'station-info';
+                    info.innerHTML = `<div class="stop-name">${s.name_tc}</div><div class="dest-name">${s.name_en}</div>`;
+
+                    const star = document.createElement('div');
+                    star.className = `fav-star ${_isFavorited(r, s) ? 'active' : ''}`;
+                    star.innerHTML = `<i class="${_isFavorited(r, s) ? 'fas' : 'far'} fa-star"></i>`;
+                    star.onclick = (e) => {
+                        e.stopPropagation();
+                        handleFavoriteClick(star, r, s);
                     };
+
+                    const drawer = document.createElement('div');
+                    drawer.className = 'eta-drawer';
+                    drawer.innerHTML = `<div class="eta-content">Loading...</div><div class="eta-status"></div>`;
+
+                    main.appendChild(info);
+                    main.appendChild(star);
+                    card.appendChild(main);
+                    card.appendChild(drawer);
                     stopResults.appendChild(card);
                 });
             } catch (error) {
@@ -538,6 +571,10 @@
         }
 
         function showHome() {
+            if (_drawerInterval) {
+                clearInterval(_drawerInterval);
+                _drawerInterval = null;
+            }
             document.getElementById('search-input-area').classList.remove('hidden');
             document.getElementById('route-results').classList.remove('hidden');
             document.getElementById('favorites-section').classList.remove('hidden');
@@ -579,7 +616,7 @@
             showStops(r);
         }
 
-        async function saveFavorite(r, s) {
+        async function saveFavorite(r, s, skipHome = false) {
             // Priority: r.path_desc -> calculated path -> r.dest_tc
             const path_desc = r.path_desc || (r.orig_tc ? `${r.orig_tc} ↔ ${r.dest_tc}` : r.dest_tc);
             
@@ -600,8 +637,10 @@
             const favs = await BusDB.getAll('favorites');
             if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route && f.serviceType === fav.serviceType)) {
                 await BusDB.put('favorites', fav);
+                const serviceType = fav.serviceType || 1;
+                _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${serviceType}`);
             }
-            showHome();
+            if (!skipHome) showHome();
         }
 
         async function removeFavorite(favId) {
@@ -611,6 +650,13 @@
 
         async function renderFavorites() {
             const favs = await BusDB.getAll('favorites');
+            
+            _favoriteStopsCache.clear();
+            favs.forEach(f => {
+                const serviceType = f.serviceType || 1;
+                _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${serviceType}`);
+            });
+
             const container = document.getElementById('favorites-list');
             if (favs.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:#888;">No favorites yet. Search a route to add one!</p>';
@@ -666,41 +712,158 @@
 
         async function updateETA(f) {
             try {
-                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId);
                 const etaContainer = document.getElementById(`eta-${f.favId}`);
                 if (!etaContainer) return;
 
-                if (!etas || etas.length === 0) {
-                    etaContainer.textContent = 'No ETA';
-                    return;
-                }
+                const serviceType = f.serviceType || 1;
+                const cached = getFlashCache(f.co, f.stopId, f.route, serviceType);
                 
-                // Standardize ETA format based on company
-                const formattedEtas = etas.slice(0, 3).map(item => {
-                    let timeStr = '';
-                    if (f.co === 'NLB') {
-                        // NLB uses estimatedArrivalTime: "YYYY-MM-DD HH:MM:SS"
-                        timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
-                    } else {
-                        // KMB/CTB use item.eta as ISO string
-                        timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                const render = (etas) => {
+                    if (!etas || etas.length === 0) {
+                        etaContainer.textContent = 'No ETA';
+                        return;
                     }
-                    return timeStr;
-                });
+                    const formattedEtas = etas.slice(0, 3).map(item => {
+                        let timeStr = '';
+                        if (f.co === 'NLB') {
+                            timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                        } else {
+                            timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                        }
+                        return timeStr;
+                    });
+                    etaContainer.innerHTML = '';
+                    formattedEtas.forEach((time, index) => {
+                        const span = document.createElement('span');
+                        span.textContent = time;
+                        etaContainer.appendChild(span);
+                        if (index < formattedEtas.length - 1) {
+                            etaContainer.appendChild(document.createTextNode(', '));
+                        }
+                    });
+                };
 
-                etaContainer.innerHTML = '';
-                formattedEtas.forEach((time, index) => {
-                    const span = document.createElement('span');
-                    span.textContent = time;
-                    etaContainer.appendChild(span);
-                    if (index < formattedEtas.length - 1) {
-                        etaContainer.appendChild(document.createTextNode(', '));
-                    }
-                });
+                if (cached) render(cached);
+
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, serviceType, f.routeId);
+                setFlashCache(f.co, f.stopId, f.route, serviceType, etas);
+                render(etas);
             } catch (e) {
                 console.error('Error fetching ETA', e);
                 const etaContainer = document.getElementById(`eta-${f.favId}`);
                 if (etaContainer) etaContainer.textContent = 'Error';
+            }
+        }
+
+        function toggleETADrawer(card, r, s) {
+            const drawer = card.querySelector('.eta-drawer');
+            const isOpen = drawer.classList.contains('open');
+
+            if (_drawerInterval) {
+                clearInterval(_drawerInterval);
+                _drawerInterval = null;
+            }
+
+            // Close all other drawers
+            document.querySelectorAll('.eta-drawer.open').forEach(d => {
+                if (d !== drawer) d.classList.remove('open');
+            });
+
+            drawer.classList.toggle('open', !isOpen);
+            if (drawer.classList.contains('open')) {
+                updateDrawerETA(drawer, r, s);
+                _drawerInterval = setInterval(() => updateDrawerETA(drawer, r, s), 30000);
+            }
+        }
+
+        async function updateDrawerETA(drawer, r, s) {
+            const content = drawer.querySelector('.eta-content');
+            const status = drawer.querySelector('.eta-status');
+            
+            try {
+                const serviceType = r.service_type || 1;
+                const cached = getFlashCache(r.co, s.stop, r.route, serviceType);
+
+                const render = (etas) => {
+                    if (!etas || etas.length === 0) {
+                        content.textContent = 'No ETA available';
+                        return;
+                    }
+                    content.innerHTML = '';
+                    etas.slice(0, 3).forEach(item => {
+                        const row = document.createElement('div');
+                        row.style.display = 'flex';
+                        row.style.justifyContent = 'space-between';
+                        row.style.marginBottom = '4px';
+
+                        let timeStr = '';
+                        if (r.co === 'NLB') {
+                            timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                        } else {
+                            timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                        }
+
+                        const timeSpan = document.createElement('span');
+                        timeSpan.textContent = timeStr;
+                        timeSpan.style.fontWeight = 'bold';
+
+                        const remarkSpan = document.createElement('span');
+                        remarkSpan.textContent = item.rmk_tc || item.rmk_en || '';
+                        remarkSpan.style.fontSize = '12px';
+                        remarkSpan.style.color = '#777';
+
+                        row.appendChild(timeSpan);
+                        row.appendChild(remarkSpan);
+                        content.appendChild(row);
+                    });
+                    status.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                };
+
+                if (cached) {
+                    render(cached);
+                } else {
+                    content.textContent = 'Loading ETAs...';
+                }
+
+                const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId);
+                setFlashCache(r.co, s.stop, r.route, serviceType, etas);
+                render(etas);
+            } catch (error) {
+                console.error('Error updating drawer ETA:', error);
+                if (!content.innerHTML || content.textContent === 'Loading ETAs...') {
+                    content.textContent = 'Error loading ETAs';
+                }
+            }
+        }
+
+        async function handleFavoriteClick(star, r, s) {
+            const serviceType = r.service_type || 1;
+            const cacheKey = `${r.co}-${r.route}-${s.stop}-${serviceType}`;
+            const isFav = _favoriteStopsCache.has(cacheKey);
+
+            if (isFav) {
+                // Immediate UI update
+                _favoriteStopsCache.delete(cacheKey);
+                star.classList.remove('active');
+                star.innerHTML = '<i class="far fa-star"></i>';
+                
+                // Async DB update
+                const favs = await BusDB.getAll('favorites');
+                const f = favs.find(f => f.co === r.co && f.stopId === s.stop && f.route === r.route && (f.serviceType || 1) === serviceType);
+                if (f) {
+                    await BusDB.delete('favorites', f.favId);
+                    // No need to call renderFavorites() here as it would re-render everything
+                    // but we might want to update the favorites list if it's visible.
+                    // However, we are usually in the search results when this is clicked.
+                }
+            } else {
+                // Immediate UI update
+                _favoriteStopsCache.add(cacheKey);
+                star.classList.add('active');
+                star.innerHTML = '<i class="fas fa-star"></i>';
+                
+                // Async DB update
+                await saveFavorite(r, s, true); 
             }
         }
 
