@@ -45,13 +45,19 @@
         .route-no { font-size: 18px; font-weight: 800; }
         .dest-name { color: #666; font-size: 14px; }
         .stop-name { font-size: 14px; margin-top: 4px; color: #444; }
+
+        .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .back-btn { background: none; border: none; color: var(--kmb-red); cursor: pointer; font-size: 16px; font-weight: bold; padding: 5px 0; }
     </style>
 </head>
 <body>
     <header><h1><i class="fas fa-bus"></i> HK Bus Arrivals</h1></header>
     <div class="container">
         <div id="favorites-section" class="section">
-            <h2><i class="fas fa-star" style="color: #ffc107;"></i> Favorites</h2>
+            <h2 style="justify-content: space-between;">
+                <span><i class="fas fa-star" style="color: #ffc107;"></i> Favorites</span>
+                <i class="fas fa-sync-alt" id="refresh-btn" style="cursor: pointer; font-size: 18px; color: #666;" onclick="refreshAllETAs()" title="Refresh ETAs"></i>
+            </h2>
             <div id="favorites-list"></div>
         </div>
         <div class="section">
@@ -60,8 +66,11 @@
                 <button class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> Stop</button>
             </div>
             <div id="route-search-ui">
-                <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X, 3M)...">
+                <div id="search-input-area">
+                    <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X, 3M)...">
+                </div>
                 <div id="route-results" class="results-list"></div>
+                <div id="stop-selection-results" class="results-list hidden"></div>
             </div>
             <div id="stop-search-ui" class="hidden">
                 <input type="text" id="stop-input" placeholder="Enter Stop Name...">
@@ -104,6 +113,31 @@
                 }
             },
 
+            async getStops(company, route, direction, serviceType, routeId) {
+                if (company === 'KMB') {
+                    const dir = direction === 'outbound' ? 'outbound' : 'inbound';
+                    return this.fetchKMB(`/route-stop/${route}/${dir}/${serviceType || 1}`);
+                }
+                if (company === 'CTB') {
+                    const dir = direction === 'outbound' ? 'outbound' : 'inbound';
+                    const stops = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`);
+                    // Fetch stop names for CTB
+                    const stopData = await Promise.all(stops.slice(0, 20).map(async s => {
+                        const info = await this.fetchCTB(`/stop/${s.stop}`);
+                        return { stop: s.stop, name_tc: info.name_tc, name_en: info.name_en };
+                    }));
+                    return stopData;
+                }
+                if (company === 'NLB') {
+                    const data = await this.fetchNLB(`route.php?action=list_stop&routeId=${routeId}`);
+                    return data.stops.map(s => ({
+                        stop: s.stopId,
+                        name_tc: s.stopName_c,
+                        name_en: s.stopName_e
+                    }));
+                }
+            },
+
             async getETA(company, stopId, route, serviceType = 1, routeId) {
                 if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
                 if (company === 'CTB') return this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
@@ -119,6 +153,11 @@
             event.currentTarget.classList.add('active');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
+            if (type === 'route') {
+                document.getElementById('search-input-area').classList.remove('hidden');
+                document.getElementById('route-results').classList.remove('hidden');
+                document.getElementById('stop-selection-results').classList.add('hidden');
+            }
         }
 
         let allRoutes = [];
@@ -157,7 +196,7 @@
             routes.forEach(r => {
                 const card = document.createElement('div');
                 card.className = `card co-${r.co}`;
-                card.onclick = () => selectRoute(r.co, r.route, r.routeId);
+                card.onclick = () => selectRoute(r);
                 
                 const info = document.createElement('div');
                 info.className = 'route-info';
@@ -183,15 +222,49 @@
             });
         }
 
-        function selectRoute(co, route, routeId) {
-            // Demonstration: Add a dummy favorite to show ETA logic.
-            let dummyStopId = '';
-            if (co === 'KMB') dummyStopId = 'BFA7B08B8159114D';
-            else if (co === 'CTB') dummyStopId = '001174';
-            else if (co === 'NLB') dummyStopId = '123'; // Dummy NLB stop
+        async function selectRoute(r) {
+            const inputArea = document.getElementById('search-input-area');
+            const routeResults = document.getElementById('route-results');
+            const stopResults = document.getElementById('stop-selection-results');
 
-            const dummyStopName = 'Sample Stop (' + route + ')';
-            saveFavorite(co, dummyStopId, route, dummyStopName, routeId);
+            inputArea.classList.add('hidden');
+            routeResults.classList.add('hidden');
+            stopResults.classList.remove('hidden');
+            stopResults.innerHTML = '<p style="text-align:center;">Loading stops...</p>';
+
+            try {
+                // For KMB/CTB we might need to handle directions. For simplicity, we fetch outbound.
+                // In a full app, we would let user toggle direction.
+                const direction = (r.co === 'KMB') ? (r.bound === 'O' ? 'outbound' : 'inbound') : 'outbound';
+                const stops = await BusAPI.getStops(r.co, r.route, direction, r.service_type, r.routeId);
+                
+                stopResults.innerHTML = '';
+                const header = document.createElement('div');
+                header.className = 'results-header';
+                header.innerHTML = `<button class="back-btn" onclick="showRouteSearch()"><i class="fas fa-arrow-left"></i> Back</button>
+                                   <span style="font-weight:bold;">${r.route} to ${r.dest_tc}</span>`;
+                stopResults.appendChild(header);
+
+                stops.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = `card co-${r.co}`;
+                    card.innerHTML = `<div class="stop-name">${s.name_tc}</div><div class="dest-name">${s.name_en}</div>`;
+                    card.onclick = () => {
+                        saveFavorite(r.co, s.stop, r.route, s.name_tc, r.routeId);
+                        showRouteSearch();
+                    };
+                    stopResults.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error fetching stops:', error);
+                stopResults.innerHTML = '<p style="text-align:center;color:red;">Failed to load stops.</p>';
+            }
+        }
+
+        function showRouteSearch() {
+            document.getElementById('search-input-area').classList.remove('hidden');
+            document.getElementById('route-results').classList.remove('hidden');
+            document.getElementById('stop-selection-results').classList.add('hidden');
         }
 
         function saveFavorite(co, stopId, route, stopName, routeId) {
@@ -250,7 +323,17 @@
                 card.appendChild(etaDiv);
                 container.appendChild(card);
             });
+            refreshAllETAs();
+        }
+
+        function refreshAllETAs() {
+            const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
             favs.forEach(f => updateETA(f));
+            const btn = document.getElementById('refresh-btn');
+            if (btn) {
+                btn.classList.add('fa-spin');
+                setTimeout(() => btn.classList.remove('fa-spin'), 1000);
+            }
         }
 
         async function updateETA(f) {
@@ -264,12 +347,12 @@
                     return;
                 }
                 
-                etaContainer.innerHTML = '';
                 // Standardize ETA format based on company
                 const formattedEtas = etas.slice(0, 3).map(item => {
                     let timeStr = '';
                     if (f.co === 'NLB') {
-                        timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                        // NLB uses estimatedArrivalTime: "YYYY-MM-DD HH:MM:SS"
+                        timeStr = item.estimatedArrivalTime ? new Date(item.estimatedArrivalTime.replace(' ', 'T')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
                     } else {
                         // KMB/CTB use item.eta as ISO string
                         timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
@@ -277,6 +360,7 @@
                     return timeStr;
                 });
 
+                etaContainer.innerHTML = '';
                 formattedEtas.forEach((time, index) => {
                     const span = document.createElement('span');
                     span.textContent = time;
@@ -295,7 +379,7 @@
         // Auto-refresh every 60 seconds
         setInterval(() => {
             console.log('Auto-refreshing ETAs...');
-            renderFavorites();
+            refreshAllETAs();
         }, 60000);
 
         document.addEventListener('DOMContentLoaded', () => {
