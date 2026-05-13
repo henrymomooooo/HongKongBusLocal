@@ -691,6 +691,76 @@
             renderFavorites();
         }
 
+        let dragTimeout = null;
+        let isDragging = false;
+        let activeDragCard = null;
+        let dragPlaceholder = null;
+        let startY = 0;
+        let initialTop = 0;
+
+        function handlePointerDown(e, card, f) {
+            if (e.target.closest('.remove-btn')) return; // Ignore if clicking remove
+
+            startY = e.clientY;
+            const rect = card.getBoundingClientRect();
+            
+            // Timer to differentiate click from drag
+            dragTimeout = setTimeout(() => {
+                isDragging = true;
+                activeDragCard = card;
+                
+                // Create placeholder
+                dragPlaceholder = document.createElement('div');
+                dragPlaceholder.className = 'drag-placeholder';
+                dragPlaceholder.style.height = `${rect.height}px`;
+                
+                // Setup dragging element
+                const container = document.getElementById('favorites-list');
+                const containerRect = container.getBoundingClientRect();
+                
+                card.classList.add('dragging');
+                card.style.width = `${rect.width}px`;
+                initialTop = rect.top - containerRect.top;
+                card.style.top = `${initialTop}px`;
+                card.style.left = `${rect.left - containerRect.left}px`;
+                
+                container.insertBefore(dragPlaceholder, card);
+            }, 200); // 200ms hold to start drag
+            
+            // Add global listeners for move/up
+            document.addEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointerup', (ev) => handlePointerUp(ev, card, f));
+            document.addEventListener('pointercancel', (ev) => handlePointerUp(ev, card, f));
+        }
+
+        function handlePointerMove(e) {
+            if (!isDragging || !activeDragCard) {
+                // If moving significantly before timer fires, cancel drag
+                if (dragTimeout && Math.abs(e.clientY - startY) > 10) {
+                    clearTimeout(dragTimeout);
+                    dragTimeout = null;
+                }
+                return;
+            }
+            
+            e.preventDefault(); // Prevent scrolling
+            const deltaY = e.clientY - startY;
+            activeDragCard.style.top = `${initialTop + deltaY}px`;
+            
+            const container = document.getElementById('favorites-list');
+            const afterElement = getDragAfterElement(container, e.clientY);
+            
+            if (afterElement == null) {
+                container.appendChild(dragPlaceholder);
+            } else {
+                container.insertBefore(dragPlaceholder, afterElement);
+            }
+        }
+
+        function handlePointerUp(e, card, f) {
+            // Stub
+        }
+
         async function renderFavorites() {
             const favs = await BusDB.getAll('favorites');
             favs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
@@ -710,7 +780,7 @@
             favs.forEach(f => {
                 const card = document.createElement('div');
                 card.className = `card co-${f.co}`;
-                card.onclick = () => goToRouteStopsFromFav(f);
+                card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
                 
                 const header = document.createElement('div');
                 header.style.display = 'flex';
