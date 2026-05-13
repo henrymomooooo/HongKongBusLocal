@@ -4,41 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HK Bus Arrivals</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --kmb-red: #d32f2f;
             --ctb-blue: #00529b;
             --ctb-yellow: #ffdf00;
+            --nlb-green: #2e7d32;
             --bg-color: #f4f4f9;
             --card-bg: #ffffff;
             --text-main: #333;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-        header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; }
+        header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        header h1 { margin: 0; font-size: 24px; }
         .section { margin-bottom: 25px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; cursor: pointer; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; position: relative; transition: transform 0.1s; }
+        .card:active { transform: scale(0.98); }
+        .card.co-KMB { border-left: 5px solid var(--kmb-red); }
+        .card.co-CTB { border-left: 5px solid var(--ctb-yellow); }
+        .card.co-NLB { border-left: 5px solid var(--nlb-green); }
+        
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; font-weight: bold; }
         .tab.active { background: var(--kmb-red); color: white; }
         .hidden { display: none; }
+        
+        .eta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .eta-list { display: flex; gap: 8px; font-weight: bold; color: var(--kmb-red); }
+        .co-NLB .eta-list { color: var(--nlb-green); }
+        .co-CTB .eta-list { color: var(--ctb-blue); }
+        
+        .remove-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .remove-btn:hover { color: #ff4444; }
+        
+        .route-info { display: flex; align-items: baseline; gap: 8px; }
+        .route-no { font-size: 18px; font-weight: 800; }
+        .dest-name { color: #666; font-size: 14px; }
+        .stop-name { font-size: 14px; margin-top: 4px; color: #444; }
     </style>
 </head>
 <body>
-    <header><h1>HK Bus Arrivals</h1></header>
+    <header><h1><i class="fas fa-bus"></i> HK Bus Arrivals</h1></header>
     <div class="container">
         <div id="favorites-section" class="section">
-            <h2>Favorites</h2>
+            <h2><i class="fas fa-star" style="color: #ffc107;"></i> Favorites</h2>
             <div id="favorites-list"></div>
         </div>
         <div class="section">
             <div class="tabs">
-                <button class="tab active" onclick="switchTab(event, 'route')">Search Route</button>
-                <button class="tab" onclick="switchTab(event, 'stop')">Search Stop</button>
+                <button class="tab active" onclick="switchTab(event, 'route')"><i class="fas fa-search"></i> Route</button>
+                <button class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> Stop</button>
             </div>
             <div id="route-search-ui">
-                <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X)...">
+                <input type="text" id="route-input" placeholder="Enter Route (e.g. 1A, 962X, 3M)...">
                 <div id="route-results" class="results-list"></div>
             </div>
             <div id="stop-search-ui" class="hidden">
@@ -46,12 +68,12 @@
                 <div id="stop-results" class="results-list"></div>
             </div>
         </div>
-        <div id="eta-display" class="section"></div>
     </div>
     <script>
         const BusAPI = {
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
             CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
+            NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
             
             async fetchKMB(endpoint) {
                 const res = await fetch(`${this.KMB_BASE}${endpoint}`);
@@ -63,14 +85,32 @@
                 return (await res.json()).data;
             },
 
+            async fetchNLB(endpoint) {
+                const res = await fetch(`${this.NLB_BASE}/${endpoint}`);
+                return (await res.json());
+            },
+
             async getRouteList(company) {
                 if (company === 'KMB') return this.fetchKMB('/route/');
                 if (company === 'CTB') return this.fetchCTB('/route/CTB');
+                if (company === 'NLB') {
+                    const data = await this.fetchNLB('route.php?action=list');
+                    return data.routes.map(r => ({
+                        route: r.routeNo,
+                        dest_tc: r.routeName_c,
+                        routeId: r.routeId,
+                        co: 'NLB'
+                    }));
+                }
             },
 
-            async getETA(company, stopId, route, serviceType = 1) {
+            async getETA(company, stopId, route, serviceType = 1, routeId) {
                 if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
                 if (company === 'CTB') return this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
+                if (company === 'NLB') {
+                    const data = await this.fetchNLB(`stop.php?action=estimated_arrival&routeId=${routeId}&stopId=${stopId}`);
+                    return data.estimatedArrivals;
+                }
             }
         };
 
@@ -85,11 +125,15 @@
 
         async function initSearch() {
             try {
-                const kmb = await BusAPI.getRouteList('KMB');
-                const ctb = await BusAPI.getRouteList('CTB');
+                const [kmb, ctb, nlb] = await Promise.all([
+                    BusAPI.getRouteList('KMB'),
+                    BusAPI.getRouteList('CTB'),
+                    BusAPI.getRouteList('NLB')
+                ]);
                 allRoutes = [
                     ...kmb.map(r => ({ ...r, co: 'KMB' })),
-                    ...ctb.map(r => ({ ...r, co: 'CTB' }))
+                    ...ctb.map(r => ({ ...r, co: 'CTB' })),
+                    ...nlb
                 ];
             } catch (error) {
                 console.error('Failed to initialize routes:', error);
@@ -112,34 +156,48 @@
             container.innerHTML = '';
             routes.forEach(r => {
                 const card = document.createElement('div');
-                card.className = 'card';
-                card.onclick = () => selectRoute(r.co, r.route);
+                card.className = `card co-${r.co}`;
+                card.onclick = () => selectRoute(r.co, r.route, r.routeId);
                 
-                const strong = document.createElement('strong');
-                strong.textContent = `${r.co} ${r.route}`;
+                const info = document.createElement('div');
+                info.className = 'route-info';
                 
-                card.appendChild(strong);
-                card.appendChild(document.createTextNode(` - ${r.dest_tc}`));
+                const strong = document.createElement('span');
+                strong.className = 'route-no';
+                strong.textContent = r.route;
+                
+                const dest = document.createElement('span');
+                dest.className = 'dest-name';
+                dest.textContent = `to ${r.dest_tc}`;
+                
+                const coTag = document.createElement('small');
+                coTag.style.marginLeft = 'auto';
+                coTag.textContent = r.co;
+                
+                info.appendChild(strong);
+                info.appendChild(dest);
+                info.appendChild(coTag);
+                card.appendChild(info);
                 
                 container.appendChild(card);
             });
         }
 
-        function selectRoute(co, route) {
-            console.log('Selected', co, route);
+        function selectRoute(co, route, routeId) {
             // Demonstration: Add a dummy favorite to show ETA logic.
-            // In a full implementation, this would fetch route stops and let the user pick one.
-            const dummyStopId = co === 'KMB' ? 'BFA7B08B8159114D' : '001174'; 
+            let dummyStopId = '';
+            if (co === 'KMB') dummyStopId = 'BFA7B08B8159114D';
+            else if (co === 'CTB') dummyStopId = '001174';
+            else if (co === 'NLB') dummyStopId = '123'; // Dummy NLB stop
+
             const dummyStopName = 'Sample Stop (' + route + ')';
-            saveFavorite(co, dummyStopId, route, dummyStopName);
-            alert(`Added dummy stop for ${co} ${route} to favorites!`);
+            saveFavorite(co, dummyStopId, route, dummyStopName, routeId);
         }
 
-        function saveFavorite(co, stopId, route, stopName) {
+        function saveFavorite(co, stopId, route, stopName, routeId) {
             const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
-            // Avoid duplicates
             if (!favs.find(f => f.co === co && f.stopId === stopId && f.route === route)) {
-                favs.push({ co, stopId, route, stopName });
+                favs.push({ co, stopId, route, stopName, routeId });
                 localStorage.setItem('bus_favs', JSON.stringify(favs));
             }
             renderFavorites();
@@ -156,36 +214,39 @@
             const favs = JSON.parse(localStorage.getItem('bus_favs') || '[]');
             const container = document.getElementById('favorites-list');
             if (favs.length === 0) {
-                container.innerHTML = '<p>No favorites yet.</p>';
+                container.innerHTML = '<p style="text-align:center;color:#888;">No favorites yet. Search a route to add one!</p>';
                 return;
             }
             container.innerHTML = '';
             favs.forEach(f => {
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = `card co-${f.co}`;
                 
-                const title = document.createElement('div');
-                const strong = document.createElement('strong');
-                strong.textContent = `${f.co} ${f.route}`;
-                title.appendChild(strong);
-                title.appendChild(document.createTextNode(` @ ${f.stopName}`));
+                const header = document.createElement('div');
+                header.style.display = 'flex';
+                header.style.justifyContent = 'space-between';
+                header.style.alignItems = 'flex-start';
+
+                const info = document.createElement('div');
+                info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
+                                 <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f.stopName}</div>`;
                 
                 const removeBtn = document.createElement('button');
-                removeBtn.textContent = 'Remove';
-                removeBtn.style.float = 'right';
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
-                    removeFavorite(f.co, f.stopId, f.route);
+                    if(confirm('Remove this favorite?')) removeFavorite(f.co, f.stopId, f.route);
                 };
-                title.appendChild(removeBtn);
+
+                header.appendChild(info);
+                header.appendChild(removeBtn);
 
                 const etaDiv = document.createElement('div');
-                etaDiv.id = `eta-${f.co}-${f.stopId}-${f.route}`;
-                etaDiv.textContent = 'Loading...';
-                etaDiv.style.marginTop = '10px';
-                etaDiv.style.color = 'var(--kmb-red)';
+                etaDiv.className = 'eta-row';
+                etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> Next:</span><div class="eta-list" id="eta-${f.co}-${f.stopId}-${f.route}">Loading...</div>`;
                 
-                card.appendChild(title);
+                card.appendChild(header);
                 card.appendChild(etaDiv);
                 container.appendChild(card);
             });
@@ -194,30 +255,48 @@
 
         async function updateETA(f) {
             try {
-                const etas = await BusAPI.getETA(f.co, f.stopId, f.route);
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, 1, f.routeId);
                 const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
                 if (!etaContainer) return;
 
                 if (!etas || etas.length === 0) {
-                    etaContainer.textContent = 'No ETA available';
+                    etaContainer.textContent = 'No ETA';
                     return;
                 }
                 
                 etaContainer.innerHTML = '';
-                etas.slice(0, 3).forEach((eta, index) => {
+                // Standardize ETA format based on company
+                const formattedEtas = etas.slice(0, 3).map(item => {
+                    let timeStr = '';
+                    if (f.co === 'NLB') {
+                        timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                    } else {
+                        // KMB/CTB use item.eta as ISO string
+                        timeStr = item.eta ? new Date(item.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                    }
+                    return timeStr;
+                });
+
+                formattedEtas.forEach((time, index) => {
                     const span = document.createElement('span');
-                    span.textContent = eta.eta ? new Date(eta.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Scheduled';
+                    span.textContent = time;
                     etaContainer.appendChild(span);
-                    if (index < Math.min(etas.length, 3) - 1) {
+                    if (index < formattedEtas.length - 1) {
                         etaContainer.appendChild(document.createTextNode(', '));
                     }
                 });
             } catch (e) {
                 console.error('Error fetching ETA', e);
                 const etaContainer = document.getElementById(`eta-${f.co}-${f.stopId}-${f.route}`);
-                if (etaContainer) etaContainer.textContent = 'Error fetching ETA';
+                if (etaContainer) etaContainer.textContent = 'Error';
             }
         }
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            console.log('Auto-refreshing ETAs...');
+            renderFavorites();
+        }, 60000);
 
         document.addEventListener('DOMContentLoaded', () => {
             initSearch();
