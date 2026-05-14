@@ -754,12 +754,59 @@
 
         function handlePointerUp(e, card, f) {
             document.removeEventListener('pointermove', handlePointerMove);
-            if (activePointerUpHandler) {
-                document.removeEventListener('pointerup', activePointerUpHandler);
-                document.removeEventListener('pointercancel', activePointerUpHandler);
-                activePointerUpHandler = null;
+            document.removeEventListener('pointerup', activePointerUpHandler);
+            document.removeEventListener('pointercancel', activePointerUpHandler);
+
+            if (dragTimeout) {
+                clearTimeout(dragTimeout);
+                dragTimeout = null;
             }
-            // Stub
+
+            if (!isDragging) {
+                // It was just a click
+                if (!e.target.closest('.remove-btn')) {
+                    goToRouteStopsFromFav(f);
+                }
+                return;
+            }
+
+            // Finish Dragging
+            isDragging = false;
+            const container = document.getElementById('favorites-list');
+            
+            card.classList.remove('dragging');
+            card.style.position = '';
+            card.style.top = '';
+            card.style.left = '';
+            card.style.width = '';
+            
+            container.insertBefore(card, dragPlaceholder);
+            container.removeChild(dragPlaceholder);
+            
+            activeDragCard = null;
+            dragPlaceholder = null;
+
+            saveReorderedFavorites();
+        }
+
+        async function saveReorderedFavorites() {
+            const container = document.getElementById('favorites-list');
+            const cards = container.querySelectorAll('.card');
+            const favs = await BusDB.getAll('favorites');
+            
+            for (let i = 0; i < cards.length; i++) {
+                // Find the ETA div inside the card to extract the favId
+                const etaDiv = cards[i].querySelector('.eta-list');
+                if (etaDiv) {
+                    const favId = parseInt(etaDiv.id.replace('eta-', ''), 10);
+                    const fav = favs.find(f => f.favId === favId);
+                    if (fav) {
+                        fav.sortOrder = i;
+                        await BusDB.put('favorites', fav);
+                    }
+                }
+            }
+            console.log('Favorites reordered and saved.');
         }
 
         async function renderFavorites() {
