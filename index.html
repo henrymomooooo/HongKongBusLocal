@@ -129,6 +129,7 @@
         let initialTop = 0;
         let dragTimeout = null;
         let isDragging = false;
+        let activePointerUpHandler = null;
 
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
@@ -691,13 +692,6 @@
             renderFavorites();
         }
 
-        let dragTimeout = null;
-        let isDragging = false;
-        let activeDragCard = null;
-        let dragPlaceholder = null;
-        let startY = 0;
-        let initialTop = 0;
-
         function handlePointerDown(e, card, f) {
             if (e.target.closest('.remove-btn')) return; // Ignore if clicking remove
 
@@ -727,10 +721,11 @@
                 container.insertBefore(dragPlaceholder, card);
             }, 200); // 200ms hold to start drag
             
+            activePointerUpHandler = (ev) => handlePointerUp(ev, card, f);
             // Add global listeners for move/up
             document.addEventListener('pointermove', handlePointerMove);
-            document.addEventListener('pointerup', (ev) => handlePointerUp(ev, card, f));
-            document.addEventListener('pointercancel', (ev) => handlePointerUp(ev, card, f));
+            document.addEventListener('pointerup', activePointerUpHandler);
+            document.addEventListener('pointercancel', activePointerUpHandler);
         }
 
         function handlePointerMove(e) {
@@ -758,6 +753,12 @@
         }
 
         function handlePointerUp(e, card, f) {
+            document.removeEventListener('pointermove', handlePointerMove);
+            if (activePointerUpHandler) {
+                document.removeEventListener('pointerup', activePointerUpHandler);
+                document.removeEventListener('pointercancel', activePointerUpHandler);
+                activePointerUpHandler = null;
+            }
             // Stub
         }
 
