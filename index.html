@@ -654,8 +654,47 @@
             }
         }
 
-        function swapDirection(r) {
-            console.log('Swapping direction for', r);
+        async function swapDirection(current) {
+            const routeNo = current.route;
+            const company = current.co;
+            const serviceType = current.service_type || 1;
+            
+            // Find potential opposites (must match route and service type)
+            let opposites = [];
+            if (company === 'KMB') {
+                const targetBound = current.bound === 'O' ? 'I' : 'O';
+                opposites = allRoutes.filter(v => 
+                    v.co === 'KMB' && 
+                    v.route === routeNo && 
+                    v.bound === targetBound && 
+                    (v.service_type || 1) == serviceType
+                );
+            } else if (company === 'CTB') {
+                const targetDir = current.direction === 'outbound' ? 'inbound' : 'outbound';
+                // For CTB, we probe the API to verify if the direction exists
+                const stops = await BusAPI.fetchCTB(`/route-stop/CTB/${routeNo}/${targetDir}`);
+                if (stops && stops.length > 0) {
+                    // Reconstruct opposite object
+                    opposites = [{
+                        ...current,
+                        direction: targetDir,
+                        dest_tc: current.orig_tc, orig_tc: current.dest_tc,
+                        dest_en: current.orig_en, orig_en: current.dest_en
+                    }];
+                }
+            } else if (company === 'NLB') {
+                // NLB usually has distinct routeIds for each direction
+                opposites = allRoutes.filter(v => v.co === 'NLB' && v.route === routeNo && v.routeId !== current.routeId);
+            }
+
+            if (opposites.length === 1) {
+                showStops(opposites[0]);
+            } else if (opposites.length > 1) {
+                // Too many variants, go to selection screen
+                selectRoute(current);
+            } else {
+                alert("No return direction found for this specific service variant.");
+            }
         }
 
         async function showStops(r) {
