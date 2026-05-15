@@ -654,6 +654,10 @@
             }
         }
 
+        function swapDirection(r) {
+            console.log('Swapping direction for', r);
+        }
+
         async function showStops(r) {
             const stopResults = document.getElementById('stop-selection-results');
             stopResults.innerHTML = `<p style="text-align:center;">${t('loadingStops')}</p>`;
@@ -665,8 +669,15 @@
                 stopResults.innerHTML = '';
                 const header = document.createElement('div');
                 header.className = 'results-header';
-                header.innerHTML = `<button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> ${t('back')}</button>
-                                   <span style="font-weight:bold;">${r.route} ${t('to')} ${localized(r, 'dest')}</span>`;
+                header.innerHTML = `
+                    <button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> ${t('back')}</button>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:bold;">${r.route} ${t('to')} ${localized(r, 'dest')}</span>
+                        <i class="fas fa-right-left" id="swap-dir-btn" style="cursor:pointer; color:var(--kmb-red); font-size:16px;" title="Swap Direction"></i>
+                    </div>
+                `;
+                const swapBtn = header.querySelector('#swap-dir-btn');
+                swapBtn.onclick = () => swapDirection(r);
                 stopResults.appendChild(header);
 
                 stops.forEach(s => {
