@@ -97,6 +97,61 @@
             font-size: 18px;
             color: var(--text-main);
         }
+
+        /* Debug Console Styles */
+        #debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50vh;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            z-index: 3000;
+            border-top: 2px solid #444;
+        }
+        #debug-header {
+            background: #333;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        #debug-header span { font-weight: bold; color: #fff; }
+        #debug-controls { display: flex; gap: 10px; }
+        #debug-controls button {
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        #debug-controls button:hover { background: #555; }
+        #debug-logs {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .log-entry { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .log-meta { display: flex; gap: 10px; color: #888; margin-bottom: 2px; }
+        .log-req { color: #569cd6; }
+        .log-res { color: #4ec9b0; }
+        .log-err { color: #f44747; }
+        .log-payload { white-space: pre-wrap; word-break: break-all; }
+
+        /* Split Screen adjustments */
+        body.debug-active .container {
+            height: 50vh;
+            overflow-y: auto;
+            padding-bottom: 10px;
+        }
+        body.debug-active header { border-radius: 0; margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -1064,57 +1119,88 @@
             }
         }
 
+        const _drawerFetching = new Set();
+
         async function updateDrawerETA(drawer, r, s, isManual = false) {
             const content = drawer.querySelector('.eta-content');
             const status = drawer.querySelector('.eta-status');
             const serviceType = r.service_type || 1;
             const cooldownKey = `${r.co}-${s.stop}-${r.route}-${serviceType}`;
 
+            // 1. Prevent overlapping requests
+            if (_drawerFetching.has(cooldownKey)) return;
+
+            // 2. Check cooldown for manual requests
             if (isManual) {
                 const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
                 if (Date.now() - lastRefresh < 5000) {
-                    console.log('Cooldown active for', cooldownKey);
-                    return; // Exit if clicked too soon
+                    return; // Still in cooldown
                 }
-                _stationRefreshCooldowns.set(cooldownKey, Date.now());
-                const icon = status.querySelector('.fa-sync-alt');
-                if (icon) icon.classList.add('fa-spin');
             }
 
+            _drawerFetching.add(cooldownKey);
+            
             try {
+                // If manual, start spinning the existing icon immediately
+                if (isManual) {
+                    const existingIcon = status.querySelector('.fa-sync-alt');
+                    if (existingIcon) existingIcon.classList.add('fa-spin');
+                }
+
                 const cached = getFlashCache(r.co, s.stop, r.route, serviceType);
                 const render = (etas) => {
                     if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
-                    content.innerHTML = '';
-                    etas.slice(0, 3).forEach(item => {
-                        const row = document.createElement('div'); row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.marginBottom = '4px';
-                        const timeStr = getRelativeTime(r.co === 'NLB' ? item.estimatedArrivalTime : item.eta);
-                        const timeSpan = document.createElement('span'); timeSpan.textContent = timeStr; timeSpan.style.fontWeight = 'bold';
-                        const remarkSpan = document.createElement('span'); remarkSpan.textContent = localized(item, 'rmk') || '';
-                        remarkSpan.style.fontSize = '12px'; remarkSpan.style.color = '#777';
-                        row.appendChild(timeSpan); row.appendChild(remarkSpan); content.appendChild(row);
-                    });
+                    
+                    // Visual feedback for content update
+                    content.style.opacity = '0.5';
+                    content.style.transition = 'opacity 0.2s';
+                    
+                    setTimeout(() => {
+                        content.innerHTML = '';
+                        etas.slice(0, 3).forEach(item => {
+                            const row = document.createElement('div'); row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.marginBottom = '4px';
+                            const timeStr = getRelativeTime(r.co === 'NLB' ? item.estimatedArrivalTime : item.eta);
+                            const timeSpan = document.createElement('span'); timeSpan.textContent = timeStr; timeSpan.style.fontWeight = 'bold';
+                            const remarkSpan = document.createElement('span'); remarkSpan.textContent = localized(item, 'rmk') || '';
+                            remarkSpan.style.fontSize = '12px'; remarkSpan.style.color = '#777';
+                            row.appendChild(timeSpan); row.appendChild(remarkSpan); content.appendChild(row);
+                        });
+                        content.style.opacity = '1';
+                    }, 50);
 
                     const refreshIcon = document.createElement('i');
                     refreshIcon.className = 'fas fa-sync-alt';
                     refreshIcon.style.cursor = 'pointer';
                     refreshIcon.style.marginLeft = '8px';
+                    refreshIcon.style.transition = 'opacity 0.3s';
+                    
                     refreshIcon.onclick = (e) => {
                         e.stopPropagation();
                         updateDrawerETA(drawer, r, s, true);
                     };
 
+                    // Handle visual dimming state
                     const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
-                    if (Date.now() - lastRefresh < 5000) {
-                        refreshIcon.style.opacity = '0.5';
+                    const timeSinceRefresh = Date.now() - lastRefresh;
+                    if (timeSinceRefresh < 5000) {
+                        refreshIcon.style.opacity = '0.3';
                         refreshIcon.style.cursor = 'not-allowed';
+                        setTimeout(() => {
+                            // Only reset if this icon is still the one in the DOM
+                            if (status.contains(refreshIcon)) {
+                                refreshIcon.style.opacity = '1';
+                                refreshIcon.style.cursor = 'pointer';
+                            }
+                        }, 5000 - timeSinceRefresh);
                     }
 
                     status.innerHTML = '';
                     status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`;
                     status.appendChild(refreshIcon);
                 };
+
                 if (cached) { render(cached); } else { content.textContent = t('loadingStops'); }
+
                 const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId, r.bound, r.direction);
                 if (etas !== null) {
                     setFlashCache(r.co, s.stop, r.route, serviceType, etas);
@@ -1123,9 +1209,29 @@
             } catch (error) { 
                 console.error('Error updating drawer ETA:', error); 
             } finally {
+                _drawerFetching.delete(cooldownKey);
                 if (isManual) {
-                    const icon = status.querySelector('.fa-sync-alt');
-                    if (icon) icon.classList.remove('fa-spin');
+                    const now = Date.now();
+                    _stationRefreshCooldowns.set(cooldownKey, now);
+                    
+                    // Visual feedback completion
+                    setTimeout(() => {
+                        const icon = status.querySelector('.fa-sync-alt');
+                        if (icon) {
+                            icon.classList.remove('fa-spin');
+                            icon.style.opacity = '0.3';
+                            icon.style.cursor = 'not-allowed';
+                            
+                            // Schedule the UN-DIM here
+                            setTimeout(() => {
+                                // Check if this icon is still in the DOM and still has this specific cooldown
+                                if (status.contains(icon) && _stationRefreshCooldowns.get(cooldownKey) === now) {
+                                    icon.style.opacity = '1';
+                                    icon.style.cursor = 'pointer';
+                                }
+                            }, 5000);
+                        }
+                    }, 500);
                 }
             }
         }
