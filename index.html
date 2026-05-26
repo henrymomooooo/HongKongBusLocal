@@ -382,11 +382,9 @@
                         ]);
                         // Update existing favorites
                         const favs = await this.getAll('favorites');
-                        for (const f of favs) {
-                            if (!f.groupId) {
-                                f.groupId = 1;
-                                await this.put('favorites', f);
-                            }
+                        const toUpdate = favs.filter(f => !f.groupId).map(f => ({...f, groupId: 1}));
+                        if (toUpdate.length > 0) {
+                            await this.putAll('favorites', toUpdate);
                         }
                     }
                     
@@ -1077,7 +1075,7 @@
                 co: r.co, stopId: s.stop, route: r.route, stopName_tc: s.name_tc, stopName_en: s.name_en,
                 routeId: r.routeId, serviceType: r.service_type || 1, bound: r.bound, direction: r.direction,
                 orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en,
-                path_desc: path_desc, sortOrder: Date.now()
+                path_desc: path_desc, sortOrder: Date.now(), groupId: 1
             };
             const favs = await BusDB.getAll('favorites');
             if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route && (f.serviceType || 1) === fav.serviceType)) {
@@ -1403,6 +1401,7 @@
                     const oldFavs = JSON.parse(oldFavsJson);
                     for (const f of oldFavs) {
                         if (!f.path_desc) f.path_desc = ''; 
+                        if (!f.groupId) f.groupId = 1;
                         await BusDB.put('favorites', f);
                     }
                     localStorage.removeItem('bus_favs');
