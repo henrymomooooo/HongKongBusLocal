@@ -31,7 +31,7 @@
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; font-weight: bold; }
         .tab.active { background: var(--kmb-red); color: white; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         
         .eta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .eta-list { display: flex; gap: 8px; font-weight: bold; color: var(--kmb-red); }
@@ -84,11 +84,26 @@
         }
         #favorites-list {
             position: relative;
-            touch-action: none;
+        }
+        #initial-loading {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: var(--text-main);
         }
     </style>
 </head>
 <body>
+    <div id="initial-loading">
+        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px; color: var(--kmb-red);"></i>
+        <span id="loading-text">Initializing routes...</span>
+    </div>
     <header><h1><i class="fas fa-bus"></i> <span id="header-title">HK Bus Arrivals</span></h1></header>
     <div class="container">
         <div id="favorites-section" class="section">
@@ -139,6 +154,7 @@
                 noFavorites: "尚未有最愛車站。請搜尋路線並添加！",
                 removeFavorite: "移除此最愛車站？",
                 syncing: "正在從 API 同步路線...",
+                initializing: "正在初始化路線...",
                 next: "下班車:",
                 noETA: "暫無預計到站時間",
                 error: "錯誤",
@@ -167,6 +183,7 @@
                 noFavorites: "No favorites yet. Search a route to add one!",
                 removeFavorite: "Remove this favorite?",
                 syncing: "Syncing routes from API...",
+                initializing: "Initializing routes...",
                 next: "Next:",
                 noETA: "No ETA",
                 error: "Error",
@@ -193,8 +210,10 @@
         document.getElementById('route-input').placeholder = t('enterRoute');
         document.getElementById('stop-input').placeholder = t('enterStop');
         document.getElementById('refresh-cache-btn').title = t('refreshCache');
+        document.getElementById('loading-text').textContent = t('initializing');
 
         const _etaFlashCache = new Map();
+        const _stationRefreshCooldowns = new Map();
         const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
         let _drawerInterval = null;
 
@@ -246,27 +265,37 @@
             db: null,
 
             async init() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-                    request.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if (!db.objectStoreNames.contains('routes')) {
-                            db.createObjectStore('routes', { keyPath: 'id' });
-                        }
-                        if (!db.objectStoreNames.contains('favorites')) {
-                            db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
-                        }
-                    };
-                    request.onsuccess = (e) => {
-                        this.db = e.target.result;
-                        resolve();
-                    };
-                    request.onerror = (e) => reject(e.target.error);
+                return new Promise((resolve) => {
+                    if (!window.indexedDB) return resolve();
+                    try {
+                        const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+                        request.onupgradeneeded = (e) => {
+                            const db = e.target.result;
+                            if (!db.objectStoreNames.contains('routes')) {
+                                db.createObjectStore('routes', { keyPath: 'id' });
+                            }
+                            if (!db.objectStoreNames.contains('favorites')) {
+                                db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
+                            }
+                        };
+                        request.onsuccess = (e) => {
+                            this.db = e.target.result;
+                            resolve();
+                        };
+                        request.onerror = (e) => {
+                            console.warn('IndexedDB Error:', e.target.error);
+                            resolve(); // Continue without DB
+                        };
+                    } catch (e) {
+                        console.warn('IndexedDB not available:', e);
+                        resolve(); // Continue without DB
+                    }
                 });
             },
 
             async put(storeName, data) {
                 return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve();
                     const tx = this.db.transaction(storeName, 'readwrite');
                     const store = tx.objectStore(storeName);
                     store.put(data);
@@ -277,6 +306,7 @@
 
             async getAll(storeName) {
                 return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve([]);
                     const tx = this.db.transaction(storeName, 'readonly');
                     const store = tx.objectStore(storeName);
                     const request = store.getAll();
@@ -287,6 +317,7 @@
 
             async clear(storeName) {
                 return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve();
                     const tx = this.db.transaction(storeName, 'readwrite');
                     const store = tx.objectStore(storeName);
                     store.clear();
@@ -297,6 +328,7 @@
 
             async putAll(storeName, dataArray) {
                 return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve();
                     const tx = this.db.transaction(storeName, 'readwrite');
                     const store = tx.objectStore(storeName);
                     dataArray.forEach(item => store.put(item));
@@ -307,6 +339,7 @@
 
             async delete(storeName, key) {
                 return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve();
                     const tx = this.db.transaction(storeName, 'readwrite');
                     const store = tx.objectStore(storeName);
                     store.delete(key);
@@ -448,12 +481,18 @@
                 }
             },
 
-            async getETA(company, stopId, route, serviceType = 1, routeId) {
+            async getETA(company, stopId, route, serviceType = 1, routeId, bound, direction) {
                 if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
-                if (company === 'CTB') return this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
+                if (company === 'CTB') {
+                    const data = await this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
+                    if (!data) return null;
+                    const ctbDir = (direction === 'inbound' || bound === 'I') ? 'I' : 'O';
+                    return data.filter(eta => eta.dir === ctbDir);
+                }
                 if (company === 'NLB') {
                     const data = await this.fetchNLB(`stop.php?action=estimatedArrivals&routeId=${routeId}&stopId=${stopId}`);
-                    if (!data || !data.estimatedArrivals) return [];
+                    if (data === null) return null;
+                    if (!data.estimatedArrivals) return [];
                     return data.estimatedArrivals;
                 }
             }
@@ -489,10 +528,16 @@
             const cached = await BusDB.getAll('routes');
             const now = Date.now();
             const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+            const loadingOverlay = document.getElementById('initial-loading');
 
             if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) {
                 allRoutes = sortRoutes(cached);
+                loadingOverlay.classList.add('hidden');
                 return;
+            }
+
+            if (cached.length === 0 || force) {
+                loadingOverlay.classList.remove('hidden');
             }
 
             console.log(t('syncing'));
@@ -502,20 +547,33 @@
                 BusAPI.getRouteList('NLB')
             ]);
 
-            const kmb = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
-            const ctb = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
-            const nlb = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : [];
+            const timestamp = Date.now();
+            let processedRoutes = [];
 
-            if (results.some(r => r.status === 'rejected')) {
-                console.warn('Some bus companies failed to sync:', results.filter(r => r.status === 'rejected').map(r => r.reason));
+            // KMB
+            if (results[0].status === 'fulfilled' && results[0].value && results[0].value.length > 0) {
+                processedRoutes.push(...results[0].value.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: timestamp })));
+            } else {
+                processedRoutes.push(...cached.filter(r => r.co === 'KMB'));
             }
 
-            const timestamp = Date.now();
-            const processedRoutes = [
-                ...kmb.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: timestamp })),
-                ...ctb.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: timestamp })),
-                ...nlb.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: timestamp }))
-            ];
+            // CTB
+            if (results[1].status === 'fulfilled' && results[1].value && results[1].value.length > 0) {
+                processedRoutes.push(...results[1].value.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: timestamp })));
+            } else {
+                processedRoutes.push(...cached.filter(r => r.co === 'CTB'));
+            }
+
+            // NLB
+            if (results[2].status === 'fulfilled' && results[2].value && results[2].value.length > 0) {
+                processedRoutes.push(...results[2].value.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: timestamp })));
+            } else {
+                processedRoutes.push(...cached.filter(r => r.co === 'NLB'));
+            }
+
+            if (results.some(r => r.status === 'rejected' || !r.value)) {
+                console.warn('Some bus companies failed to sync, retaining cached data.');
+            }
 
             if (processedRoutes.length > 0) {
                 const sorted = sortRoutes(processedRoutes);
@@ -525,11 +583,12 @@
             } else if (cached.length > 0) {
                 allRoutes = sortRoutes(cached);
             }
+            loadingOverlay.classList.add('hidden');
         }
 
         function searchRoutes(query, routes) {
             if (!query) return [];
-            return routes.filter(r => r.route.startsWith(query)).slice(0, 10);
+            return routes.filter(r => r.route.startsWith(query)).slice(0, 50);
         }
 
         document.getElementById('route-input').addEventListener('input', e => {
@@ -698,7 +757,15 @@
         }
 
         async function showStops(r) {
+            const inputArea = document.getElementById('search-input-area');
+            const routeResults = document.getElementById('route-results');
+            const favSection = document.getElementById('favorites-section');
             const stopResults = document.getElementById('stop-selection-results');
+
+            inputArea.classList.add('hidden');
+            routeResults.classList.add('hidden');
+            favSection.classList.add('hidden');
+            stopResults.classList.remove('hidden');
             stopResults.innerHTML = `<p style="text-align:center;">${t('loadingStops')}</p>`;
 
             try {
@@ -825,12 +892,20 @@
             renderFavorites();
         }
 
+        let wasDragged = false;
+        
         function handlePointerDown(e, card, f) {
-            if (e.target.closest('.remove-btn')) return;
+            if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
             startY = e.clientY;
             const rect = card.getBoundingClientRect();
+            wasDragged = false;
+
             dragTimeout = setTimeout(() => {
                 isDragging = true; activeDragCard = card;
+                wasDragged = true;
+                
+                card.style.touchAction = 'none';
+
                 dragPlaceholder = document.createElement('div');
                 dragPlaceholder.className = 'drag-placeholder';
                 dragPlaceholder.style.height = `${rect.height}px`;
@@ -842,19 +917,24 @@
                 card.style.top = `${initialTop}px`;
                 card.style.left = `${rect.left - containerRect.left}px`;
                 container.insertBefore(dragPlaceholder, card);
-            }, 200);
+            }, 300); // 300ms hold to start drag
+            
             activePointerUpHandler = (ev) => handlePointerUp(ev, card, f);
-            document.addEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointermove', handlePointerMove, { passive: false });
             document.addEventListener('pointerup', activePointerUpHandler);
             document.addEventListener('pointercancel', activePointerUpHandler);
         }
 
         function handlePointerMove(e) {
-            if (!isDragging || !activeDragCard) {
-                if (dragTimeout && Math.abs(e.clientY - startY) > 10) { clearTimeout(dragTimeout); dragTimeout = null; }
+            if (!isDragging) {
+                if (dragTimeout && Math.abs(e.clientY - startY) > 15) { 
+                    clearTimeout(dragTimeout); 
+                    dragTimeout = null; 
+                }
                 return;
             }
-            e.preventDefault();
+            
+            e.preventDefault(); 
             const deltaY = e.clientY - startY;
             activeDragCard.style.top = `${initialTop + deltaY}px`;
             const container = document.getElementById('favorites-list');
@@ -866,9 +946,16 @@
             document.removeEventListener('pointermove', handlePointerMove);
             document.removeEventListener('pointerup', activePointerUpHandler);
             document.removeEventListener('pointercancel', activePointerUpHandler);
+            
             if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-            if (!isDragging) { if (!e.target.closest('.remove-btn')) { goToRouteStopsFromFav(f); } return; }
+            
+            if (!isDragging) { 
+                return; 
+            }
+            
             isDragging = false;
+            card.style.touchAction = '';
+            
             const container = document.getElementById('favorites-list');
             card.classList.remove('dragging');
             card.style.position = ''; card.style.top = ''; card.style.left = ''; card.style.width = '';
@@ -904,6 +991,11 @@
                 card.className = `card co-${f.co}`;
                 card.dataset.favid = f.favId;
                 card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
+                card.onclick = (e) => {
+                    if (wasDragged) return;
+                    if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
+                    goToRouteStopsFromFav(f);
+                };
                 const header = document.createElement('div');
                 header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
                 const info = document.createElement('div');
@@ -952,9 +1044,11 @@
                     });
                 };
                 if (cached) render(cached);
-                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, serviceType, f.routeId);
-                setFlashCache(f.co, f.stopId, f.route, serviceType, etas);
-                render(etas);
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, serviceType, f.routeId, f.bound, f.direction);
+                if (etas !== null) {
+                    setFlashCache(f.co, f.stopId, f.route, serviceType, etas);
+                    render(etas);
+                }
             } catch (e) { console.error('Error fetching ETA', e); }
         }
 
@@ -970,11 +1064,22 @@
             }
         }
 
-        async function updateDrawerETA(drawer, r, s) {
+        async function updateDrawerETA(drawer, r, s, isManual = false) {
             const content = drawer.querySelector('.eta-content');
             const status = drawer.querySelector('.eta-status');
+            const serviceType = r.service_type || 1;
+            const cooldownKey = `${r.co}-${s.stop}-${r.route}-${serviceType}`;
+
+            if (isManual) {
+                const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
+                if (Date.now() - lastRefresh < 5000) {
+                    console.log('Cooldown active for', cooldownKey);
+                    return; // Exit if clicked too soon
+                }
+                _stationRefreshCooldowns.set(cooldownKey, Date.now());
+            }
+
             try {
-                const serviceType = r.service_type || 1;
                 const cached = getFlashCache(r.co, s.stop, r.route, serviceType);
                 const render = (etas) => {
                     if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
@@ -990,9 +1095,11 @@
                     status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`;
                 };
                 if (cached) { render(cached); } else { content.textContent = t('loadingStops'); }
-                const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId);
-                setFlashCache(r.co, s.stop, r.route, serviceType, etas);
-                render(etas);
+                const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId, r.bound, r.direction);
+                if (etas !== null) {
+                    setFlashCache(r.co, s.stop, r.route, serviceType, etas);
+                    render(etas);
+                }
             } catch (error) { console.error('Error updating drawer ETA:', error); }
         }
 
@@ -1027,7 +1134,17 @@
 
         setInterval(() => { refreshAllETAs(); }, 60000);
         document.addEventListener('DOMContentLoaded', async () => {
-            await BusDB.init(); await migrateFavorites(); syncRoutes(); renderFavorites();
+            try {
+                await BusDB.init(); 
+                await migrateFavorites(); 
+                await syncRoutes(); 
+            } catch (e) {
+                console.error("App initialization failed", e);
+            } finally {
+                const loadingOverlay = document.getElementById('initial-loading');
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+                renderFavorites();
+            }
         });
     </script>
 </body>
