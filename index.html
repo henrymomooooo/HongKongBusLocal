@@ -668,7 +668,12 @@
             },
 
             async getETA(company, stopId, route, serviceType = 1, routeId, bound, direction) {
-                if (company === 'KMB') return this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
+                if (company === 'KMB') {
+                    const data = await this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
+                    if (!data) return null;
+                    const kmbDir = bound || (direction === 'inbound' ? 'I' : 'O');
+                    return data.filter(eta => eta.dir === kmbDir);
+                }
                 if (company === 'CTB') {
                     const data = await this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
                     if (!data) return null;
