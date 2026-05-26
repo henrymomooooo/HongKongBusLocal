@@ -363,7 +363,7 @@
                 failedStops: "載入車站失敗。",
                 failedDirections: "載入方向失敗。",
                 noFavorites: "尚未有最愛車站。請搜尋路線並添加！",
-                emptyGroup: "Add a bus to this group! (搜尋路線以加入此群組)",
+                emptyGroup: "搜尋路線以加入此群組",
                 removeFavorite: "移除此最愛車站？",
                 syncing: "正在從 API 同步路線...",
                 initializing: "正在初始化路線...",
@@ -402,7 +402,7 @@
                 failedStops: "Failed to load stops.",
                 failedDirections: "Failed to load directions.",
                 noFavorites: "No favorites yet. Search a route to add one!",
-                emptyGroup: "Add a bus to this group! (搜尋路線以加入此群組)",
+                emptyGroup: "Search for a route to add it to this group",
                 removeFavorite: "Remove this favorite?",
                 syncing: "Syncing routes from API...",
                 initializing: "Initializing routes...",
@@ -1647,7 +1647,6 @@
                 if (isActive) {
                     const editBtn = document.createElement('i');
                     editBtn.className = 'fas fa-cog edit-group-btn';
-                    editBtn.style.marginLeft = '8px';
                     editBtn.style.opacity = '0.7';
                     editBtn.style.cursor = 'pointer';
                     editBtn.onclick = (e) => handleGroupEditClick(e, group.id);
@@ -1692,30 +1691,23 @@
             const group = groups.find(g => g.id === groupId);
             if (!group) return;
 
-            if (groupId === 1 || groupId === 2) {
-                // Default groups: Only Rename
-                const newName = prompt(t('renameGroup'), localized(group, 'name'));
-                if (newName && newName.trim()) {
+            const newName = prompt(t('renameGroup'), localized(group, 'name'));
+            
+            if (newName !== null) {
+                // User clicked OK
+                if (newName.trim()) {
                     group.name_tc = newName.trim();
                     group.name_en = newName.trim();
                     await BusDB.put('favorite_groups', group);
                     renderFavorites();
-                }
-            } else {
-                // Custom groups: Rename or Delete
-                const action = confirm(`${t('renameGroup')}? (${t('cancel')} = ${t('deleteGroup')})`);
-                if (action) {
-                    const newName = prompt(t('renameGroup'), localized(group, 'name'));
-                    if (newName && newName.trim()) {
-                        group.name_tc = newName.trim();
-                        group.name_en = newName.trim();
-                        await BusDB.put('favorite_groups', group);
-                        renderFavorites();
-                    }
                 } else {
-                    if (confirm(t('deleteGroupConfirm'))) {
-                        await deleteGroup(groupId);
-                    }
+                    alert(t('invalidName'));
+                }
+            } else if (groupId > 2) {
+                // User clicked Cancel and it's a custom group: ask if they want to delete
+                if (confirm(t('deleteGroupConfirm'))) {
+                    await deleteGroup(groupId);
+                    renderFavorites();
                 }
             }
         }
