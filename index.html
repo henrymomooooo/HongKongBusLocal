@@ -1092,7 +1092,25 @@
                         remarkSpan.style.fontSize = '12px'; remarkSpan.style.color = '#777';
                         row.appendChild(timeSpan); row.appendChild(remarkSpan); content.appendChild(row);
                     });
+
+                    const refreshIcon = document.createElement('i');
+                    refreshIcon.className = 'fas fa-sync-alt';
+                    refreshIcon.style.cursor = 'pointer';
+                    refreshIcon.style.marginLeft = '8px';
+                    refreshIcon.onclick = (e) => {
+                        e.stopPropagation();
+                        updateDrawerETA(drawer, r, s, true);
+                    };
+
+                    const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
+                    if (Date.now() - lastRefresh < 5000) {
+                        refreshIcon.style.opacity = '0.5';
+                        refreshIcon.style.cursor = 'not-allowed';
+                    }
+
+                    status.innerHTML = '';
                     status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`;
+                    status.appendChild(refreshIcon);
                 };
                 if (cached) { render(cached); } else { content.textContent = t('loadingStops'); }
                 const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId, r.bound, r.direction);
