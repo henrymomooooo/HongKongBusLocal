@@ -404,6 +404,58 @@
             }
         };
 
+        const DebugLogger = {
+            logs: [],
+            maxLogs: 50,
+            active: false,
+
+            toggle(force) {
+                this.active = force !== undefined ? force : !this.active;
+                const consoleEl = document.getElementById('debug-console');
+                if (this.active) {
+                    consoleEl.classList.remove('hidden');
+                    document.body.classList.add('debug-active');
+                    this.render();
+                } else {
+                    consoleEl.classList.add('hidden');
+                    document.body.classList.remove('debug-active');
+                }
+            },
+
+            log(type, method, url, payload, status = '') {
+                const entry = {
+                    timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'),
+                    type, method, url, payload, status
+                };
+                this.logs.push(entry);
+                if (this.logs.length > this.maxLogs) this.logs.shift();
+                if (this.active) this.render();
+            },
+
+            clear() {
+                this.logs = [];
+                this.render();
+            },
+
+            render() {
+                const container = document.getElementById('debug-logs');
+                if (!container) return;
+                
+                container.innerHTML = this.logs.map(log => `
+                    <div class="log-entry">
+                        <div class="log-meta">
+                            <span>[${log.timestamp}]</span>
+                            <span class="log-${log.type.toLowerCase()}">${log.type} ${log.method}</span>
+                            <span>${log.status}</span>
+                        </div>
+                        <div style="color: #bbb; margin-bottom: 2px;">${log.url}</div>
+                        <div class="log-payload">${typeof log.payload === 'object' ? JSON.stringify(log.payload, null, 2) : log.payload}</div>
+                    </div>
+                `).join('');
+                container.scrollTop = container.scrollHeight;
+            }
+        };
+
         const BusAPI = {
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
             CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
@@ -426,24 +478,32 @@
             },
             
             async fetchKMB(endpoint) {
+                const url = `${this.KMB_BASE}${endpoint}`;
+                DebugLogger.log('REQ', 'GET', url, '...');
                 try {
-                    const res = await fetch(`${this.KMB_BASE}${endpoint}`);
+                    const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const json = await res.json();
+                    DebugLogger.log('RES', 'GET', url, json.data, res.status);
                     return json.data;
                 } catch (e) {
+                    DebugLogger.log('ERR', 'GET', url, e.message);
                     console.error('KMB Fetch Error:', e);
                     return null;
                 }
             },
             
             async fetchCTB(endpoint) {
+                const url = `${this.CTB_BASE}${endpoint}`;
+                DebugLogger.log('REQ', 'GET', url, '...');
                 try {
-                    const res = await fetch(`${this.CTB_BASE}${endpoint}`);
+                    const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const json = await res.json();
+                    DebugLogger.log('RES', 'GET', url, json.data, res.status);
                     return json.data;
                 } catch (e) {
+                    DebugLogger.log('ERR', 'GET', url, e.message);
                     console.error('CTB Fetch Error:', e);
                     return null;
                 }
@@ -453,28 +513,37 @@
                 if (!stopId) return null;
                 const stops = await this.getCTBStops();
                 if (stops.has(stopId)) return stops.get(stopId);
+                const url = `${this.CTB_BASE}/stop/${stopId}`;
+                DebugLogger.log('REQ', 'GET', url, '...');
                 try {
-                    const res = await fetch(`${this.CTB_BASE}/stop/${stopId}`);
+                    const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const json = await res.json();
                     const data = json.data;
                     if (data) {
                         stops.set(stopId, data);
+                        DebugLogger.log('RES', 'GET', url, data, res.status);
                         return data;
                     }
                     return null;
                 } catch (e) {
+                    DebugLogger.log('ERR', 'GET', url, e.message);
                     console.error('Error fetching CTB stop', stopId, e);
                     return null;
                 }
             },
 
             async fetchNLB(endpoint) {
+                const url = `${this.NLB_BASE}/${endpoint}`;
+                DebugLogger.log('REQ', 'GET', url, '...');
                 try {
-                    const res = await fetch(`${this.NLB_BASE}/${endpoint}`);
+                    const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
+                    const json = await res.json();
+                    DebugLogger.log('RES', 'GET', url, json, res.status);
+                    return json;
                 } catch (e) {
+                    DebugLogger.log('ERR', 'GET', url, e.message);
                     console.error('NLB Fetch Error:', e);
                     return null;
                 }
