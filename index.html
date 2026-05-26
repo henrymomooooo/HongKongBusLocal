@@ -473,6 +473,8 @@
                 this.active = force !== undefined ? force : !this.active;
                 const consoleEl = document.getElementById('debug-console');
                 if (this.active) {
+                    const debugTitle = document.querySelector('#debug-header span');
+                    if (debugTitle) debugTitle.innerHTML = `<i class="fas fa-terminal"></i> Debug Console <small style="opacity: 0.7; font-weight: normal;">(v${APP_VERSION})</small>`;
                     consoleEl.classList.remove('hidden');
                     document.body.classList.add('debug-active');
                     this.render();
