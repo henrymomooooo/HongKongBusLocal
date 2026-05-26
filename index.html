@@ -202,6 +202,8 @@
         </div>
     </div>
     <script>
+        const APP_VERSION = '1.1.0';
+
         // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
         const I18N = {
@@ -416,6 +418,26 @@
                     tx.oncomplete = () => resolve();
                     tx.onerror = (e) => reject(e.target.error);
                 });
+            },
+
+            async get(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve(null);
+                    const tx = this.db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async getMetadata(key) {
+                const data = await this.get('metadata', key);
+                return data ? data.value : null;
+            },
+
+            async setMetadata(key, value) {
+                return this.put('metadata', { key, value });
             }
         };
 
