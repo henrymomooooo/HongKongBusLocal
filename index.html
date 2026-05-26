@@ -1280,5 +1280,15 @@
             }
         });
     </script>
+    <div id="debug-console" class="hidden">
+        <div id="debug-header">
+            <span><i class="fas fa-terminal"></i> Debug Console</span>
+            <div id="debug-controls">
+                <button onclick="DebugLogger.clear()">Clear</button>
+                <button onclick="DebugLogger.toggle(false)">Close</button>
+            </div>
+        </div>
+        <div id="debug-logs"></div>
+    </div>
 </body>
 </html>
