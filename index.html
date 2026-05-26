@@ -100,9 +100,6 @@
 
         /* Debug Console Styles */
         #debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
             width: 100%;
             height: 50vh;
             background: #1e1e1e;
@@ -113,6 +110,11 @@
             flex-direction: column;
             z-index: 3000;
             border-top: 2px solid #444;
+        }
+        body:not(.debug-active) #debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
         }
         #debug-header {
             background: #333;
@@ -146,12 +148,22 @@
         .log-payload { white-space: pre-wrap; word-break: break-all; }
 
         /* Split Screen adjustments */
-        body.debug-active .container {
-            height: 50vh;
-            overflow-y: auto;
-            padding-bottom: 10px;
+        body.debug-active {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        body.debug-active header { border-radius: 0; margin-bottom: 0; }
+        body.debug-active .container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        body.debug-active header { border-radius: 0; margin-bottom: 0; flex-shrink: 0; }
+        #debug-console { flex-shrink: 0; }
     </style>
 </head>
 <body>
