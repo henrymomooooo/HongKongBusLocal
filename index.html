@@ -1416,6 +1416,7 @@
             const container = document.getElementById('favorites-list');
             const elements = [...container.querySelectorAll('.group-header')];
             const groups = await BusDB.getAll('favorite_groups');
+            const toUpdate = [];
             
             let sortOrder = 1;
             for (const el of elements) {
@@ -1424,10 +1425,15 @@
                     const group = groups.find(g => g.id === groupId);
                     if (group) {
                         group.sortOrder = sortOrder++;
-                        await BusDB.put('favorite_groups', group);
+                        toUpdate.push(group);
                     }
                 }
             }
+            
+            if (toUpdate.length > 0) {
+                await BusDB.putAll('favorite_groups', toUpdate);
+            }
+            
             // Also need to update favorites sortOrder to match the visual order
             saveReorderedFavorites();
         }
