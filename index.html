@@ -1077,11 +1077,8 @@
                 orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en,
                 path_desc: path_desc, sortOrder: Date.now(), groupId: 1
             };
-            const favs = await BusDB.getAll('favorites');
-            if (!favs.find(f => f.co === fav.co && f.stopId === fav.stopId && f.route === fav.route && (f.serviceType || 1) === fav.serviceType)) {
-                await BusDB.put('favorites', fav);
-                _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
-            }
+            await BusDB.put('favorites', fav);
+            _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
             if (!skipHome) showHome();
         }
 
@@ -1399,10 +1396,13 @@
             if (oldFavsJson) {
                 try {
                     const oldFavs = JSON.parse(oldFavsJson);
-                    for (const f of oldFavs) {
-                        if (!f.path_desc) f.path_desc = ''; 
+                    const toPut = oldFavs.map(f => {
+                        if (!f.path_desc) f.path_desc = '';
                         if (!f.groupId) f.groupId = 1;
-                        await BusDB.put('favorites', f);
+                        return f;
+                    });
+                    if (toPut.length > 0) {
+                        await BusDB.putAll('favorites', toPut);
                     }
                     localStorage.removeItem('bus_favs');
                 } catch (e) { console.error('Migration failed', e); }
