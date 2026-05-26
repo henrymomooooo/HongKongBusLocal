@@ -66,7 +66,7 @@
         .eta-content { font-size: 14px; }
         .eta-status { font-size: 11px; color: #999; margin-top: 5px; }
 
-        .card.dragging {
+        .card.dragging, .group-header.dragging {
             opacity: 0.8;
             transform: scale(1.02);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
@@ -336,7 +336,11 @@
                 addGroup: "新增群組",
                 newGroupName: "新群組名稱",
                 cancel: "取消",
-                others: "其他"
+                others: "其他",
+                renameGroup: "重命名群組",
+                deleteGroup: "刪除群組",
+                deleteGroupConfirm: "這將同時移除此群組中的所有已儲存巴士。確定嗎？",
+                invalidName: "請輸入有效的名稱。"
             },
             en: {
                 title: "HK Bus Arrivals",
@@ -370,7 +374,11 @@
                 addGroup: "Add Group",
                 newGroupName: "New Group Name",
                 cancel: "Cancel",
-                others: "Others"
+                others: "Others",
+                renameGroup: "Rename Group",
+                deleteGroup: "Delete Group",
+                deleteGroupConfirm: "This will also remove all saved buses in this group. Are you sure?",
+                invalidName: "Please enter a valid name."
             }
         };
         const t = (key) => I18N[userLang][key] || key;
@@ -391,6 +399,11 @@
         document.getElementById('new-group-input').placeholder = t('newGroupName');
         document.getElementById('add-group-label').textContent = t('addGroup');
 
+        // UX Polish for Group Modal
+        document.getElementById('new-group-input').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') createNewGroupAndSave();
+        });
+
         const _etaFlashCache = new Map();
         const _stationRefreshCooldowns = new Map();
         const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -405,7 +418,7 @@
         let activePointerUpHandler = null;
 
         function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging), .group-header:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = y - box.top - box.height / 2;
@@ -1005,7 +1018,7 @@
                     const variants = allRoutes.filter(v => v.co === 'NLB' && v.route === r.route);
                     variants.forEach(v => {
                         const card = document.createElement('div');
-                        card.className = 'card co-NLB';
+                        card.className = `card co-NLB`;
                         card.innerHTML = localized(v, 'dest');
                         card.onclick = () => showStops(v);
                         container.appendChild(card);
@@ -1180,6 +1193,7 @@
         let _currentFavContext = null;
 
         async function showGroupSelector(r, s) {
+            const input = document.getElementById('new-group-input');
             _currentFavContext = { r, s };
             const modal = document.getElementById('group-modal');
             const list = document.getElementById('group-list');
@@ -1198,7 +1212,8 @@
             });
             
             modal.classList.remove('hidden');
-            document.getElementById('new-group-input').value = '';
+            input.value = '';
+            setTimeout(() => input.focus(), 100);
         }
 
         function closeGroupModal() {
@@ -1209,7 +1224,10 @@
         async function createNewGroupAndSave() {
             const input = document.getElementById('new-group-input');
             const name = input.value.trim();
-            if (!name) return;
+            if (!name) {
+                alert(t('invalidName'));
+                return;
+            }
             
             const groups = await BusDB.getAll('favorite_groups');
             const nextSortOrder = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
@@ -1261,33 +1279,69 @@
         }
 
         let wasDragged = false;
+        let isGroupDrag = false;
+        let draggingElements = [];
         
-        function handlePointerDown(e, card, f) {
-            if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
+        function handlePointerDown(e, card, context) {
+            if (e.target.closest('.remove-btn') || e.target.closest('.fav-star') || e.target.closest('.edit-group-btn')) return;
             startY = e.clientY;
             const rect = card.getBoundingClientRect();
             wasDragged = false;
+            isGroupDrag = context && context.isGroup;
 
             dragTimeout = setTimeout(() => {
                 isDragging = true; activeDragCard = card;
                 wasDragged = true;
                 
                 card.style.touchAction = 'none';
-
-                dragPlaceholder = document.createElement('div');
-                dragPlaceholder.className = 'drag-placeholder';
-                dragPlaceholder.style.height = `${rect.height}px`;
                 const container = document.getElementById('favorites-list');
                 const containerRect = container.getBoundingClientRect();
-                card.classList.add('dragging');
-                card.style.width = `${rect.width}px`;
-                initialTop = rect.top - containerRect.top;
-                card.style.top = `${initialTop}px`;
-                card.style.left = `${rect.left - containerRect.left}px`;
-                container.insertBefore(dragPlaceholder, card);
+
+                if (isGroupDrag) {
+                    // Collect all elements in the group
+                    draggingElements = [card];
+                    let next = card.nextElementSibling;
+                    while (next && next.classList.contains('card')) {
+                        draggingElements.push(next);
+                        next = next.nextElementSibling;
+                    }
+                    
+                    // Create placeholder for the whole group
+                    dragPlaceholder = document.createElement('div');
+                    dragPlaceholder.className = 'drag-placeholder';
+                    let totalHeight = 0;
+                    draggingElements.forEach(el => {
+                        totalHeight += el.offsetHeight + 12; // margin-bottom
+                        el.classList.add('dragging');
+                        el.style.width = `${el.offsetWidth}px`;
+                    });
+                    dragPlaceholder.style.height = `${totalHeight}px`;
+                    container.insertBefore(dragPlaceholder, card);
+                    
+                    initialTop = rect.top - containerRect.top;
+                    // Position all elements
+                    let currentOffset = 0;
+                    draggingElements.forEach(el => {
+                        el.style.position = 'absolute';
+                        el.style.top = `${initialTop + currentOffset}px`;
+                        el.style.left = `${el.offsetLeft - containerRect.left}px`;
+                        el.style.zIndex = '1000';
+                        currentOffset += el.offsetHeight + 12;
+                    });
+                } else {
+                    dragPlaceholder = document.createElement('div');
+                    dragPlaceholder.className = 'drag-placeholder';
+                    dragPlaceholder.style.height = `${rect.height}px`;
+                    card.classList.add('dragging');
+                    card.style.width = `${rect.width}px`;
+                    initialTop = rect.top - containerRect.top;
+                    card.style.top = `${initialTop}px`;
+                    card.style.left = `${rect.left - containerRect.left}px`;
+                    container.insertBefore(dragPlaceholder, card);
+                }
             }, 300); // 300ms hold to start drag
             
-            activePointerUpHandler = (ev) => handlePointerUp(ev, card, f);
+            activePointerUpHandler = (ev) => handlePointerUp(ev, card);
             document.addEventListener('pointermove', handlePointerMove, { passive: false });
             document.addEventListener('pointerup', activePointerUpHandler);
             document.addEventListener('pointercancel', activePointerUpHandler);
@@ -1304,13 +1358,27 @@
             
             e.preventDefault(); 
             const deltaY = e.clientY - startY;
-            activeDragCard.style.top = `${initialTop + deltaY}px`;
             const container = document.getElementById('favorites-list');
+
+            if (isGroupDrag) {
+                let currentOffset = 0;
+                draggingElements.forEach(el => {
+                    el.style.top = `${initialTop + currentOffset + deltaY}px`;
+                    currentOffset += el.offsetHeight + 12;
+                });
+            } else {
+                activeDragCard.style.top = `${initialTop + deltaY}px`;
+            }
+
             const afterElement = getDragAfterElement(container, e.clientY);
-            if (afterElement == null) { container.appendChild(dragPlaceholder); } else { container.insertBefore(dragPlaceholder, afterElement); }
+            if (afterElement == null) { 
+                container.appendChild(dragPlaceholder); 
+            } else { 
+                container.insertBefore(dragPlaceholder, afterElement); 
+            }
         }
 
-        function handlePointerUp(e, card, f) {
+        function handlePointerUp(e, card) {
             document.removeEventListener('pointermove', handlePointerMove);
             document.removeEventListener('pointerup', activePointerUpHandler);
             document.removeEventListener('pointercancel', activePointerUpHandler);
@@ -1325,11 +1393,42 @@
             card.style.touchAction = '';
             
             const container = document.getElementById('favorites-list');
-            card.classList.remove('dragging');
-            card.style.position = ''; card.style.top = ''; card.style.left = ''; card.style.width = '';
-            container.insertBefore(card, dragPlaceholder);
+            
+            if (isGroupDrag) {
+                draggingElements.forEach(el => {
+                    el.classList.remove('dragging');
+                    el.style.position = ''; el.style.top = ''; el.style.left = ''; el.style.width = ''; el.style.zIndex = '';
+                    container.insertBefore(el, dragPlaceholder);
+                });
+                saveReorderedGroups();
+            } else {
+                card.classList.remove('dragging');
+                card.style.position = ''; card.style.top = ''; card.style.left = ''; card.style.width = '';
+                container.insertBefore(card, dragPlaceholder);
+                saveReorderedFavorites();
+            }
+            
             container.removeChild(dragPlaceholder);
-            activeDragCard = null; dragPlaceholder = null;
+            activeDragCard = null; dragPlaceholder = null; draggingElements = [];
+        }
+
+        async function saveReorderedGroups() {
+            const container = document.getElementById('favorites-list');
+            const elements = [...container.querySelectorAll('.group-header')];
+            const groups = await BusDB.getAll('favorite_groups');
+            
+            let sortOrder = 1;
+            for (const el of elements) {
+                const groupId = parseInt(el.dataset.groupid, 10);
+                if (groupId > 0) {
+                    const group = groups.find(g => g.id === groupId);
+                    if (group) {
+                        group.sortOrder = sortOrder++;
+                        await BusDB.put('favorite_groups', group);
+                    }
+                }
+            }
+            // Also need to update favorites sortOrder to match the visual order
             saveReorderedFavorites();
         }
 
@@ -1389,7 +1488,15 @@
                     const groupHeader = document.createElement('div');
                     groupHeader.className = 'group-header';
                     groupHeader.dataset.groupid = group.id;
-                    groupHeader.innerHTML = `<i class="fas fa-folder-open"></i> ${localized(group, 'name')}`;
+                    groupHeader.style.justifyContent = 'space-between';
+                    groupHeader.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-folder-open"></i> <span>${localized(group, 'name')}</span>
+                        </div>
+                        <i class="fas fa-gear edit-group-btn" style="cursor:pointer; padding:5px; color:#999;" onclick="handleGroupEditClick(event, ${group.id})"></i>
+                    `;
+                    groupHeader.addEventListener('pointerdown', (e) => handlePointerDown(e, groupHeader, { isGroup: true, groupId: group.id }));
+                    
                     container.appendChild(groupHeader);
                     
                     groupFavs.forEach(f => {
@@ -1413,6 +1520,42 @@
             }
 
             refreshAllETAs();
+        }
+
+        async function handleGroupEditClick(e, groupId) {
+            e.stopPropagation();
+            const groups = await BusDB.getAll('favorite_groups');
+            const group = groups.find(g => g.id === groupId);
+            if (!group) return;
+
+            const action = confirm(`${t('renameGroup')}? (${t('cancel')} = ${t('deleteGroup')})`);
+            if (action) {
+                const newName = prompt(t('renameGroup'), localized(group, 'name'));
+                if (newName && newName.trim()) {
+                    group.name_tc = newName.trim();
+                    group.name_en = newName.trim();
+                    await BusDB.put('favorite_groups', group);
+                    renderFavorites();
+                }
+            } else {
+                if (confirm(t('deleteGroupConfirm'))) {
+                    await deleteGroup(groupId);
+                }
+            }
+        }
+
+        async function deleteGroup(groupId) {
+            // Delete group
+            await BusDB.delete('favorite_groups', groupId);
+            
+            // Delete all favorites in this group
+            const favs = await BusDB.getAll('favorites');
+            const toDelete = favs.filter(f => f.groupId === groupId);
+            for (const f of toDelete) {
+                await BusDB.delete('favorites', f.favId);
+            }
+            
+            renderFavorites();
         }
 
         function createFavoriteCard(f) {
