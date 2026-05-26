@@ -328,7 +328,7 @@
 
         const BusDB = {
             DB_NAME: 'HKBusDB',
-            DB_VERSION: 1,
+            DB_VERSION: 2,
             db: null,
 
             async init() {
@@ -343,6 +343,9 @@
                             }
                             if (!db.objectStoreNames.contains('favorites')) {
                                 db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
+                            }
+                            if (!db.objectStoreNames.contains('metadata')) {
+                                db.createObjectStore('metadata', { keyPath: 'key' });
                             }
                         };
                         request.onsuccess = (e) => {
