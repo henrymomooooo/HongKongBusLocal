@@ -464,6 +464,24 @@
         let isDragging = false;
         let activePointerUpHandler = null;
 
+        let activeDragTab = null;
+        let tabDragPlaceholder = null;
+        let startX = 0;
+        let initialLeft = 0;
+
+        function getDragAfterElementHorizontal(container, x) {
+            const draggableElements = [...container.querySelectorAll('.fav-tab:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = x - box.left - box.width / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.card:not(.dragging), .group-header:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
@@ -1466,16 +1484,99 @@
             activeDragCard = null; dragPlaceholder = null; draggingElements = [];
         }
 
+        function handleTabPointerDown(e, tab, group) {
+            startX = e.clientX;
+            const rect = tab.getBoundingClientRect();
+            wasDragged = false;
+
+            dragTimeout = setTimeout(() => {
+                isDragging = true;
+                activeDragTab = tab;
+                wasDragged = true;
+
+                tab.style.touchAction = 'none';
+                const container = document.getElementById('favorites-tabs');
+                const containerRect = container.getBoundingClientRect();
+
+                tabDragPlaceholder = document.createElement('div');
+                tabDragPlaceholder.className = 'fav-tab-placeholder';
+                tabDragPlaceholder.style.width = `${rect.width}px`;
+                tabDragPlaceholder.style.height = `${rect.height}px`;
+                
+                tab.classList.add('dragging');
+                tab.style.width = `${rect.width}px`;
+                initialLeft = rect.left - containerRect.left;
+                tab.style.left = `${initialLeft}px`;
+                tab.style.top = `${rect.top - containerRect.top}px`;
+                
+                container.insertBefore(tabDragPlaceholder, tab);
+            }, 300);
+
+            const upHandler = (ev) => handleTabPointerUp(ev, tab);
+            const moveHandler = (ev) => handleTabPointerMove(ev);
+            
+            document.addEventListener('pointermove', moveHandler, { passive: false });
+            document.addEventListener('pointerup', upHandler, { once: true });
+            document.addEventListener('pointercancel', upHandler, { once: true });
+            
+            // Store handlers to remove move listener on up
+            tab._moveHandler = moveHandler;
+        }
+
+        function handleTabPointerMove(e) {
+            if (!isDragging) {
+                if (dragTimeout && Math.abs(e.clientX - startX) > 15) {
+                    clearTimeout(dragTimeout);
+                    dragTimeout = null;
+                }
+                return;
+            }
+
+            e.preventDefault();
+            const deltaX = e.clientX - startX;
+            const container = document.getElementById('favorites-tabs');
+
+            activeDragTab.style.left = `${initialLeft + deltaX}px`;
+
+            const afterElement = getDragAfterElementHorizontal(container, e.clientX);
+            if (afterElement == null) {
+                container.appendChild(tabDragPlaceholder);
+            } else {
+                container.insertBefore(tabDragPlaceholder, afterElement);
+            }
+        }
+
+        function handleTabPointerUp(e, tab) {
+            document.removeEventListener('pointermove', tab._moveHandler);
+            if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
+
+            if (!isDragging) {
+                return;
+            }
+
+            isDragging = false;
+            tab.style.touchAction = '';
+            const container = document.getElementById('favorites-tabs');
+
+            tab.classList.remove('dragging');
+            tab.style.position = ''; tab.style.left = ''; tab.style.top = ''; tab.style.width = '';
+            container.insertBefore(tab, tabDragPlaceholder);
+            container.removeChild(tabDragPlaceholder);
+
+            activeDragTab = null; tabDragPlaceholder = null;
+            saveReorderedGroups();
+        }
+
         async function saveReorderedGroups() {
-            const container = document.getElementById('favorites-list');
-            const elements = [...container.querySelectorAll('.group-header')];
+            const tabContainer = document.getElementById('favorites-tabs');
+            const elements = [...tabContainer.querySelectorAll('.fav-tab')];
             const groups = await BusDB.getAll('favorite_groups');
             const toUpdate = [];
             
             let sortOrder = 1;
             for (const el of elements) {
                 const groupId = parseInt(el.dataset.groupid, 10);
-                if (groupId > 0) {
+                if (groupId) {
                     const group = groups.find(g => g.id === groupId);
                     if (group) {
                         group.sortOrder = sortOrder++;
@@ -1487,9 +1588,6 @@
             if (toUpdate.length > 0) {
                 await BusDB.putAll('favorite_groups', toUpdate);
             }
-            
-            // Also need to update favorites sortOrder to match the visual order
-            saveReorderedFavorites();
         }
 
         async function saveReorderedFavorites() {
@@ -1537,8 +1635,11 @@
             groups.forEach(group => {
                 const tab = document.createElement('div');
                 tab.className = `fav-tab ${activeGroupId === group.id ? 'active' : ''}`;
+                tab.dataset.groupid = group.id;
                 tab.innerHTML = `<span>${localized(group, 'name')}</span>`;
+                tab.addEventListener('pointerdown', (e) => handleTabPointerDown(e, tab, group));
                 tab.onclick = () => {
+                    if (wasDragged) return;
                     activeGroupId = group.id;
                     renderFavorites();
                 };
