@@ -371,21 +371,10 @@
 
             async checkMigrations() {
                 const storedAppVersion = await this.getMetadata('app_version');
-                
-                if (!storedAppVersion) {
-                    // Fresh install or first time versioning
-                    DebugLogger.log('SYS', 'DB', 'Initializing metadata', APP_VERSION);
-                    await this.setMetadata('app_version', APP_VERSION);
-                    await this.setMetadata('db_version', this.DB_VERSION);
-                    await this.setMetadata('install_date', Date.now());
-                    return;
-                }
+                const dbVer = await this.getMetadata('db_version');
 
                 if (storedAppVersion !== APP_VERSION) {
-                    DebugLogger.log('SYS', 'MIGRATE', `Upgrading from ${storedAppVersion} to ${APP_VERSION}`);
-                    
-                    const dbVer = await this.getMetadata('db_version');
-                    if (dbVer < 3) {
+                    if (!dbVer || dbVer < 3) {
                         // Seed default groups
                         await this.putAll('favorite_groups', [
                             { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 },
@@ -403,6 +392,8 @@
                     
                     await this.setMetadata('app_version', APP_VERSION);
                     await this.setMetadata('db_version', this.DB_VERSION);
+                    const installDate = await this.getMetadata('install_date');
+                    if (!installDate) await this.setMetadata('install_date', Date.now());
                 }
             },
 
