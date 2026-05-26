@@ -496,6 +496,13 @@
                 const storedAppVersion = await this.getMetadata('app_version');
                 const dbVer = await this.getMetadata('db_version');
 
+                // Self-healing check for default groups (1 and 2)
+                const groups = await this.getAll('favorite_groups');
+                if (!groups.find(g => g.id === 1) || !groups.find(g => g.id === 2)) {
+                    if (!groups.find(g => g.id === 1)) await this.put('favorite_groups', { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 });
+                    if (!groups.find(g => g.id === 2)) await this.put('favorite_groups', { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 });
+                }
+
                 if (storedAppVersion !== APP_VERSION) {
                     if (!dbVer || dbVer < 3) {
                         // Seed default groups
