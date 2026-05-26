@@ -1480,11 +1480,6 @@
             favs.forEach(f => { _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${f.serviceType || 1}`); });
             
             const container = document.getElementById('favorites-list');
-            if (favs.length === 0) {
-                container.innerHTML = `<p style="text-align:center;color:#888;">${t('noFavorites')}</p>`;
-                return;
-            }
-            
             container.innerHTML = '';
             
             // Sort groups and favorites
@@ -1497,7 +1492,8 @@
             // Render groups
             groups.forEach(group => {
                 const groupFavs = favs.filter(f => f.groupId === group.id);
-                if (groupFavs.length > 0) {
+                // ALWAYS render if it's a default group (1 or 2), otherwise only if not empty
+                if (group.id === 1 || group.id === 2 || groupFavs.length > 0) {
                     const groupHeader = document.createElement('div');
                     groupHeader.className = 'group-header';
                     groupHeader.dataset.groupid = group.id;
