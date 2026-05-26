@@ -1539,7 +1539,6 @@
                 tab.onclick = () => {
                     activeGroupId = group.id;
                     renderFavorites();
-                    refreshAllETAs();
                 };
                 tabContainer.appendChild(tab);
             });
@@ -1643,8 +1642,13 @@
         }
 
         async function refreshAllETAs() {
+            if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
             const favs = await BusDB.getAll('favorites');
-            favs.forEach(f => updateETA(f));
+            // ONLY refresh ETAs for buses in the active tab
+            const activeFavs = favs.filter(f => f.groupId === activeGroupId);
+            for (const f of activeFavs) {
+                await updateETA(f);
+            }
             const btn = document.getElementById('refresh-btn');
             if (btn) { btn.classList.add('fa-spin'); setTimeout(() => btn.classList.remove('fa-spin'), 1000); }
         }
