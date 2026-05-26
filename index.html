@@ -335,7 +335,8 @@
                 selectGroup: "選擇群組",
                 addGroup: "新增群組",
                 newGroupName: "新群組名稱",
-                cancel: "取消"
+                cancel: "取消",
+                others: "其他"
             },
             en: {
                 title: "HK Bus Arrivals",
@@ -368,7 +369,8 @@
                 selectGroup: "Select Group",
                 addGroup: "Add Group",
                 newGroupName: "New Group Name",
-                cancel: "Cancel"
+                cancel: "Cancel",
+                others: "Others"
             }
         };
         const t = (key) => I18N[userLang][key] || key;
@@ -1335,24 +1337,26 @@
             const container = document.getElementById('favorites-list');
             const elements = [...container.children];
             const favs = await BusDB.getAll('favorites');
+            const toUpdate = [];
             
             let currentGroupId = 1;
             let sortOrder = 0;
             
             for (const el of elements) {
                 if (el.classList.contains('group-header')) {
-                    if (el.dataset.groupid) {
-                        currentGroupId = parseInt(el.dataset.groupid, 10);
-                    }
+                    currentGroupId = el.dataset.groupid ? parseInt(el.dataset.groupid, 10) : 0;
                 } else if (el.classList.contains('card') && el.dataset.favid) {
                     const favId = parseInt(el.dataset.favid, 10);
                     const fav = favs.find(f => f.favId === favId);
                     if (fav) {
                         fav.sortOrder = sortOrder++;
                         fav.groupId = currentGroupId;
-                        await BusDB.put('favorites', fav);
+                        toUpdate.push(fav);
                     }
                 }
+            }
+            if (toUpdate.length > 0) {
+                await BusDB.putAll('favorites', toUpdate);
             }
         }
 
@@ -1399,7 +1403,8 @@
             if (orphans.length > 0) {
                 const groupHeader = document.createElement('div');
                 groupHeader.className = 'group-header';
-                groupHeader.innerHTML = `<i class="fas fa-folder"></i> ${userLang === 'tc' ? '其他' : 'Others'}`;
+                groupHeader.dataset.groupid = "0";
+                groupHeader.innerHTML = `<i class="fas fa-folder"></i> ${t('others')}`;
                 container.appendChild(groupHeader);
                 
                 orphans.forEach(f => {
