@@ -1537,8 +1537,8 @@
             const group = groups.find(g => g.id === groupId);
             if (!group) return;
 
-            const action = confirm(`${t('renameGroup')}? (${t('cancel')} = ${t('deleteGroup')})`);
-            if (action) {
+            if (groupId === 1 || groupId === 2) {
+                // Default groups: Only Rename
                 const newName = prompt(t('renameGroup'), localized(group, 'name'));
                 if (newName && newName.trim()) {
                     group.name_tc = newName.trim();
@@ -1547,8 +1547,20 @@
                     renderFavorites();
                 }
             } else {
-                if (confirm(t('deleteGroupConfirm'))) {
-                    await deleteGroup(groupId);
+                // Custom groups: Rename or Delete
+                const action = confirm(`${t('renameGroup')}? (${t('cancel')} = ${t('deleteGroup')})`);
+                if (action) {
+                    const newName = prompt(t('renameGroup'), localized(group, 'name'));
+                    if (newName && newName.trim()) {
+                        group.name_tc = newName.trim();
+                        group.name_en = newName.trim();
+                        await BusDB.put('favorite_groups', group);
+                        renderFavorites();
+                    }
+                } else {
+                    if (confirm(t('deleteGroupConfirm'))) {
+                        await deleteGroup(groupId);
+                    }
                 }
             }
         }
