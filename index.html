@@ -202,7 +202,7 @@
         </div>
     </div>
     <script>
-        const APP_VERSION = '1.1.0';
+        const APP_VERSION = '1.2.0';
 
         // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
@@ -330,7 +330,7 @@
 
         const BusDB = {
             DB_NAME: 'HKBusDB',
-            DB_VERSION: 2,
+            DB_VERSION: 3,
             db: null,
 
             async init() {
@@ -348,6 +348,9 @@
                             }
                             if (!db.objectStoreNames.contains('metadata')) {
                                 db.createObjectStore('metadata', { keyPath: 'key' });
+                            }
+                            if (!db.objectStoreNames.contains('favorite_groups')) {
+                                db.createObjectStore('favorite_groups', { keyPath: 'id', autoIncrement: true });
                             }
                         };
                         request.onsuccess = async (e) => {
@@ -380,8 +383,23 @@
 
                 if (storedAppVersion !== APP_VERSION) {
                     DebugLogger.log('SYS', 'MIGRATE', `Upgrading from ${storedAppVersion} to ${APP_VERSION}`);
-                    // Placeholder for future migration logic
-                    // await this.runMigrations(storedAppVersion, APP_VERSION);
+                    
+                    const dbVer = await this.getMetadata('db_version');
+                    if (dbVer < 3) {
+                        // Seed default groups
+                        await this.putAll('favorite_groups', [
+                            { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 },
+                            { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }
+                        ]);
+                        // Update existing favorites
+                        const favs = await this.getAll('favorites');
+                        for (const f of favs) {
+                            if (!f.groupId) {
+                                f.groupId = 1;
+                                await this.put('favorites', f);
+                            }
+                        }
+                    }
                     
                     await this.setMetadata('app_version', APP_VERSION);
                     await this.setMetadata('db_version', this.DB_VERSION);
