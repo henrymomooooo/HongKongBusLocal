@@ -232,6 +232,18 @@
         }
         .btn-cancel { background: #eee; color: #666; }
         .btn-save { background: var(--kmb-red); color: white; }
+
+        .group-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1321,51 +1333,108 @@
 
         async function saveReorderedFavorites() {
             const container = document.getElementById('favorites-list');
-            const cards = container.querySelectorAll('.card');
+            const elements = [...container.children];
             const favs = await BusDB.getAll('favorites');
-            for (let i = 0; i < cards.length; i++) {
-                if (cards[i].dataset.favid) {
-                    const favId = parseInt(cards[i].dataset.favid, 10);
+            
+            let currentGroupId = 1;
+            let sortOrder = 0;
+            
+            for (const el of elements) {
+                if (el.classList.contains('group-header')) {
+                    if (el.dataset.groupid) {
+                        currentGroupId = parseInt(el.dataset.groupid, 10);
+                    }
+                } else if (el.classList.contains('card') && el.dataset.favid) {
+                    const favId = parseInt(el.dataset.favid, 10);
                     const fav = favs.find(f => f.favId === favId);
-                    if (fav) { fav.sortOrder = i; await BusDB.put('favorites', fav); }
+                    if (fav) {
+                        fav.sortOrder = sortOrder++;
+                        fav.groupId = currentGroupId;
+                        await BusDB.put('favorites', fav);
+                    }
                 }
             }
         }
 
         async function renderFavorites() {
             const favs = await BusDB.getAll('favorites');
-            favs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            const groups = await BusDB.getAll('favorite_groups');
+            
             _favoriteStopsCache.clear();
             favs.forEach(f => { _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${f.serviceType || 1}`); });
+            
             const container = document.getElementById('favorites-list');
-            if (favs.length === 0) { container.innerHTML = `<p style="text-align:center;color:#888;">${t('noFavorites')}</p>`; return; }
+            if (favs.length === 0) {
+                container.innerHTML = `<p style="text-align:center;color:#888;">${t('noFavorites')}</p>`;
+                return;
+            }
+            
             container.innerHTML = '';
-            favs.forEach(f => {
-                const card = document.createElement('div');
-                card.className = `card co-${f.co}`;
-                card.dataset.favid = f.favId;
-                card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
-                card.onclick = (e) => {
-                    if (wasDragged) return;
-                    if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
-                    goToRouteStopsFromFav(f);
-                };
-                const header = document.createElement('div');
-                header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
-                const info = document.createElement('div');
-                info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
-                                 <div class="path-info" style="font-size: 12px; color: #777; margin-bottom: 4px;">${f.path_desc || ''}</div>
-                                 <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}</div>`;
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-btn'; removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
-                removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t('removeFavorite'))) removeFavorite(f.favId); };
-                header.appendChild(info); header.appendChild(removeBtn);
-                const etaDiv = document.createElement('div');
-                etaDiv.className = 'eta-row';
-                etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> ${t('next')}</span><div class="eta-list" id="eta-${f.favId}">${t('loadingStops')}</div>`;
-                card.appendChild(header); card.appendChild(etaDiv); container.appendChild(card);
+            
+            // Sort groups and favorites
+            groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            favs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+            const groupMap = new Map();
+            groups.forEach(g => groupMap.set(g.id, g));
+
+            // Render groups
+            groups.forEach(group => {
+                const groupFavs = favs.filter(f => f.groupId === group.id);
+                if (groupFavs.length > 0) {
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'group-header';
+                    groupHeader.dataset.groupid = group.id;
+                    groupHeader.innerHTML = `<i class="fas fa-folder-open"></i> ${localized(group, 'name')}`;
+                    container.appendChild(groupHeader);
+                    
+                    groupFavs.forEach(f => {
+                        container.appendChild(createFavoriteCard(f));
+                    });
+                }
             });
+
+            // Render orphans
+            const orphans = favs.filter(f => !f.groupId || !groupMap.has(f.groupId));
+            if (orphans.length > 0) {
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'group-header';
+                groupHeader.innerHTML = `<i class="fas fa-folder"></i> ${userLang === 'tc' ? '其他' : 'Others'}`;
+                container.appendChild(groupHeader);
+                
+                orphans.forEach(f => {
+                    container.appendChild(createFavoriteCard(f));
+                });
+            }
+
             refreshAllETAs();
+        }
+
+        function createFavoriteCard(f) {
+            const card = document.createElement('div');
+            card.className = `card co-${f.co}`;
+            card.dataset.favid = f.favId;
+            card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
+            card.onclick = (e) => {
+                if (wasDragged) return;
+                if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
+                goToRouteStopsFromFav(f);
+            };
+            const header = document.createElement('div');
+            header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
+            const info = document.createElement('div');
+            info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
+                             <div class="path-info" style="font-size: 12px; color: #777; margin-bottom: 4px;">${f.path_desc || ''}</div>
+                             <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}</div>`;
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn'; removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
+            removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t('removeFavorite'))) removeFavorite(f.favId); };
+            header.appendChild(info); header.appendChild(removeBtn);
+            const etaDiv = document.createElement('div');
+            etaDiv.className = 'eta-row';
+            etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> ${t('next')}</span><div class="eta-list" id="eta-${f.favId}">${t('loadingStops')}</div>`;
+            card.appendChild(header); card.appendChild(etaDiv);
+            return card;
         }
 
         async function refreshAllETAs() {
