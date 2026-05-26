@@ -345,6 +345,7 @@
     <script>
         const APP_VERSION = '1.2.0';
         let activeGroupId = null;
+        let _editingGroupId = null;
 
         // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
@@ -383,9 +384,11 @@
                 newGroupName: "新群組名稱",
                 cancel: "取消",
                 others: "其他",
+                manageGroup: "管理群組",
                 renameGroup: "重命名群組",
                 deleteGroup: "刪除群組",
                 deleteGroupConfirm: "這將同時移除此群組中的所有已儲存巴士。確定嗎？",
+                save: "儲存",
                 invalidName: "請輸入有效的名稱。"
             },
             en: {
@@ -422,9 +425,11 @@
                 newGroupName: "New Group Name",
                 cancel: "Cancel",
                 others: "Others",
+                manageGroup: "Manage Group",
                 renameGroup: "Rename Group",
                 deleteGroup: "Delete Group",
                 deleteGroupConfirm: "This will also remove all saved buses in this group. Are you sure?",
+                save: "Save",
                 invalidName: "Please enter a valid name."
             }
         };
@@ -445,6 +450,19 @@
         document.getElementById('modal-title').textContent = t('selectGroup');
         document.getElementById('new-group-input').placeholder = t('newGroupName');
         document.getElementById('add-group-label').textContent = t('addGroup');
+
+        // Setup initial text content for group management modals
+        document.getElementById('group-action-title').textContent = t('manageGroup');
+        document.getElementById('label-action-rename').textContent = t('renameGroup');
+        document.getElementById('label-action-delete').textContent = t('deleteGroup');
+        document.getElementById('label-action-cancel').textContent = t('cancel');
+        document.getElementById('label-rename-title').textContent = t('renameGroup');
+        document.getElementById('label-rename-save').textContent = t('save');
+        document.getElementById('label-rename-cancel').textContent = t('cancel');
+        document.getElementById('label-delete-title').textContent = `${t('deleteGroup')}?`;
+        document.getElementById('label-delete-desc').textContent = t('deleteGroupConfirm');
+        document.getElementById('label-delete-confirm').textContent = t('deleteGroup');
+        document.getElementById('label-delete-cancel').textContent = t('cancel');
 
         // UX Polish for Group Modal
         document.getElementById('new-group-input').addEventListener('keyup', (e) => {
