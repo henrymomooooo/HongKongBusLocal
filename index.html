@@ -1348,6 +1348,24 @@
                 renderFavorites();
             }
         });
+
+        let headerTapCount = 0;
+        let lastHeaderTapTime = 0;
+
+        document.querySelector('header h1').addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastHeaderTapTime > 500) {
+                headerTapCount = 1;
+            } else {
+                headerTapCount++;
+            }
+            lastHeaderTapTime = now;
+
+            if (headerTapCount === 10) {
+                headerTapCount = 0;
+                DebugLogger.toggle(true);
+            }
+        });
     </script>
     <div id="debug-console" class="hidden">
         <div id="debug-header">
