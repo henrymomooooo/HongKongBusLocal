@@ -1077,6 +1077,8 @@
                     return; // Exit if clicked too soon
                 }
                 _stationRefreshCooldowns.set(cooldownKey, Date.now());
+                const icon = status.querySelector('.fa-sync-alt');
+                if (icon) icon.classList.add('fa-spin');
             }
 
             try {
@@ -1118,7 +1120,14 @@
                     setFlashCache(r.co, s.stop, r.route, serviceType, etas);
                     render(etas);
                 }
-            } catch (error) { console.error('Error updating drawer ETA:', error); }
+            } catch (error) { 
+                console.error('Error updating drawer ETA:', error); 
+            } finally {
+                if (isManual) {
+                    const icon = status.querySelector('.fa-sync-alt');
+                    if (icon) icon.classList.remove('fa-spin');
+                }
+            }
         }
 
         async function handleFavoriteClick(star, r, s) {
