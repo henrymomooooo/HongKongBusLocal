@@ -1333,6 +1333,8 @@
             await BusDB.put('favorites', fav);
             _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
             
+            activeGroupId = groupId;
+            
             if (skipHome) {
                 // Update the star in the current view if it exists
                 const star = document.querySelector(`.station-card[data-stop-id="${s.stop}"] .fav-star`);
@@ -1633,10 +1635,25 @@
             const tabContainer = document.getElementById('favorites-tabs');
             tabContainer.innerHTML = '';
             groups.forEach(group => {
+                const isActive = activeGroupId === group.id;
                 const tab = document.createElement('div');
-                tab.className = `fav-tab ${activeGroupId === group.id ? 'active' : ''}`;
+                tab.className = `fav-tab ${isActive ? 'active' : ''}`;
                 tab.dataset.groupid = group.id;
-                tab.innerHTML = `<span>${localized(group, 'name')}</span>`;
+                
+                const label = document.createElement('span');
+                label.textContent = localized(group, 'name');
+                tab.appendChild(label);
+
+                if (isActive) {
+                    const editBtn = document.createElement('i');
+                    editBtn.className = 'fas fa-cog edit-group-btn';
+                    editBtn.style.marginLeft = '8px';
+                    editBtn.style.opacity = '0.7';
+                    editBtn.style.cursor = 'pointer';
+                    editBtn.onclick = (e) => handleGroupEditClick(e, group.id);
+                    tab.appendChild(editBtn);
+                }
+
                 tab.addEventListener('pointerdown', (e) => handleTabPointerDown(e, tab, group));
                 tab.onclick = () => {
                     if (wasDragged) return;
