@@ -164,9 +164,94 @@
         }
         body.debug-active header { border-radius: 0; margin-bottom: 0; flex-shrink: 0; }
         #debug-console { flex-shrink: 0; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 4000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 15px;
+            background: var(--kmb-red);
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-content {
+            padding: 15px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .group-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .group-item:last-child { border-bottom: none; }
+        .group-item:active { background: #f0f0f0; }
+        .group-item i { color: #888; }
+        .add-group-area {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        .modal-footer {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #eee;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-cancel { background: #eee; color: #666; }
+        .btn-save { background: var(--kmb-red); color: white; }
     </style>
 </head>
 <body>
+    <div id="group-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span id="modal-title">Select Group</span>
+                <i class="fas fa-times" onclick="closeGroupModal()" style="cursor: pointer;"></i>
+            </div>
+            <div id="group-list" class="modal-content">
+                <!-- Groups will be listed here -->
+            </div>
+            <div class="add-group-area">
+                <input type="text" id="new-group-input" style="margin-bottom: 8px;">
+                <button class="btn btn-save" style="width: 100%;" id="add-group-btn" onclick="createNewGroupAndSave()">
+                    <i class="fas fa-plus"></i> <span id="add-group-label">Add New Group</span>
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="initial-loading">
         <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px; color: var(--kmb-red);"></i>
         <span id="loading-text">Initializing routes...</span>
@@ -234,7 +319,11 @@
                 to: "往",
                 outbound: "去程",
                 inbound: "回程",
-                specialVariant: "特別班次"
+                specialVariant: "特別班次",
+                selectGroup: "選擇群組",
+                addGroup: "新增群組",
+                newGroupName: "新群組名稱",
+                cancel: "取消"
             },
             en: {
                 title: "HK Bus Arrivals",
@@ -263,7 +352,11 @@
                 to: "to",
                 outbound: "Outbound",
                 inbound: "Inbound",
-                specialVariant: "Special Variant"
+                specialVariant: "Special Variant",
+                selectGroup: "Select Group",
+                addGroup: "Add Group",
+                newGroupName: "New Group Name",
+                cancel: "Cancel"
             }
         };
         const t = (key) => I18N[userLang][key] || key;
@@ -280,6 +373,9 @@
         document.getElementById('stop-input').placeholder = t('enterStop');
         document.getElementById('refresh-cache-btn').title = t('refreshCache');
         document.getElementById('loading-text').textContent = t('initializing');
+        document.getElementById('modal-title').textContent = t('selectGroup');
+        document.getElementById('new-group-input').placeholder = t('newGroupName');
+        document.getElementById('add-group-label').textContent = t('addGroup');
 
         const _etaFlashCache = new Map();
         const _stationRefreshCooldowns = new Map();
@@ -1067,7 +1163,60 @@
             showStops(r);
         }
 
-        async function saveFavorite(r, s, skipHome = false) {
+        let _currentFavContext = null;
+
+        async function showGroupSelector(r, s) {
+            _currentFavContext = { r, s };
+            const modal = document.getElementById('group-modal');
+            const list = document.getElementById('group-list');
+            const groups = await BusDB.getAll('favorite_groups');
+            
+            list.innerHTML = '';
+            groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).forEach(g => {
+                const item = document.createElement('div');
+                item.className = 'group-item';
+                item.innerHTML = `<i class="fas fa-folder"></i> <span>${localized(g, 'name')}</span>`;
+                item.onclick = () => {
+                    saveFavorite(r, s, true, g.id);
+                    closeGroupModal();
+                };
+                list.appendChild(item);
+            });
+            
+            modal.classList.remove('hidden');
+            document.getElementById('new-group-input').value = '';
+        }
+
+        function closeGroupModal() {
+            document.getElementById('group-modal').classList.add('hidden');
+            _currentFavContext = null;
+        }
+
+        async function createNewGroupAndSave() {
+            const input = document.getElementById('new-group-input');
+            const name = input.value.trim();
+            if (!name) return;
+            
+            const groups = await BusDB.getAll('favorite_groups');
+            const nextSortOrder = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
+            
+            const newGroup = {
+                name_tc: name,
+                name_en: name,
+                sortOrder: nextSortOrder
+            };
+            
+            await BusDB.put('favorite_groups', newGroup);
+            const allGroups = await BusDB.getAll('favorite_groups');
+            const savedGroup = allGroups.reduce((prev, current) => (prev.id > current.id) ? prev : current);
+            
+            if (_currentFavContext) {
+                saveFavorite(_currentFavContext.r, _currentFavContext.s, true, savedGroup.id);
+            }
+            closeGroupModal();
+        }
+
+        async function saveFavorite(r, s, skipHome = false, groupId = 1) {
             const dest_name = localized(r, 'dest');
             const orig_name = localized(r, 'orig');
             const path_desc = r.path_desc || (orig_name ? `${orig_name} ↔ ${dest_name}` : dest_name);
@@ -1075,11 +1224,21 @@
                 co: r.co, stopId: s.stop, route: r.route, stopName_tc: s.name_tc, stopName_en: s.name_en,
                 routeId: r.routeId, serviceType: r.service_type || 1, bound: r.bound, direction: r.direction,
                 orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en,
-                path_desc: path_desc, sortOrder: Date.now(), groupId: 1
+                path_desc: path_desc, sortOrder: Date.now(), groupId: groupId
             };
             await BusDB.put('favorites', fav);
             _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
-            if (!skipHome) showHome();
+            
+            if (skipHome) {
+                // Update the star in the current view if it exists
+                const star = document.querySelector(`.station-card[data-stop-id="${s.stop}"] .fav-star`);
+                if (star) {
+                    star.classList.add('active');
+                    star.innerHTML = '<i class="fas fa-star"></i>';
+                }
+            } else {
+                showHome();
+            }
         }
 
         async function removeFavorite(favId) {
@@ -1386,8 +1545,7 @@
                 const f = favs.find(f => f.co === r.co && f.stopId === s.stop && f.route === r.route && (f.serviceType || 1) === serviceType);
                 if (f) await BusDB.delete('favorites', f.favId);
             } else {
-                _favoriteStopsCache.add(cacheKey); star.classList.add('active'); star.innerHTML = '<i class="fas fa-star"></i>';
-                await saveFavorite(r, s, true); 
+                showGroupSelector(r, s);
             }
         }
 
