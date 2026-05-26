@@ -344,6 +344,7 @@
     </div>
     <script>
         const APP_VERSION = '1.2.0';
+        let activeGroupId = null;
 
         // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
@@ -362,6 +363,7 @@
                 failedStops: "載入車站失敗。",
                 failedDirections: "載入方向失敗。",
                 noFavorites: "尚未有最愛車站。請搜尋路線並添加！",
+                emptyGroup: "Add a bus to this group! (搜尋路線以加入此群組)",
                 removeFavorite: "移除此最愛車站？",
                 syncing: "正在從 API 同步路線...",
                 initializing: "正在初始化路線...",
@@ -400,6 +402,7 @@
                 failedStops: "Failed to load stops.",
                 failedDirections: "Failed to load directions.",
                 noFavorites: "No favorites yet. Search a route to add one!",
+                emptyGroup: "Add a bus to this group! (搜尋路線以加入此群組)",
                 removeFavorite: "Remove this favorite?",
                 syncing: "Syncing routes from API...",
                 initializing: "Initializing routes...",
@@ -1495,18 +1498,15 @@
             const favs = await BusDB.getAll('favorites');
             const toUpdate = [];
             
-            let currentGroupId = 1;
             let sortOrder = 0;
             
             for (const el of elements) {
-                if (el.classList.contains('group-header')) {
-                    currentGroupId = el.dataset.groupid ? parseInt(el.dataset.groupid, 10) : 0;
-                } else if (el.classList.contains('card') && el.dataset.favid) {
+                if (el.classList.contains('card') && el.dataset.favid) {
                     const favId = parseInt(el.dataset.favid, 10);
                     const fav = favs.find(f => f.favId === favId);
                     if (fav) {
                         fav.sortOrder = sortOrder++;
-                        fav.groupId = currentGroupId;
+                        fav.groupId = activeGroupId;
                         toUpdate.push(fav);
                     }
                 }
@@ -1523,52 +1523,44 @@
             _favoriteStopsCache.clear();
             favs.forEach(f => { _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${f.serviceType || 1}`); });
             
-            const container = document.getElementById('favorites-list');
-            container.innerHTML = '';
-            
-            // Sort groups and favorites
             groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-            favs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-            const groupMap = new Map();
-            groups.forEach(g => groupMap.set(g.id, g));
+            if (activeGroupId === null && groups.length > 0) {
+                activeGroupId = groups[0].id;
+            }
 
-            // Render groups
+            // Render Tabs
+            const tabContainer = document.getElementById('favorites-tabs');
+            tabContainer.innerHTML = '';
             groups.forEach(group => {
-                const groupFavs = favs.filter(f => f.groupId === group.id);
-                // ALWAYS render if it's a default group (1 or 2), otherwise only if not empty
-                if (group.id === 1 || group.id === 2 || groupFavs.length > 0) {
-                    const groupHeader = document.createElement('div');
-                    groupHeader.className = 'group-header';
-                    groupHeader.dataset.groupid = group.id;
-                    groupHeader.style.justifyContent = 'space-between';
-                    groupHeader.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <i class="fas fa-folder-open"></i> <span>${localized(group, 'name')}</span>
-                        </div>
-                        <i class="fas fa-gear edit-group-btn" style="cursor:pointer; padding:5px; color:#999;" onclick="handleGroupEditClick(event, ${group.id})"></i>
-                    `;
-                    groupHeader.addEventListener('pointerdown', (e) => handlePointerDown(e, groupHeader, { isGroup: true, groupId: group.id }));
-                    
-                    container.appendChild(groupHeader);
-                    
-                    groupFavs.forEach(f => {
-                        container.appendChild(createFavoriteCard(f));
-                    });
-                }
+                const tab = document.createElement('div');
+                tab.className = `fav-tab ${activeGroupId === group.id ? 'active' : ''}`;
+                tab.innerHTML = `<span>${localized(group, 'name')}</span>`;
+                tab.onclick = () => {
+                    activeGroupId = group.id;
+                    renderFavorites();
+                    refreshAllETAs();
+                };
+                tabContainer.appendChild(tab);
             });
 
-            // Render orphans
-            const orphans = favs.filter(f => !f.groupId || !groupMap.has(f.groupId));
-            if (orphans.length > 0) {
-                const groupHeader = document.createElement('div');
-                groupHeader.className = 'group-header';
-                groupHeader.dataset.groupid = "0";
-                groupHeader.innerHTML = `<i class="fas fa-folder"></i> ${t('others')}`;
-                container.appendChild(groupHeader);
-                
-                orphans.forEach(f => {
-                    container.appendChild(createFavoriteCard(f));
+            // Render List
+            const listContainer = document.getElementById('favorites-list');
+            listContainer.innerHTML = '';
+            
+            const groupFavs = favs.filter(f => f.groupId === activeGroupId);
+            groupFavs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+            if (groupFavs.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.padding = '20px';
+                emptyMsg.style.color = '#888';
+                emptyMsg.textContent = t('emptyGroup');
+                listContainer.appendChild(emptyMsg);
+            } else {
+                groupFavs.forEach(f => {
+                    listContainer.appendChild(createFavoriteCard(f));
                 });
             }
 
