@@ -350,8 +350,9 @@
                                 db.createObjectStore('metadata', { keyPath: 'key' });
                             }
                         };
-                        request.onsuccess = (e) => {
+                        request.onsuccess = async (e) => {
                             this.db = e.target.result;
+                            await this.checkMigrations();
                             resolve();
                         };
                         request.onerror = (e) => {
@@ -363,6 +364,28 @@
                         resolve(); // Continue without DB
                     }
                 });
+            },
+
+            async checkMigrations() {
+                const storedAppVersion = await this.getMetadata('app_version');
+                
+                if (!storedAppVersion) {
+                    // Fresh install or first time versioning
+                    DebugLogger.log('SYS', 'DB', 'Initializing metadata', APP_VERSION);
+                    await this.setMetadata('app_version', APP_VERSION);
+                    await this.setMetadata('db_version', this.DB_VERSION);
+                    await this.setMetadata('install_date', Date.now());
+                    return;
+                }
+
+                if (storedAppVersion !== APP_VERSION) {
+                    DebugLogger.log('SYS', 'MIGRATE', `Upgrading from ${storedAppVersion} to ${APP_VERSION}`);
+                    // Placeholder for future migration logic
+                    // await this.runMigrations(storedAppVersion, APP_VERSION);
+                    
+                    await this.setMetadata('app_version', APP_VERSION);
+                    await this.setMetadata('db_version', this.DB_VERSION);
+                }
             },
 
             async put(storeName, data) {
