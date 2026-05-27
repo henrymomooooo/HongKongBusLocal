@@ -326,9 +326,29 @@
             },
             async getStops(co, route, direction, type, rid) {
                 const dir = direction === 'outbound' ? 'outbound' : 'inbound';
-                if (co === 'KMB') { const s = await this.fetchKMB(`/route-stop/${route}/${dir}/${type || 1}`), all = await this.getKMBStops(); return (s || []).map(i => { const info = all.get(i.stop); return { stop: i.stop, name_tc: info?.name_tc || i.stop, name_en: info?.name_en || i.stop }; }); }
-                if (co === 'CTB') { const s = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`), data = await Promise.all((s || []).map(async i => { const info = await this.getCTBStopInfo(i.stop); return info ? { stop: i.stop, name_tc: info.name_tc, name_en: info.name_en } : null; })); return data.filter(i => i); }
-                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=list&routeId=${rid}`); return (d?.stops || []).map(i => ({ stop: i.stopId, name_tc: i.stopName_c, name_en: i.stopName_e })); }
+                const cacheId = `${co}_${route}_${dir}_${type || 1}_${rid || ''}`;
+                
+                // 1. Check Cache
+                try {
+                    const cached = await BusDB.get('route_stops', cacheId);
+                    if (cached && (Date.now() - cached.last_updated < 86400000)) {
+                        return cached.stops;
+                    }
+                } catch (e) { console.warn('Cache read error', e); }
+
+                // 2. Fetch from API
+                let stops = [];
+                if (co === 'KMB') { const s = await this.fetchKMB(`/route-stop/${route}/${dir}/${type || 1}`), all = await this.getKMBStops(); stops = (s || []).map(i => { const info = all.get(i.stop); return { stop: i.stop, name_tc: info?.name_tc || i.stop, name_en: info?.name_en || i.stop }; }); }
+                if (co === 'CTB') { const s = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`), data = await Promise.all((s || []).map(async i => { const info = await this.getCTBStopInfo(i.stop); return info ? { stop: i.stop, name_tc: info.name_tc, name_en: info.name_en } : null; })); stops = data.filter(i => i); }
+                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=list&routeId=${rid}`); stops = (d?.stops || []).map(i => ({ stop: i.stopId, name_tc: i.stopName_c, name_en: i.stopName_e })); }
+
+                // 3. Save to Cache
+                if (stops && stops.length > 0) {
+                    try {
+                        await BusDB.put('route_stops', { id: cacheId, stops: stops, last_updated: Date.now() });
+                    } catch (e) { console.warn('Cache write error', e); }
+                }
+                return stops;
             },
             async getETA(co, sid, r, type = 1, rid, bound, direction) {
                 if (co === 'KMB') { const d = await this.fetchKMB(`/eta/${sid}/${r}/${type}`), kdir = bound || (direction === 'inbound' ? 'I' : 'O'); return (d || []).filter(i => i.dir === kdir); }
