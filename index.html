@@ -382,6 +382,7 @@
                 selectGroup: "選擇群組",
                 addGroup: "新增群組",
                 newGroupName: "新群組名稱",
+                move: "移動",
                 cancel: "取消",
                 others: "其他",
                 manageGroup: "管理群組",
@@ -423,6 +424,7 @@
                 selectGroup: "Select Group",
                 addGroup: "Add Group",
                 newGroupName: "New Group Name",
+                move: "Move",
                 cancel: "Cancel",
                 others: "Others",
                 manageGroup: "Manage Group",
@@ -1283,10 +1285,12 @@
         }
 
         let _currentFavContext = null;
+        let _currentMoveContext = null;
 
-        async function showGroupSelector(r, s) {
+        async function showGroupSelector(r, s, moveFav = null) {
             const input = document.getElementById('new-group-input');
             _currentFavContext = { r, s };
+            _currentMoveContext = moveFav;
             const modal = document.getElementById('group-modal');
             const list = document.getElementById('group-list');
             const groups = await BusDB.getAll('favorite_groups');
@@ -1296,9 +1300,17 @@
                 const item = document.createElement('div');
                 item.className = 'group-item';
                 item.innerHTML = `<i class="fas fa-folder"></i> <span>${localized(g, 'name')}</span>`;
-                item.onclick = () => {
-                    saveFavorite(r, s, true, g.id);
-                    closeGroupModal();
+                item.onclick = async () => {
+                    if (_currentMoveContext) {
+                        _currentMoveContext.groupId = g.id;
+                        await BusDB.put('favorites', _currentMoveContext);
+                        activeGroupId = g.id;
+                        closeGroupModal();
+                        renderFavorites();
+                    } else {
+                        saveFavorite(r, s, true, g.id);
+                        closeGroupModal();
+                    }
                 };
                 list.appendChild(item);
             });
@@ -1334,7 +1346,12 @@
             const allGroups = await BusDB.getAll('favorite_groups');
             const savedGroup = allGroups.reduce((prev, current) => (prev.id > current.id) ? prev : current);
             
-            if (_currentFavContext) {
+            if (_currentMoveContext) {
+                _currentMoveContext.groupId = savedGroup.id;
+                await BusDB.put('favorites', _currentMoveContext);
+                activeGroupId = savedGroup.id;
+                renderFavorites();
+            } else if (_currentFavContext) {
                 saveFavorite(_currentFavContext.r, _currentFavContext.s, true, savedGroup.id);
             }
             closeGroupModal();
@@ -1815,10 +1832,25 @@
             info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
                              <div class="path-info" style="font-size: 12px; color: #777; margin-bottom: 4px;">${f.path_desc || ''}</div>
                              <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}</div>`;
+            
+            const actionArea = document.createElement('div');
+            actionArea.style.display = 'flex';
+            
+            const moveBtn = document.createElement('button');
+            moveBtn.className = 'remove-btn';
+            moveBtn.style.marginRight = '8px';
+            moveBtn.innerHTML = '<i class="fas fa-folder-open"></i>';
+            moveBtn.title = t('move');
+            moveBtn.onclick = (e) => { e.stopPropagation(); showGroupSelector(null, null, f); };
+
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn'; removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
             removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t('removeFavorite'))) removeFavorite(f.favId); };
-            header.appendChild(info); header.appendChild(removeBtn);
+            
+            actionArea.appendChild(moveBtn);
+            actionArea.appendChild(removeBtn);
+            
+            header.appendChild(info); header.appendChild(actionArea);
             const etaDiv = document.createElement('div');
             etaDiv.className = 'eta-row';
             etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> ${t('next')}</span><div class="eta-list" id="eta-${f.favId}">${t('loadingStops')}</div>`;
