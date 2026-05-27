@@ -2083,21 +2083,30 @@
     <!-- Group Action Menu -->
     <div id="group-action-modal" class="modal-overlay hidden" onclick="closeGroupActionModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0; margin-bottom: 15px;" id="group-action-title">Manage Group</h3>
-            <button class="modal-btn" onclick="openRenameModal()" style="margin-bottom: 10px; justify-content: center;"><i class="fas fa-edit"></i> <span id="label-action-rename">Rename</span></button>
-            <button id="btn-action-delete" class="modal-btn" onclick="openDeleteConfirmModal()" style="margin-bottom: 10px; justify-content: center; color: var(--kmb-red);"><i class="fas fa-trash"></i> <span id="label-action-delete">Delete</span></button>
-            <button class="modal-btn" onclick="closeGroupActionModal()" style="justify-content: center; background: #eee; color: #333;"><span id="label-action-cancel">Cancel</span></button>
+            <div class="modal-header">
+                <span id="group-action-title">Manage Group</span>
+                <i class="fas fa-times" onclick="closeGroupActionModal()" style="cursor: pointer;"></i>
+            </div>
+            <div class="modal-content" style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn btn-save" onclick="openRenameModal()" style="width: 100%; display: flex; justify-content: center; gap: 8px; background: #eee; color: #333;"><i class="fas fa-edit"></i> <span id="label-action-rename">Rename</span></button>
+                <button id="btn-action-delete" class="btn btn-save" onclick="openDeleteConfirmModal()" style="width: 100%; display: flex; justify-content: center; gap: 8px; background: #ffeeee; color: var(--kmb-red);"><i class="fas fa-trash"></i> <span id="label-action-delete">Delete</span></button>
+            </div>
         </div>
     </div>
 
     <!-- Rename Group Modal -->
     <div id="rename-group-modal" class="modal-overlay hidden" onclick="closeRenameModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0; margin-bottom: 15px;" id="label-rename-title">Rename Group</h3>
-            <input type="text" id="rename-group-input" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
-            <div style="display:flex; gap:10px;">
-                <button class="modal-btn" onclick="submitRenameGroup()" style="flex:1; justify-content: center; background: var(--kmb-red); color: white;"><span id="label-rename-save">Save</span></button>
-                <button class="modal-btn" onclick="closeRenameModal()" style="flex:1; justify-content: center; background: #eee; color: #333;"><span id="label-rename-cancel">Cancel</span></button>
+            <div class="modal-header">
+                <span id="label-rename-title">Rename Group</span>
+                <i class="fas fa-times" onclick="closeRenameModal()" style="cursor: pointer;"></i>
+            </div>
+            <div class="modal-content">
+                <input type="text" id="rename-group-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeRenameModal()"><span id="label-rename-cancel">Cancel</span></button>
+                <button class="btn btn-save" onclick="submitRenameGroup()"><span id="label-rename-save">Save</span></button>
             </div>
         </div>
     </div>
@@ -2105,11 +2114,16 @@
     <!-- Delete Confirm Modal -->
     <div id="delete-confirm-modal" class="modal-overlay hidden" onclick="closeDeleteConfirmModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0; margin-bottom: 15px; color: var(--kmb-red);" id="label-delete-title">Delete Group?</h3>
-            <p style="margin-bottom: 20px; font-size: 14px; color: #555;" id="label-delete-desc">This will also remove all saved buses in this group. Are you sure?</p>
-            <div style="display:flex; gap:10px;">
-                <button class="modal-btn" onclick="submitDeleteGroup()" style="flex:1; justify-content: center; background: var(--kmb-red); color: white;"><span id="label-delete-confirm">Delete</span></button>
-                <button class="modal-btn" onclick="closeDeleteConfirmModal()" style="flex:1; justify-content: center; background: #eee; color: #333;"><span id="label-delete-cancel">Cancel</span></button>
+            <div class="modal-header" style="background: var(--kmb-red);">
+                <span id="label-delete-title">Delete Group?</span>
+                <i class="fas fa-times" onclick="closeDeleteConfirmModal()" style="cursor: pointer;"></i>
+            </div>
+            <div class="modal-content">
+                <p style="margin: 0; font-size: 14px; color: #555;" id="label-delete-desc">This will also remove all saved buses in this group. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeDeleteConfirmModal()"><span id="label-delete-cancel">Cancel</span></button>
+                <button class="btn btn-save" onclick="submitDeleteGroup()" style="background: var(--kmb-red);"><span id="label-delete-confirm">Delete</span></button>
             </div>
         </div>
     </div>
