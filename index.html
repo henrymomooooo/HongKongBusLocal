@@ -452,17 +452,19 @@
         document.getElementById('add-group-label').textContent = t('addGroup');
 
         // Setup initial text content for group management modals
-        document.getElementById('group-action-title').textContent = t('manageGroup');
-        document.getElementById('label-action-rename').textContent = t('renameGroup');
-        document.getElementById('label-action-delete').textContent = t('deleteGroup');
-        document.getElementById('label-action-cancel').textContent = t('cancel');
-        document.getElementById('label-rename-title').textContent = t('renameGroup');
-        document.getElementById('label-rename-save').textContent = t('save');
-        document.getElementById('label-rename-cancel').textContent = t('cancel');
-        document.getElementById('label-delete-title').textContent = `${t('deleteGroup')}?`;
-        document.getElementById('label-delete-desc').textContent = t('deleteGroupConfirm');
-        document.getElementById('label-delete-confirm').textContent = t('deleteGroup');
-        document.getElementById('label-delete-cancel').textContent = t('cancel');
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('group-action-title').textContent = t('manageGroup');
+            document.getElementById('label-action-rename').textContent = t('renameGroup');
+            document.getElementById('label-action-delete').textContent = t('deleteGroup');
+            document.getElementById('label-action-cancel').textContent = t('cancel');
+            document.getElementById('label-rename-title').textContent = t('renameGroup');
+            document.getElementById('label-rename-save').textContent = t('save');
+            document.getElementById('label-rename-cancel').textContent = t('cancel');
+            document.getElementById('label-delete-title').textContent = `${t('deleteGroup')}?`;
+            document.getElementById('label-delete-desc').textContent = t('deleteGroupConfirm');
+            document.getElementById('label-delete-confirm').textContent = t('deleteGroup');
+            document.getElementById('label-delete-cancel').textContent = t('cancel');
+        });
 
         // UX Polish for Group Modal
         document.getElementById('new-group-input').addEventListener('keyup', (e) => {
@@ -1705,29 +1707,74 @@
 
         async function handleGroupEditClick(e, groupId) {
             e.stopPropagation();
+            _editingGroupId = groupId;
             const groups = await BusDB.getAll('favorite_groups');
             const group = groups.find(g => g.id === groupId);
             if (!group) return;
 
-            const newName = prompt(t('renameGroup'), localized(group, 'name'));
+            document.getElementById('group-action-title').textContent = localized(group, 'name');
             
-            if (newName !== null) {
-                // User clicked OK
-                if (newName.trim()) {
-                    group.name_tc = newName.trim();
-                    group.name_en = newName.trim();
-                    await BusDB.put('favorite_groups', group);
-                    renderFavorites();
-                } else {
-                    alert(t('invalidName'));
-                }
-            } else if (groupId > 2) {
-                // User clicked Cancel and it's a custom group: ask if they want to delete
-                if (confirm(t('deleteGroupConfirm'))) {
-                    await deleteGroup(groupId);
-                    renderFavorites();
-                }
+            // Hide delete button for default groups (1 and 2)
+            const deleteBtn = document.getElementById('btn-action-delete');
+            if (groupId === 1 || groupId === 2) {
+                deleteBtn.style.display = 'none';
+            } else {
+                deleteBtn.style.display = 'flex';
             }
+
+            document.getElementById('group-action-modal').classList.remove('hidden');
+        }
+
+        function closeGroupActionModal() { document.getElementById('group-action-modal').classList.add('hidden'); }
+
+        async function openRenameModal() {
+            closeGroupActionModal();
+            const groups = await BusDB.getAll('favorite_groups');
+            const group = groups.find(g => g.id === _editingGroupId);
+            if (!group) return;
+
+            const input = document.getElementById('rename-group-input');
+            input.value = localized(group, 'name');
+            document.getElementById('rename-group-modal').classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeRenameModal() { document.getElementById('rename-group-modal').classList.add('hidden'); }
+
+        async function submitRenameGroup() {
+            const input = document.getElementById('rename-group-input');
+            const newName = input.value.trim();
+            if (!newName) {
+                alert(t('invalidName'));
+                return;
+            }
+
+            const groups = await BusDB.getAll('favorite_groups');
+            const group = groups.find(g => g.id === _editingGroupId);
+            if (group) {
+                group.name_tc = newName;
+                group.name_en = newName;
+                await BusDB.put('favorite_groups', group);
+                closeRenameModal();
+                renderFavorites();
+            }
+        }
+
+        function openDeleteConfirmModal() {
+            closeGroupActionModal();
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteConfirmModal() { document.getElementById('delete-confirm-modal').classList.add('hidden'); }
+
+        async function submitDeleteGroup() {
+            await deleteGroup(_editingGroupId);
+            closeDeleteConfirmModal();
+            // If we deleted the active tab, switch to group 1
+            if (activeGroupId === _editingGroupId) {
+                activeGroupId = 1;
+            }
+            renderFavorites();
         }
 
         async function deleteGroup(groupId) {
@@ -1740,9 +1787,12 @@
             for (const f of toDelete) {
                 await BusDB.delete('favorites', f.favId);
             }
-            
-            renderFavorites();
         }
+
+        // Enter key support for Rename Modal
+        document.getElementById('rename-group-input').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') submitRenameGroup();
+        });
 
         function createFavoriteCard(f) {
             const card = document.createElement('div');
