@@ -526,6 +526,7 @@
             startX = e.clientX; wasDragged = false;
             dragTimeout = setTimeout(() => {
                 isDragging = true; activeDragTab = tab; wasDragged = true; document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                tab.style.touchAction = 'none'; // Disable scrolling once drag starts
                 const c = document.getElementById('favorites-tabs'), r = tab.getBoundingClientRect(), cr = c.getBoundingClientRect();
                 tabDragPlaceholder = document.createElement('div'); tabDragPlaceholder.className = 'fav-tab-placeholder'; tabDragPlaceholder.style.width = `${r.width}px`; tabDragPlaceholder.style.height = `${r.height}px`;
                 tab.classList.add('dragging'); tab.style.width = `${r.width}px`; initialLeft = r.left - cr.left; tab.style.left = `${initialLeft}px`; tab.style.top = `${r.top - cr.top}px`;
@@ -691,4 +692,4 @@
     <div id="debug-console" class="hidden"><div id="debug-header"><span>Debug Console</span><div id="debug-controls"><button onclick="DebugLogger.clear()">Clear</button><button onclick="DebugLogger.toggle(false)">Close</button></div></div><div id="debug-logs"></div></div>
     <div id="generic-modal" class="modal-overlay hidden" onclick="closeGenericModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="g-modal-header"><span id="g-modal-title"></span><i class="fas fa-times" onclick="closeGenericModal()" style="cursor:pointer"></i></div><div class="modal-content" id="g-modal-body"></div><div class="modal-footer" id="g-modal-footer"></div></div></div>
 </body>
-</html>
+</html>>
