@@ -346,6 +346,25 @@
         const APP_VERSION = '1.2.0';
         let activeGroupId = null;
         let _editingGroupId = null;
+        let _etaObserver = null;
+        const _visibleFavIds = new Set();
+
+        function setupETAObserver() {
+            _etaObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const favId = parseInt(entry.target.dataset.favid, 10);
+                    if (entry.isIntersecting) {
+                        _visibleFavIds.add(favId);
+                        // Trigger update for this specific favorite
+                        BusDB.get('favorites', favId).then(fav => {
+                            if (fav) updateETA(fav);
+                        });
+                    } else {
+                        _visibleFavIds.delete(favId);
+                    }
+                });
+            }, { threshold: 0.1 });
+        }
 
         // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
@@ -1654,6 +1673,9 @@
         }
 
         async function renderFavorites() {
+            if (_etaObserver) _etaObserver.disconnect();
+            _visibleFavIds.clear();
+
             const favs = await BusDB.getAll('favorites');
             const groups = await BusDB.getAll('favorite_groups');
             
@@ -1715,7 +1737,9 @@
                 listContainer.appendChild(emptyMsg);
             } else {
                 groupFavs.forEach(f => {
-                    listContainer.appendChild(createFavoriteCard(f));
+                    const card = createFavoriteCard(f);
+                    listContainer.appendChild(card);
+                    if (_etaObserver) _etaObserver.observe(card);
                 });
             }
 
@@ -1865,10 +1889,9 @@
             try {
                 if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
                 const favs = await BusDB.getAll('favorites');
-                const activeFavs = favs.filter(f => f.groupId === activeGroupId);
-                
-                // Fetch in parallel for speed
-                await Promise.all(activeFavs.map(f => updateETA(f)));
+                // Only refresh buses that are in the active tab AND visible on screen
+                const toRefresh = favs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId));
+                await Promise.all(toRefresh.map(f => updateETA(f)));
             } catch (e) {
                 console.error('Refresh Error:', e);
             } finally {
@@ -2071,6 +2094,7 @@
         setInterval(() => { refreshAllETAs(); }, 60000);
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                setupETAObserver();
                 await BusDB.init(); 
                 await migrateFavorites(); 
                 await syncRoutes(); 
