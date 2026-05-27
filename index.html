@@ -632,6 +632,11 @@
 
         async function deleteGroup(gid) { await BusDB.delete('favorite_groups', gid); const fs = await BusDB.getAll('favorites'); for (const f of fs.filter(x => x.groupId === gid)) await BusDB.delete('favorites', f.favId); }
 
+        async function removeFavorite(favId) {
+            await BusDB.delete('favorites', favId);
+            renderFavorites();
+        }
+
         function createFavoriteCard(f) {
             const card = document.createElement('div'); card.className = `card co-${f.co}`; card.dataset.favid = f.favId; card.oncontextmenu = () => false; card.addEventListener('pointerdown', e => handlePointerDown(e, card, f));
             card.onclick = e => { if (!wasDragged && !e.target.closest('.remove-btn, .fav-star')) goToRouteStopsFromFav(f); };
