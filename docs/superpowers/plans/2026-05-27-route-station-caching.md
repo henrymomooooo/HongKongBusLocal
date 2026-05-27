@@ -44,7 +44,7 @@ Update the function to calculate a cache ID and check `BusDB` before calling API
                 
                 // 1. Check Cache
                 const cached = await BusDB.get('route_stops', cacheId);
-                const isRecent = cached && (Date.now() - cached.last_updated < 86400000); // 24 hours
+                const isRecent = cached && (new Date(cached.last_updated).toDateString() === new Date().toDateString()); // Same calendar day
                 
                 if (isRecent) return cached.stops;
 

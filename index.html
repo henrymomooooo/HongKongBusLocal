@@ -331,7 +331,7 @@
                 // 1. Check Cache
                 try {
                     const cached = await BusDB.get('route_stops', cacheId);
-                    if (cached && (Date.now() - cached.last_updated < 86400000)) {
+                    if (cached && (new Date(cached.last_updated).toDateString() === new Date().toDateString())) {
                         return cached.stops;
                     }
                 } catch (e) { console.warn('Cache read error', e); }

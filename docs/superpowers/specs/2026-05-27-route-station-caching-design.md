@@ -21,9 +21,9 @@
 - **Unique Key:** Generate a unique string using the company, route number, direction, service type, and route ID.
 - **Cache Check:**
     1.  Attempt to fetch the entry from `BusDB.route_stops`.
-    2.  **Valid Cache (< 24 hours):** Return the cached stops immediately.
-    3.  **Background Refresh (Optional):** If the cache is older than 6 hours but less than 24 hours, return the cached version but trigger an API fetch in the background to update the database for the next visit.
-    4.  **No Cache / Expired (> 24 hours):** Show the loading state, fetch from API, store in DB, and return.
+    2.  **Valid Cache (Same Date):** Return the cached stops immediately if the `last_updated` timestamp matches the current calendar date.
+    3.  **Background Refresh (Optional):** We can trigger an API fetch in the background if the cache is found but we want to ensure fresh data for tomorrow.
+    4.  **No Cache / Expired (Different Date):** Show the loading state, fetch from API, store in DB, and return.
 
 ## 3. Implementation Details
 - **Database Version:** Increment `BusDB.DB_VERSION` to 4.
