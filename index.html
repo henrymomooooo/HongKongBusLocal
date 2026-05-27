@@ -1790,8 +1790,13 @@
         }
 
         // Enter key support for Rename Modal
-        document.getElementById('rename-group-input').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') submitRenameGroup();
+        document.addEventListener('DOMContentLoaded', () => {
+            const renameInput = document.getElementById('rename-group-input');
+            if (renameInput) {
+                renameInput.addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') submitRenameGroup();
+                });
+            }
         });
 
         function createFavoriteCard(f) {
