@@ -527,11 +527,17 @@
         function handlePointerUp(e, card) {
             document.removeEventListener('pointermove', handlePointerMove); document.removeEventListener('pointerup', activePointerUpHandler); document.removeEventListener('pointercancel', activePointerUpHandler);
             if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-            isDragging = false; card.style.touchAction = ''; 
+            if (!isDragging) return; isDragging = false; 
+            card.style.touchAction = ''; 
             document.body.style.userSelect = document.body.style.webkitUserSelect = '';
             document.body.style.overflow = ''; // Restore scrolling
             const c = document.getElementById('favorites-list'); card.classList.remove('dragging'); card.style.position = card.style.top = card.style.left = card.style.width = '';
-            c.insertBefore(card, dragPlaceholder); saveReorderedFavorites(); c.removeChild(dragPlaceholder); activeDragCard = dragPlaceholder = null;
+            if (dragPlaceholder) {
+                c.insertBefore(card, dragPlaceholder); 
+                saveReorderedFavorites(); 
+                if (dragPlaceholder.parentNode === c) c.removeChild(dragPlaceholder);
+            }
+            activeDragCard = dragPlaceholder = null;
         }
 
         function handleTabPointerDown(e, tab, g) {
@@ -564,7 +570,11 @@
             document.body.style.userSelect = document.body.style.webkitUserSelect = '';
             document.body.style.overflow = ''; // Restore scrolling
             const c = document.getElementById('favorites-tabs'); tab.classList.remove('dragging'); tab.style.position = tab.style.left = tab.style.top = tab.style.width = '';
-            c.insertBefore(tab, tabDragPlaceholder); c.removeChild(tabDragPlaceholder); activeDragTab = tabDragPlaceholder = null; saveReorderedGroups();
+            if (tabDragPlaceholder) {
+                c.insertBefore(tab, tabDragPlaceholder);
+                if (tabDragPlaceholder.parentNode === c) c.removeChild(tabDragPlaceholder);
+            }
+            activeDragTab = tabDragPlaceholder = null; saveReorderedGroups();
         }
 
         async function saveReorderedGroups() {
