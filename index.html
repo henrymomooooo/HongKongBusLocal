@@ -497,7 +497,10 @@
             if (e.target.closest('.remove-btn, .fav-star, .edit-group-btn')) return;
             startY = e.clientY; wasDragged = false;
             dragTimeout = setTimeout(() => {
-                isDragging = true; activeDragCard = card; wasDragged = true; document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                isDragging = true; activeDragCard = card; wasDragged = true; 
+                document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                document.body.style.overflow = 'hidden'; // Lock scrolling
+                card.style.touchAction = 'none';
                 const container = document.getElementById('favorites-list'), rect = card.getBoundingClientRect(), crect = container.getBoundingClientRect();
                 dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'drag-placeholder'; dragPlaceholder.style.height = `${rect.height}px`;
                 card.classList.add('dragging'); card.style.width = `${rect.width}px`; initialTop = rect.top - crect.top; card.style.top = `${initialTop}px`; card.style.left = `${rect.left - crect.left}px`;
@@ -517,7 +520,9 @@
         function handlePointerUp(e, card) {
             document.removeEventListener('pointermove', handlePointerMove); document.removeEventListener('pointerup', activePointerUpHandler); document.removeEventListener('pointercancel', activePointerUpHandler);
             if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-            if (!isDragging) return; isDragging = false; card.style.touchAction = ''; document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            isDragging = false; card.style.touchAction = ''; 
+            document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            document.body.style.overflow = ''; // Restore scrolling
             const c = document.getElementById('favorites-list'); card.classList.remove('dragging'); card.style.position = card.style.top = card.style.left = card.style.width = '';
             c.insertBefore(card, dragPlaceholder); saveReorderedFavorites(); c.removeChild(dragPlaceholder); activeDragCard = dragPlaceholder = null;
         }
@@ -525,7 +530,9 @@
         function handleTabPointerDown(e, tab, g) {
             startX = e.clientX; wasDragged = false;
             dragTimeout = setTimeout(() => {
-                isDragging = true; activeDragTab = tab; wasDragged = true; document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                isDragging = true; activeDragTab = tab; wasDragged = true; 
+                document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                document.body.style.overflow = 'hidden'; // Lock scrolling
                 tab.style.touchAction = 'none'; // Disable scrolling once drag starts
                 const c = document.getElementById('favorites-tabs'), r = tab.getBoundingClientRect(), cr = c.getBoundingClientRect();
                 tabDragPlaceholder = document.createElement('div'); tabDragPlaceholder.className = 'fav-tab-placeholder'; tabDragPlaceholder.style.width = `${r.width}px`; tabDragPlaceholder.style.height = `${r.height}px`;
@@ -545,7 +552,10 @@
 
         function handleTabPointerUp(e, tab) {
             document.removeEventListener('pointermove', tab._moveHandler); if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-            if (!isDragging) return; isDragging = false; tab.style.touchAction = ''; document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            if (!isDragging) return; isDragging = false; 
+            tab.style.touchAction = ''; 
+            document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            document.body.style.overflow = ''; // Restore scrolling
             const c = document.getElementById('favorites-tabs'); tab.classList.remove('dragging'); tab.style.position = tab.style.left = tab.style.top = tab.style.width = '';
             c.insertBefore(tab, tabDragPlaceholder); c.removeChild(tabDragPlaceholder); activeDragTab = tabDragPlaceholder = null; saveReorderedGroups();
         }
@@ -691,5 +701,7 @@
     </script>
     <div id="debug-console" class="hidden"><div id="debug-header"><span>Debug Console</span><div id="debug-controls"><button onclick="DebugLogger.clear()">Clear</button><button onclick="DebugLogger.toggle(false)">Close</button></div></div><div id="debug-logs"></div></div>
     <div id="generic-modal" class="modal-overlay hidden" onclick="closeGenericModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="g-modal-header"><span id="g-modal-title"></span><i class="fas fa-times" onclick="closeGenericModal()" style="cursor:pointer"></i></div><div class="modal-content" id="g-modal-body"></div><div class="modal-footer" id="g-modal-footer"></div></div></div>
+</body>
+</html>>ooter"></div></div></div>
 </body>
 </html>>
