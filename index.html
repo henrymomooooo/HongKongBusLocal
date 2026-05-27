@@ -196,6 +196,11 @@
         let _drawerInterval = null, activeDragCard = null, dragPlaceholder = null, startY = 0, initialTop = 0, dragTimeout = null, isDragging = false, activePointerUpHandler = null;
         let activeDragTab = null, tabDragPlaceholder = null, startX = 0, initialLeft = 0, wasDragged = false;
 
+        // Global touchmove blocker to prevent iOS scrolling during JS drag
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) e.preventDefault();
+        }, { passive: false });
+
         function getDragAfterElementHorizontal(container, x) {
             const draggableElements = [...container.querySelectorAll('.fav-tab:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
@@ -702,6 +707,4 @@
     <div id="debug-console" class="hidden"><div id="debug-header"><span>Debug Console</span><div id="debug-controls"><button onclick="DebugLogger.clear()">Clear</button><button onclick="DebugLogger.toggle(false)">Close</button></div></div><div id="debug-logs"></div></div>
     <div id="generic-modal" class="modal-overlay hidden" onclick="closeGenericModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="g-modal-header"><span id="g-modal-title"></span><i class="fas fa-times" onclick="closeGenericModal()" style="cursor:pointer"></i></div><div class="modal-content" id="g-modal-body"></div><div class="modal-footer" id="g-modal-footer"></div></div></div>
 </body>
-</html>>ooter"></div></div></div>
-</body>
-</html>>
+</html>
