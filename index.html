@@ -20,8 +20,21 @@
         header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         header h1 { margin: 0; font-size: 24px; }
         .section { margin-bottom: 25px; }
-        h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; position: relative; transition: transform 0.1s; }
+        h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; user-select: none; -webkit-user-select: none; }
+        .card { 
+            background: var(--card-bg); 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            margin-bottom: 12px; 
+            cursor: pointer; 
+            position: relative; 
+            transition: transform 0.1s; 
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: pan-y; /* Allow vertical scrolling, but we will override to 'none' during drag */
+        }
         .card:active { transform: scale(0.98); }
         .card.co-KMB { border-left: 5px solid var(--kmb-red); }
         .card.co-CTB { border-left: 5px solid var(--ctb-yellow); }
@@ -74,6 +87,9 @@
             z-index: 1000;
             pointer-events: none;
             margin: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .drag-placeholder {
             background: transparent;
@@ -243,6 +259,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: pan-y;
         }
         .fav-tab-bar {
             display: flex;
@@ -252,6 +271,10 @@
             padding-bottom: 5px;
             scrollbar-width: none; /* Hide scrollbar for clean look */
             position: relative; /* For dragging positioning */
+            -webkit-overflow-scrolling: touch;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .fav-tab-bar::-webkit-scrollbar { display: none; }
         .fav-tab {
@@ -267,6 +290,9 @@
             gap: 5px;
             border: 1px solid transparent;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: pan-x;
         }
         .fav-tab.active {
             background: var(--kmb-red);
@@ -278,6 +304,9 @@
             position: absolute;
             z-index: 1000;
             pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .fav-tab-placeholder {
             flex: 0 0 auto;
@@ -1521,6 +1550,8 @@
             
             isDragging = false;
             card.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
             
             const container = document.getElementById('favorites-list');
             
@@ -1614,6 +1645,8 @@
 
             isDragging = false;
             tab.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
             const container = document.getElementById('favorites-tabs');
 
             tab.classList.remove('dragging');
@@ -1844,6 +1877,7 @@
             const card = document.createElement('div');
             card.className = `card co-${f.co}`;
             card.dataset.favid = f.favId;
+            card.oncontextmenu = () => false; // Prevent context menu on long press
             card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
             card.onclick = (e) => {
                 if (wasDragged) return;
@@ -2184,4 +2218,11 @@
         </div>
     </div>
 </body>
-</html>
+</html>ound: var(--kmb-red);"><span id="label-delete-confirm">Delete</span></button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>ml>/body>
+</html>ml>/body>
+</html>ml>
