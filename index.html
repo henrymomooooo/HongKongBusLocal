@@ -4,363 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">HK Bus Arrivals</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><path fill=%22%23d32f2f%22 d=%22M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z%22/></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%2215%%22 fill=%22%23d32f2f%22/><path fill=%22%23ffffff%22 d=%22M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z%22/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%23d32f2f' d='M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='15%' fill='%23d32f2f'/><path fill='%23ffffff' d='M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z'/></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --kmb-red: #d32f2f;
-            --ctb-blue: #00529b;
-            --ctb-yellow: #ffdf00;
-            --nlb-green: #2e7d32;
-            --bg-color: #f4f4f9;
-            --card-bg: #ffffff;
-            --text-main: #333;
-        }
+        :root { --kmb-red: #d32f2f; --ctb-blue: #00529b; --ctb-yellow: #ffdf00; --nlb-green: #2e7d32; --bg-color: #f4f4f9; --card-bg: #ffffff; --text-main: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         header h1 { margin: 0; font-size: 24px; }
         .section { margin-bottom: 25px; }
         h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; user-select: none; -webkit-user-select: none; }
-        .card { 
-            background: var(--card-bg); 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            margin-bottom: 12px; 
-            cursor: pointer; 
-            position: relative; 
-            transition: transform 0.1s; 
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: pan-y; /* Allow vertical scrolling, but we will override to 'none' during drag */
-        }
+        .card, .group-header, .fav-tab { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; position: relative; transition: transform 0.1s; touch-action: pan-y; }
         .card:active { transform: scale(0.98); }
         .card.co-KMB { border-left: 5px solid var(--kmb-red); }
         .card.co-CTB { border-left: 5px solid var(--ctb-yellow); }
         .card.co-NLB { border-left: 5px solid var(--nlb-green); }
-        
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-size: inherit; font-family: inherit; font-weight: bold; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: var(--kmb-red); color: white; }
         .hidden { display: none !important; }
-        
         .eta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .eta-list { display: flex; gap: 8px; font-weight: bold; color: var(--kmb-red); }
         .co-NLB .eta-list { color: var(--nlb-green); }
         .co-CTB .eta-list { color: var(--ctb-blue); }
-        
         .remove-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .remove-btn:hover { color: #ff4444; }
-        
         .route-info { display: flex; align-items: baseline; gap: 8px; }
         .route-no { font-size: 18px; font-weight: 800; }
         .dest-name { color: #666; font-size: 14px; }
         .stop-name { font-size: 14px; margin-top: 4px; color: #444; }
-
         .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .back-btn { background: none; border: none; color: var(--kmb-red); cursor: pointer; font-size: 16px; font-weight: bold; padding: 5px 0; }
-
-        .station-card { display: flex; flex-direction: column; padding: 0 !important; }
+        .station-card { padding: 0 !important; }
         .station-main { display: flex; align-items: center; padding: 15px; width: 100%; box-sizing: border-box; }
         .station-info { flex-grow: 1; }
         .fav-star { font-size: 20px; color: #ccc; padding: 10px; cursor: pointer; transition: color 0.2s; }
         .fav-star.active { color: #ffc107; }
-
-        .eta-drawer { 
-            max-height: 0; 
-            overflow: hidden; 
-            transition: max-height 0.3s ease-out; 
-            background: #f9f9f9; 
-            border-top: 1px solid #eee;
-        }
+        .eta-drawer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #f9f9f9; border-top: 1px solid #eee; }
         .eta-drawer.open { max-height: 200px; padding: 10px 15px; }
         .eta-content { font-size: 14px; }
         .eta-status { font-size: 11px; color: #999; margin-top: 5px; }
-
-        .card.dragging, .group-header.dragging {
-            opacity: 0.8;
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            position: absolute;
-            z-index: 1000;
-            pointer-events: none;
-            margin: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-        .drag-placeholder {
-            background: transparent;
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-sizing: border-box;
-        }
-        #favorites-list {
-            position: relative;
-        }
-        #initial-loading {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            color: var(--text-main);
-        }
-
-        /* Debug Console Styles */
-        #debug-console {
-            width: 100%;
-            height: 50vh;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 12px;
-            display: flex;
-            flex-direction: column;
-            z-index: 3000;
-            border-top: 2px solid #444;
-        }
-        body:not(.debug-active) #debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-        }
-        #debug-header {
-            background: #333;
-            padding: 5px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #444;
-        }
-        #debug-header span { font-weight: bold; color: #fff; }
-        #debug-controls { display: flex; gap: 10px; }
-        #debug-controls button {
-            background: #444;
-            color: #fff;
-            border: 1px solid #666;
-            padding: 2px 8px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        #debug-controls button:hover { background: #555; }
-        #debug-logs {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
+        .card.dragging, .group-header.dragging, .fav-tab.dragging { opacity: 0.8; transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: absolute; z-index: 1000; pointer-events: none; margin: 0; }
+        .drag-placeholder, .fav-tab-placeholder { background: transparent; border: 2px dashed #ccc; border-radius: 8px; box-sizing: border-box; }
+        .drag-placeholder { margin-bottom: 12px; }
+        #initial-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; color: var(--text-main); }
+        #debug-console { width: 100%; height: 50vh; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; display: flex; flex-direction: column; z-index: 3000; border-top: 2px solid #444; }
+        body:not(.debug-active) #debug-console { position: fixed; bottom: 0; left: 0; }
+        #debug-header { background: #333; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
+        #debug-logs { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .log-entry { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
         .log-meta { display: flex; gap: 10px; color: #888; margin-bottom: 2px; }
-        .log-req { color: #569cd6; }
-        .log-res { color: #4ec9b0; }
-        .log-err { color: #f44747; }
+        .log-req { color: #569cd6; } .log-res { color: #4ec9b0; } .log-err { color: #f44747; }
         .log-payload { white-space: pre-wrap; word-break: break-all; }
-
-        /* Split Screen adjustments */
-        body.debug-active {
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        body.debug-active .container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 20px;
-            max-width: 600px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        body.debug-active { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        body.debug-active .container { flex: 1; overflow-y: auto; padding-bottom: 20px; max-width: 600px; width: 100%; box-sizing: border-box; }
         body.debug-active header { border-radius: 0; margin-bottom: 0; flex-shrink: 0; }
         #debug-console { flex-shrink: 0; }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 4000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(2px);
-        }
-        .modal {
-            background: white;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-header {
-            padding: 15px;
-            background: var(--kmb-red);
-            color: white;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .modal-content {
-            padding: 15px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        .group-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .group-item:last-child { border-bottom: none; }
-        .group-item:active { background: #f0f0f0; }
-        .group-item i { color: #888; }
-        .add-group-area {
-            padding: 15px;
-            border-top: 1px solid #eee;
-            background: #f9f9f9;
-        }
-        .modal-footer {
-            padding: 10px 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            border-top: 1px solid #eee;
-        }
-        .btn {
-            padding: 8px 16px;
-            border-radius: 5px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal { background: white; width: 90%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px; background: var(--kmb-red); color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .modal-content { padding: 15px; max-height: 60vh; overflow-y: auto; }
+        .group-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .add-group-area { padding: 15px; border-top: 1px solid #eee; background: #f9f9f9; }
+        .modal-footer { padding: 10px 15px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; }
+        .btn { padding: 8px 16px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #eee; color: #666; }
         .btn-save { background: var(--kmb-red); color: white; }
-
-        .group-header {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ddd;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: pan-y;
-        }
-        .fav-tab-bar {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-            scrollbar-width: none; /* Hide scrollbar for clean look */
-            position: relative; /* For dragging positioning */
-            -webkit-overflow-scrolling: touch;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
+        .group-header { font-size: 16px; font-weight: bold; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #ddd; color: #666; display: flex; align-items: center; gap: 8px; touch-action: pan-y; }
+        .fav-tab-bar { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; position: relative; -webkit-overflow-scrolling: touch; }
         .fav-tab-bar::-webkit-scrollbar { display: none; }
-        .fav-tab {
-            flex: 0 0 auto;
-            padding: 8px 15px;
-            background: #eee;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            border: 1px solid transparent;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: pan-x;
-        }
-        .fav-tab.active {
-            background: var(--kmb-red);
-            color: white;
-        }
-        .fav-tab.dragging {
-            opacity: 0.7;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: absolute;
-            z-index: 1000;
-            pointer-events: none;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-        .fav-tab-placeholder {
-            flex: 0 0 auto;
-            width: 80px; /* Approximate */
-            height: 33px;
-            background: transparent;
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-        }
+        .fav-tab { flex: 0 0 auto; padding: 8px 15px; background: #eee; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 5px; border: 1px solid transparent; touch-action: pan-x; }
+        .fav-tab.active { background: var(--kmb-red); color: white; }
+        .fav-tab-placeholder { flex: 0 0 auto; width: 80px; height: 33px; }
     </style>
 </head>
 <body>
-    <div id="group-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <span id="modal-title">Select Group</span>
-                <i class="fas fa-times" onclick="closeGroupModal()" style="cursor: pointer;"></i>
-            </div>
-            <div id="group-list" class="modal-content">
-                <!-- Groups will be listed here -->
-            </div>
-            <div class="add-group-area">
-                <input type="text" id="new-group-input" style="margin-bottom: 8px;">
-                <button class="btn btn-save" style="width: 100%;" id="add-group-btn" onclick="createNewGroupAndSave()">
-                    <i class="fas fa-plus"></i> <span id="add-group-label">Add New Group</span>
-                </button>
-            </div>
-        </div>
-    </div>
     <div id="initial-loading">
         <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px; color: var(--kmb-red);"></i>
-        <span id="loading-text">Initializing routes...</span>
+        <span data-i18n="initializing">Initializing routes...</span>
     </div>
-    <header><h1><i class="fas fa-bus"></i> <span id="header-title">HK Bus Arrivals</span></h1></header>
+    <header><h1><i class="fas fa-bus"></i> <span data-i18n="title">HK Bus Arrivals</span></h1></header>
     <div class="container">
         <div id="favorites-section" class="section">
             <h2 style="justify-content: space-between;">
-                <span><i class="fas fa-star" style="color: #ffc107;"></i> <span id="fav-title">Favorites</span></span>
-                <i class="fas fa-sync-alt" id="refresh-btn" style="cursor: pointer; font-size: 18px; color: #666;" onclick="refreshAllETAs()"></i>
+                <span><i class="fas fa-star" style="color: #ffc107;"></i> <span data-i18n="favorites">Favorites</span></span>
+                <i class="fas fa-sync-alt" id="refresh-btn" style="cursor: pointer; font-size: 18px; color: #666;" onclick="refreshAllETAs()" data-i18n-title="refreshETAs"></i>
             </h2>
             <div id="favorites-tabs" class="fav-tab-bar"></div>
             <div id="favorites-list"></div>
         </div>
         <div class="section">
             <div class="tabs">
-                <button id="tab-route" class="tab active" onclick="switchTab(event, 'route')"><i class="fas fa-search"></i> Route</button>
-                <button id="tab-stop" class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> Stop</button>
+                <button id="tab-route" class="tab active" onclick="switchTab(event, 'route')"><i class="fas fa-search"></i> <span data-i18n="route">Route</span></button>
+                <button id="tab-stop" class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> <span data-i18n="stop">Stop</span></button>
             </div>
             <div id="route-search-ui">
                 <div id="search-input-area" style="display: flex; gap: 10px; align-items: flex-start;">
-                    <input type="text" id="route-input">
-                    <button id="refresh-cache-btn" onclick="syncRoutes(true)" class="tab" style="flex: 0 0 auto; width: auto; padding: 12px;">
+                    <input type="text" id="route-input" data-i18n-placeholder="enterRoute">
+                    <button onclick="syncRoutes(true)" class="tab" style="flex: 0 0 auto; width: auto; padding: 12px;" data-i18n-title="refreshCache">
                         <i class="fas fa-sync"></i>
                     </button>
                 </div>
@@ -368,16 +112,14 @@
                 <div id="stop-selection-results" class="results-list hidden"></div>
             </div>
             <div id="stop-search-ui" class="hidden">
-                <input type="text" id="stop-input">
+                <input type="text" id="stop-input" data-i18n-placeholder="enterStop">
                 <div id="stop-results" class="results-list"></div>
             </div>
         </div>
     </div>
     <script>
         const APP_VERSION = '1.2.0';
-        let activeGroupId = null;
-        let _editingGroupId = null;
-        let _etaObserver = null;
+        let activeGroupId = null, _editingGroupId = null, _etaObserver = null;
         const _visibleFavIds = new Set();
 
         function setupETAObserver() {
@@ -386,10 +128,7 @@
                     const favId = parseInt(entry.target.dataset.favid, 10);
                     if (entry.isIntersecting) {
                         _visibleFavIds.add(favId);
-                        // Trigger update for this specific favorite
-                        BusDB.get('favorites', favId).then(fav => {
-                            if (fav) updateETA(fav);
-                        });
+                        BusDB.get('favorites', favId).then(fav => { if (fav) updateETA(fav); });
                     } else {
                         _visibleFavIds.delete(favId);
                     }
@@ -397,159 +136,73 @@
             }, { threshold: 0.1 });
         }
 
-        // Internationalization
         const userLang = (navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en';
         const I18N = {
             tc: {
-                title: "香港巴士到站時間",
-                favorites: "我的最愛車站",
-                route: "搜尋路線",
-                stop: "搜尋車站",
-                enterRoute: "輸入路線 (例如 1A, 962X, 3M)...",
-                enterStop: "輸入車站名稱...",
-                refreshETAs: "重新整理到站時間",
-                refreshCache: "更新路線緩存",
-                loadingStops: "正在載入車站...",
-                loadingDirections: "正在載入方向...",
-                failedStops: "載入車站失敗。",
-                failedDirections: "載入方向失敗。",
-                noFavorites: "尚未有最愛車站。請搜尋路線並添加！",
-                emptyGroup: "搜尋路線以加入此群組",
-                removeFavorite: "移除此最愛車站？",
-                syncing: "正在從 API 同步路線...",
-                initializing: "正在初始化路線...",
-                next: "下班車:",
-                noETA: "暫無預計到站時間",
-                error: "錯誤",
-                lastUpdated: "最後更新:",
-                scheduled: "預定班次",
-                min: "分鐘",
-                back: "返回",
-                to: "往",
-                outbound: "去程",
-                inbound: "回程",
-                specialVariant: "特別班次",
-                selectGroup: "選擇群組",
-                addGroup: "新增群組",
-                newGroupName: "新群組名稱",
-                move: "移動",
-                cancel: "取消",
-                others: "其他",
-                manageGroup: "管理群組",
-                renameGroup: "重命名群組",
-                deleteGroup: "刪除群組",
-                deleteGroupConfirm: "這將同時移除此群組中的所有已儲存巴士。確定嗎？",
-                save: "儲存",
-                invalidName: "請輸入有效的名稱。"
+                title: "香港巴士到站時間", favorites: "我的最愛車站", route: "搜尋路線", stop: "搜尋車站",
+                enterRoute: "輸入路線 (例如 1A, 962X, 3M)...", enterStop: "輸入車站名稱...",
+                refreshETAs: "重新整理到站時間", refreshCache: "更新路線緩存",
+                loadingStops: "正在載入車站...", loadingDirections: "正在載入方向...",
+                failedStops: "載入車站失敗。", failedDirections: "載入方向失敗。",
+                noFavorites: "尚未有最愛車站。請搜尋路線並添加！", emptyGroup: "搜尋路線以加入此群組",
+                removeFavorite: "移除此最愛車站？", syncing: "正在從 API 同步路線...",
+                initializing: "正在初始化路線...", next: "下班車:", noETA: "暫無預計到站時間",
+                error: "錯誤", lastUpdated: "最後更新:", scheduled: "預定班次", min: "分鐘",
+                back: "返回", to: "往", outbound: "去程", inbound: "回程", specialVariant: "特別班次",
+                selectGroup: "選擇群組", addGroup: "新增群組", newGroupName: "新群組名稱",
+                move: "移動", cancel: "取消", others: "其他", manageGroup: "管理群組",
+                renameGroup: "重命名群組", deleteGroup: "刪除群組",
+                deleteGroupConfirm: "這將同時移除此群組中的所有已儲存巴士。確定嗎？", save: "儲存", invalidName: "請輸入有效的名稱。"
             },
             en: {
-                title: "HK Bus Arrivals",
-                favorites: "Favorites",
-                route: "Route",
-                stop: "Stop",
-                enterRoute: "Enter Route (e.g. 1A, 962X, 3M)...",
-                enterStop: "Enter Stop Name...",
-                refreshETAs: "Refresh ETAs",
-                refreshCache: "Refresh Route Cache",
-                loadingStops: "Loading stops...",
-                loadingDirections: "Loading directions...",
-                failedStops: "Failed to load stops.",
-                failedDirections: "Failed to load directions.",
-                noFavorites: "No favorites yet. Search a route to add one!",
-                emptyGroup: "Search for a route to add it to this group",
-                removeFavorite: "Remove this favorite?",
-                syncing: "Syncing routes from API...",
-                initializing: "Initializing routes...",
-                next: "Next:",
-                noETA: "No ETA",
-                error: "Error",
-                lastUpdated: "Last updated:",
-                scheduled: "Scheduled",
-                min: "min",
-                back: "Back",
-                to: "to",
-                outbound: "Outbound",
-                inbound: "Inbound",
-                specialVariant: "Special Variant",
-                selectGroup: "Select Group",
-                addGroup: "Add Group",
-                newGroupName: "New Group Name",
-                move: "Move",
-                cancel: "Cancel",
-                others: "Others",
-                manageGroup: "Manage Group",
-                renameGroup: "Rename Group",
-                deleteGroup: "Delete Group",
-                deleteGroupConfirm: "This will also remove all saved buses in this group. Are you sure?",
-                save: "Save",
-                invalidName: "Please enter a valid name."
+                title: "HK Bus Arrivals", favorites: "Favorites", route: "Route", stop: "Stop",
+                enterRoute: "Enter Route (e.g. 1A, 962X, 3M)...", enterStop: "Enter Stop Name...",
+                refreshETAs: "Refresh ETAs", refreshCache: "Refresh Route Cache",
+                loadingStops: "Loading stops...", loadingDirections: "Loading directions...",
+                failedStops: "Failed to load stops.", failedDirections: "Failed to load directions.",
+                noFavorites: "No favorites yet. Search a route to add one!", emptyGroup: "Search for a route to add it to this group",
+                removeFavorite: "Remove this favorite?", syncing: "Syncing routes from API...",
+                initializing: "Initializing routes...", next: "Next:", noETA: "No ETA",
+                error: "Error", lastUpdated: "Last updated:", scheduled: "Scheduled", min: "min",
+                back: "Back", to: "to", outbound: "Outbound", inbound: "Inbound", specialVariant: "Special Variant",
+                selectGroup: "Select Group", addGroup: "Add Group", newGroupName: "New Group Name",
+                move: "Move", cancel: "Cancel", others: "Others", manageGroup: "Manage Group",
+                renameGroup: "Rename Group", deleteGroup: "Delete Group",
+                deleteGroupConfirm: "This will also remove all saved buses in this group. Are you sure?", save: "Save", invalidName: "Please enter a valid name."
             }
         };
         const t = (key) => I18N[userLang][key] || key;
         const localized = (obj, fieldBase) => obj[`${fieldBase}_${userLang}`] || obj[`${fieldBase}_tc`] || obj[fieldBase];
 
-        // UI Initialization
-        document.getElementById('page-title').textContent = t('title');
-        document.getElementById('header-title').textContent = t('title');
-        document.getElementById('fav-title').textContent = t('favorites');
-        document.getElementById('refresh-btn').title = t('refreshETAs');
-        document.getElementById('tab-route').innerHTML = `<i class="fas fa-search"></i> ${t('route')}`;
-        document.getElementById('tab-stop').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${t('stop')}`;
-        document.getElementById('route-input').placeholder = t('enterRoute');
-        document.getElementById('stop-input').placeholder = t('enterStop');
-        document.getElementById('refresh-cache-btn').title = t('refreshCache');
-        document.getElementById('loading-text').textContent = t('initializing');
-        document.getElementById('modal-title').textContent = t('selectGroup');
-        document.getElementById('new-group-input').placeholder = t('newGroupName');
-        document.getElementById('add-group-label').textContent = t('addGroup');
+        function updateLabels() {
+            document.getElementById('page-title').textContent = t('title');
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+        }
 
-        // Setup initial text content for group management modals
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('group-action-title').textContent = t('manageGroup');
-            document.getElementById('label-action-rename').textContent = t('renameGroup');
-            document.getElementById('label-action-delete').textContent = t('deleteGroup');
-            document.getElementById('label-rename-title').textContent = t('renameGroup');
-            document.getElementById('label-rename-save').textContent = t('save');
-            document.getElementById('label-rename-cancel').textContent = t('cancel');
-            document.getElementById('label-delete-title').textContent = `${t('deleteGroup')}?`;
-            document.getElementById('label-delete-desc').textContent = t('deleteGroupConfirm');
-            document.getElementById('label-delete-confirm').textContent = t('deleteGroup');
-            document.getElementById('label-delete-cancel').textContent = t('cancel');
-        });
+        function openGenericModal(title, bodyHtml, footerHtml, isDanger = false) {
+            document.getElementById('g-modal-title').textContent = title;
+            document.getElementById('g-modal-body').innerHTML = bodyHtml;
+            const footer = document.getElementById('g-modal-footer');
+            footer.innerHTML = footerHtml || '';
+            footer.style.display = footerHtml ? 'flex' : 'none';
+            document.getElementById('g-modal-header').style.backgroundColor = isDanger ? 'var(--kmb-red)' : '';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+        function closeGenericModal() { document.getElementById('generic-modal').classList.add('hidden'); }
 
-        // UX Polish for Group Modal
-        document.getElementById('new-group-input').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') createNewGroupAndSave();
-        });
-
-        const _etaFlashCache = new Map();
-        const _stationRefreshCooldowns = new Map();
-        const FLASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-        let _drawerInterval = null;
-
-        let activeDragCard = null;
-        let dragPlaceholder = null;
-        let startY = 0;
-        let initialTop = 0;
-        let dragTimeout = null;
-        let isDragging = false;
-        let activePointerUpHandler = null;
-
-        let activeDragTab = null;
-        let tabDragPlaceholder = null;
-        let startX = 0;
-        let initialLeft = 0;
+        const _etaFlashCache = new Map(), _stationRefreshCooldowns = new Map(), FLASH_CACHE_TTL = 300000;
+        let _drawerInterval = null, activeDragCard = null, dragPlaceholder = null, startY = 0, initialTop = 0, dragTimeout = null, isDragging = false, activePointerUpHandler = null;
+        let activeDragTab = null, tabDragPlaceholder = null, startX = 0, initialLeft = 0, wasDragged = false;
 
         function getDragAfterElementHorizontal(container, x) {
             const draggableElements = [...container.querySelectorAll('.fav-tab:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = x - box.left - box.width / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
@@ -558,1665 +211,464 @@
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         const _favoriteStopsCache = new Set();
-        function _isFavorited(r, s) {
-            const serviceType = r.service_type || 1;
-            const id = `${r.co}-${r.route}-${s.stop}-${serviceType}`;
-            return _favoriteStopsCache.has(id);
-        }
+        function _isFavorited(r, s) { return _favoriteStopsCache.has(`${r.co}-${r.route}-${s.stop}-${r.service_type || 1}`); }
 
-        function getFlashCache(co, stopId, route, serviceType) {
-            const key = `${co}-${stopId}-${route}-${serviceType || 1}`;
-            const cached = _etaFlashCache.get(key);
-            if (cached && (Date.now() - cached.timestamp < FLASH_CACHE_TTL)) {
-                return cached.data;
-            }
-            return null;
-        }
-
-        function setFlashCache(co, stopId, route, serviceType, data) {
-            const key = `${co}-${stopId}-${route}-${serviceType || 1}`;
-            _etaFlashCache.set(key, { data, timestamp: Date.now() });
-        }
+        function getFlashCache(co, sid, r, st) { const c = _etaFlashCache.get(`${co}-${sid}-${r}-${st || 1}`); return (c && (Date.now() - c.timestamp < FLASH_CACHE_TTL)) ? c.data : null; }
+        function setFlashCache(co, sid, r, st, d) { _etaFlashCache.set(`${co}-${sid}-${r}-${st || 1}`, { data: d, timestamp: Date.now() }); }
 
         const BusDB = {
-            DB_NAME: 'HKBusDB',
-            DB_VERSION: 3,
-            db: null,
-
+            DB_NAME: 'HKBusDB', DB_VERSION: 4, db: null,
             async init() {
                 return new Promise((resolve) => {
                     if (!window.indexedDB) return resolve();
-                    try {
-                        const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-                        request.onupgradeneeded = (e) => {
-                            const db = e.target.result;
-                            if (!db.objectStoreNames.contains('routes')) {
-                                db.createObjectStore('routes', { keyPath: 'id' });
-                            }
-                            if (!db.objectStoreNames.contains('favorites')) {
-                                db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
-                            }
-                            if (!db.objectStoreNames.contains('metadata')) {
-                                db.createObjectStore('metadata', { keyPath: 'key' });
-                            }
-                            if (!db.objectStoreNames.contains('favorite_groups')) {
-                                db.createObjectStore('favorite_groups', { keyPath: 'id', autoIncrement: true });
-                            }
-                        };
-                        request.onsuccess = async (e) => {
-                            this.db = e.target.result;
-                            await this.checkMigrations();
-                            resolve();
-                        };
-                        request.onerror = (e) => {
-                            console.warn('IndexedDB Error:', e.target.error);
-                            resolve(); // Continue without DB
-                        };
-                    } catch (e) {
-                        console.warn('IndexedDB not available:', e);
-                        resolve(); // Continue without DB
-                    }
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        ['routes', 'favorites', 'metadata', 'favorite_groups', 'route_stops'].forEach(s => {
+                            if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { 
+                                keyPath: (s === 'routes' || s === 'route_stops' ? 'id' : (s === 'favorites' ? 'favId' : (s === 'favorite_groups' ? 'id' : 'key'))), 
+                                autoIncrement: (s === 'favorites' || s === 'favorite_groups') 
+                            });
+                        });
+                    };
+                    request.onsuccess = async (e) => { this.db = e.target.result; await this.checkMigrations(); resolve(); };
+                    request.onerror = resolve;
                 });
             },
-
             async checkMigrations() {
-                const storedAppVersion = await this.getMetadata('app_version');
-                const dbVer = await this.getMetadata('db_version');
-
-                // Self-healing check for default groups (1 and 2)
+                const storedAppVersion = await this.getMetadata('app_version'), dbVer = await this.getMetadata('db_version');
                 const groups = await this.getAll('favorite_groups');
                 if (!groups.find(g => g.id === 1) || !groups.find(g => g.id === 2)) {
                     if (!groups.find(g => g.id === 1)) await this.put('favorite_groups', { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 });
                     if (!groups.find(g => g.id === 2)) await this.put('favorite_groups', { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 });
                 }
-
                 if (storedAppVersion !== APP_VERSION) {
                     if (!dbVer || dbVer < 3) {
-                        // Seed default groups
-                        await this.putAll('favorite_groups', [
-                            { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 },
-                            { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }
-                        ]);
-                        // Update existing favorites
-                        const favs = await this.getAll('favorites');
-                        const toUpdate = favs.filter(f => !f.groupId).map(f => ({...f, groupId: 1}));
-                        if (toUpdate.length > 0) {
-                            await this.putAll('favorites', toUpdate);
-                        }
+                        await this.putAll('favorite_groups', [{ id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 }, { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }]);
+                        const fs = await this.getAll('favorites'), toUp = fs.filter(f => !f.groupId).map(f => ({...f, groupId: 1}));
+                        if (toUp.length > 0) await this.putAll('favorites', toUp);
                     }
-                    
-                    await this.setMetadata('app_version', APP_VERSION);
-                    await this.setMetadata('db_version', this.DB_VERSION);
-                    const installDate = await this.getMetadata('install_date');
-                    if (!installDate) await this.setMetadata('install_date', Date.now());
+                    await this.setMetadata('app_version', APP_VERSION); await this.setMetadata('db_version', this.DB_VERSION);
+                    if (!await this.getMetadata('install_date')) await this.setMetadata('install_date', Date.now());
                 }
             },
-
-            async put(storeName, data) {
+            async _op(storeName, mode, callback) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve();
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    store.put(data);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => reject(e.target.error);
+                    if (!this.db) return resolve(mode === 'readonly' ? [] : null);
+                    try {
+                        const tx = this.db.transaction(storeName, mode), store = tx.objectStore(storeName), res = callback(store);
+                        if (res instanceof IDBRequest) {
+                            res.onsuccess = () => resolve(res.result);
+                            res.onerror = (e) => reject(e.target.error);
+                        } else {
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = (e) => reject(e.target.error);
+                        }
+                    } catch (e) { reject(e); }
                 });
             },
-
-            async getAll(storeName) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve([]);
-                    const tx = this.db.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async clear(storeName) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve();
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    store.clear();
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async putAll(storeName, dataArray) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve();
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    dataArray.forEach(item => store.put(item));
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async delete(storeName, key) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve();
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    store.delete(key);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async get(storeName, key) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve(null);
-                    const tx = this.db.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const request = store.get(key);
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async getMetadata(key) {
-                const data = await this.get('metadata', key);
-                return data ? data.value : null;
-            },
-
-            async setMetadata(key, value) {
-                return this.put('metadata', { key, value });
-            }
+            getAll(s) { return this._op(s, 'readonly', st => st.getAll()); },
+            get(s, k) { return this._op(s, 'readonly', st => st.get(k)); },
+            put(s, d) { return this._op(s, 'readwrite', st => st.put(d)); },
+            clear(s) { return this._op(s, 'readwrite', st => st.clear()); },
+            delete(s, k) { return this._op(s, 'readwrite', st => st.delete(k)); },
+            putAll(s, a) { return this._op(s, 'readwrite', st => a.forEach(i => st.put(i))); },
+            async getMetadata(k) { const d = await this.get('metadata', k); return d ? d.value : null; },
+            setMetadata(k, v) { return this.put('metadata', { key: k, value: v }); }
         };
 
         const DebugLogger = {
-            logs: [],
-            maxLogs: 50,
-            active: false,
-
+            logs: [], maxLogs: 50, active: false,
             toggle(force) {
                 this.active = force !== undefined ? force : !this.active;
-                const consoleEl = document.getElementById('debug-console');
+                const el = document.getElementById('debug-console');
                 if (this.active) {
-                    const debugTitle = document.querySelector('#debug-header span');
-                    if (debugTitle) debugTitle.innerHTML = `<i class="fas fa-terminal"></i> Debug Console <small style="opacity: 0.7; font-weight: normal;">(v${APP_VERSION})</small>`;
-                    consoleEl.classList.remove('hidden');
-                    document.body.classList.add('debug-active');
-                    this.render();
-                } else {
-                    consoleEl.classList.add('hidden');
-                    document.body.classList.remove('debug-active');
-                }
+                    document.querySelector('#debug-header span').innerHTML = `<i class='fas fa-terminal'></i> Debug Console <small style='opacity:0.7'>(v${APP_VERSION})</small>`;
+                    el.classList.remove('hidden'); document.body.classList.add('debug-active'); this.render();
+                } else { el.classList.add('hidden'); document.body.classList.remove('debug-active'); }
             },
-
             log(type, method, url, payload, status = '') {
-                const entry = {
-                    timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'),
-                    type, method, url, payload, status
-                };
-                this.logs.push(entry);
+                this.logs.push({ timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'), type, method, url, payload, status });
                 if (this.logs.length > this.maxLogs) this.logs.shift();
                 if (this.active) this.render();
             },
-
-            clear() {
-                this.logs = [];
-                this.render();
-            },
-
+            clear() { this.logs = []; this.render(); },
             render() {
-                const container = document.getElementById('debug-logs');
-                if (!container) return;
-                
-                container.innerHTML = this.logs.map(log => `
-                    <div class="log-entry">
-                        <div class="log-meta">
-                            <span>[${log.timestamp}]</span>
-                            <span class="log-${log.type.toLowerCase()}">${log.type} ${log.method}</span>
-                            <span>${log.status}</span>
-                        </div>
-                        <div style="color: #bbb; margin-bottom: 2px;">${log.url}</div>
-                        <div class="log-payload">${typeof log.payload === 'object' ? JSON.stringify(log.payload, null, 2) : log.payload}</div>
-                    </div>
-                `).join('');
-                container.scrollTop = container.scrollHeight;
+                const c = document.getElementById('debug-logs'); if (!c) return;
+                c.innerHTML = this.logs.map(l => `<div class='log-entry'><div class='log-meta'><span>[${l.timestamp}]</span><span class='log-${l.type.toLowerCase()}'>${l.type} ${l.method}</span><span>${l.status}</span></div><div style='color:#bbb'>${l.url}</div><div class='log-payload'>${typeof l.payload === 'object' ? JSON.stringify(l.payload, null, 2) : l.payload}</div></div>`).join('');
+                c.scrollTop = c.scrollHeight;
             }
         };
 
         const BusAPI = {
-            KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb',
-            CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus',
-            NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
-            _ctbStopCache: new Map(),
-            _kmbStopCache: new Map(),
-
-            async getKMBStops() {
-                if (this._kmbStopCache.size === 0) {
-                    const data = await this.fetchKMB('/stop');
-                    if (data) {
-                        data.forEach(s => this._kmbStopCache.set(s.stop, s));
-                    }
-                }
-                return this._kmbStopCache;
-            },
-
-            async getCTBStops() {
-                return this._ctbStopCache;
-            },
-            
-            async fetchKMB(endpoint) {
-                const url = `${this.KMB_BASE}${endpoint}`;
-                DebugLogger.log('REQ', 'GET', url, '...');
+            KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb', CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus', NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
+            _ctbStopCache: new Map(), _kmbStopCache: new Map(),
+            async _fetch(url, method = 'GET') {
+                DebugLogger.log('REQ', method, url, '...');
                 try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json();
-                    DebugLogger.log('RES', 'GET', url, json.data, res.status);
-                    return json.data;
-                } catch (e) {
-                    DebugLogger.log('ERR', 'GET', url, e.message);
-                    console.error('KMB Fetch Error:', e);
-                    return null;
-                }
+                    const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json(), data = json.data || json;
+                    DebugLogger.log('RES', method, url, data, res.status); return data;
+                } catch (e) { DebugLogger.log('ERR', method, url, e.message); return null; }
             },
-            
-            async fetchCTB(endpoint) {
-                const url = `${this.CTB_BASE}${endpoint}`;
-                DebugLogger.log('REQ', 'GET', url, '...');
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json();
-                    DebugLogger.log('RES', 'GET', url, json.data, res.status);
-                    return json.data;
-                } catch (e) {
-                    DebugLogger.log('ERR', 'GET', url, e.message);
-                    console.error('CTB Fetch Error:', e);
-                    return null;
-                }
+            async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
+            fetchKMB(e) { return this._fetch(`${this.KMB_BASE}${e}`); }, fetchCTB(e) { return this._fetch(`${this.CTB_BASE}${e}`); }, fetchNLB(e) { return this._fetch(`${this.NLB_BASE}/${e}`); },
+            async getCTBStopInfo(id) { if (!id) return null; if (this._ctbStopCache.has(id)) return this._ctbStopCache.get(id); const d = await this.fetchCTB(`/stop/${id}`); if (d) this._ctbStopCache.set(id, d); return d; },
+            async getRouteList(co) {
+                if (co === 'KMB') return this.fetchKMB('/route/'); if (co === 'CTB') return this.fetchCTB('/route/CTB');
+                if (co === 'NLB') { const d = await this.fetchNLB('route.php?action=list'); return (d?.routes || []).map(r => ({ route: r.routeNo, dest_tc: r.routeName_c, dest_en: r.routeName_e, routeId: r.routeId })); }
             },
-
-            async getCTBStopInfo(stopId) {
-                if (!stopId) return null;
-                const stops = await this.getCTBStops();
-                if (stops.has(stopId)) return stops.get(stopId);
-                const url = `${this.CTB_BASE}/stop/${stopId}`;
-                DebugLogger.log('REQ', 'GET', url, '...');
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json();
-                    const data = json.data;
-                    if (data) {
-                        stops.set(stopId, data);
-                        DebugLogger.log('RES', 'GET', url, data, res.status);
-                        return data;
-                    }
-                    return null;
-                } catch (e) {
-                    DebugLogger.log('ERR', 'GET', url, e.message);
-                    console.error('Error fetching CTB stop', stopId, e);
-                    return null;
-                }
+            async getStops(co, route, direction, type, rid) {
+                const dir = direction === 'outbound' ? 'outbound' : 'inbound';
+                if (co === 'KMB') { const s = await this.fetchKMB(`/route-stop/${route}/${dir}/${type || 1}`), all = await this.getKMBStops(); return (s || []).map(i => { const info = all.get(i.stop); return { stop: i.stop, name_tc: info?.name_tc || i.stop, name_en: info?.name_en || i.stop }; }); }
+                if (co === 'CTB') { const s = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`), data = await Promise.all((s || []).map(async i => { const info = await this.getCTBStopInfo(i.stop); return info ? { stop: i.stop, name_tc: info.name_tc, name_en: info.name_en } : null; })); return data.filter(i => i); }
+                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=list&routeId=${rid}`); return (d?.stops || []).map(i => ({ stop: i.stopId, name_tc: i.stopName_c, name_en: i.stopName_e })); }
             },
-
-            async fetchNLB(endpoint) {
-                const url = `${this.NLB_BASE}/${endpoint}`;
-                DebugLogger.log('REQ', 'GET', url, '...');
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json();
-                    DebugLogger.log('RES', 'GET', url, json, res.status);
-                    return json;
-                } catch (e) {
-                    DebugLogger.log('ERR', 'GET', url, e.message);
-                    console.error('NLB Fetch Error:', e);
-                    return null;
-                }
-            },
-
-            async getRouteList(company) {
-                if (company === 'KMB') return this.fetchKMB('/route/');
-                if (company === 'CTB') return this.fetchCTB('/route/CTB');
-                if (company === 'NLB') {
-                    const data = await this.fetchNLB('route.php?action=list');
-                    if (!data || !data.routes) return [];
-                    return data.routes.map(r => ({
-                        route: r.routeNo,
-                        dest_tc: r.routeName_c,
-                        dest_en: r.routeName_e,
-                        routeId: r.routeId
-                    }));
-                }
-            },
-
-            async getStops(company, route, direction, serviceType, routeId) {
-                if (company === 'KMB') {
-                    const dir = direction === 'outbound' ? 'outbound' : 'inbound';
-                    const stops = await this.fetchKMB(`/route-stop/${route}/${dir}/${serviceType || 1}`);
-                    if (!stops) return [];
-                    const allStops = await this.getKMBStops();
-                    return stops.map(s => {
-                        const info = allStops.get(s.stop);
-                        return { 
-                            stop: s.stop, 
-                            name_tc: info ? info.name_tc : s.stop, 
-                            name_en: info ? info.name_en : s.stop 
-                        };
-                    });
-                }
-                if (company === 'CTB') {
-                    const dir = direction === 'outbound' ? 'outbound' : 'inbound';
-                    const stops = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`);
-                    if (!stops) return [];
-                    const stopData = await Promise.all(stops.map(async s => {
-                        const info = await this.getCTBStopInfo(s.stop);
-                        if (!info) return null;
-                        return { 
-                            stop: s.stop, 
-                            name_tc: info.name_tc, 
-                            name_en: info.name_en 
-                        };
-                    }));
-                    return stopData.filter(s => s !== null);
-                }
-                if (company === 'NLB') {
-                    const data = await this.fetchNLB(`stop.php?action=list&routeId=${routeId}`);
-                    if (!data || !data.stops) return [];
-                    return data.stops.map(s => ({
-                        stop: s.stopId,
-                        name_tc: s.stopName_c,
-                        name_en: s.stopName_e
-                    }));
-                }
-            },
-
-            async getETA(company, stopId, route, serviceType = 1, routeId, bound, direction) {
-                if (company === 'KMB') {
-                    const data = await this.fetchKMB(`/eta/${stopId}/${route}/${serviceType}`);
-                    if (!data) return null;
-                    const kmbDir = bound || (direction === 'inbound' ? 'I' : 'O');
-                    return data.filter(eta => eta.dir === kmbDir);
-                }
-                if (company === 'CTB') {
-                    const data = await this.fetchCTB(`/eta/CTB/${stopId}/${route}`);
-                    if (!data) return null;
-                    const ctbDir = (direction === 'inbound' || bound === 'I') ? 'I' : 'O';
-                    return data.filter(eta => eta.dir === ctbDir);
-                }
-                if (company === 'NLB') {
-                    const data = await this.fetchNLB(`stop.php?action=estimatedArrivals&routeId=${routeId}&stopId=${stopId}`);
-                    if (data === null) return null;
-                    if (!data.estimatedArrivals) return [];
-                    return data.estimatedArrivals;
-                }
+            async getETA(co, sid, r, type = 1, rid, bound, direction) {
+                if (co === 'KMB') { const d = await this.fetchKMB(`/eta/${sid}/${r}/${type}`), kdir = bound || (direction === 'inbound' ? 'I' : 'O'); return (d || []).filter(i => i.dir === kdir); }
+                if (co === 'CTB') { const d = await this.fetchCTB(`/eta/CTB/${sid}/${r}`), cdir = (direction === 'inbound' || bound === 'I') ? 'I' : 'O'; return (d || []).filter(i => i.dir === cdir); }
+                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=estimatedArrivals&routeId=${rid}&stopId=${sid}`); return d?.estimatedArrivals || (d === null ? null : []); }
             }
         };
 
-        function switchTab(event, type) {
-            if (_drawerInterval) {
-                clearInterval(_drawerInterval);
-                _drawerInterval = null;
-            }
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        function switchTab(e, type) {
+            if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.currentTarget.classList.add('active');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
-            if (type === 'route') {
-                document.getElementById('search-input-area').classList.remove('hidden');
-                document.getElementById('route-results').classList.remove('hidden');
-                document.getElementById('stop-selection-results').classList.add('hidden');
-            }
+            if (type === 'route') { document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); }
         }
 
         let allRoutes = [];
-
-        function sortRoutes(routes) {
-            return routes.sort((a, b) => {
-                const res = a.route.localeCompare(b.route, undefined, { numeric: true, sensitivity: 'base' });
-                if (res !== 0) return res;
-                return a.co.localeCompare(b.co);
-            });
-        }
+        const sortRoutes = (rs) => rs.sort((a, b) => a.route.localeCompare(b.route, undefined, { numeric: true, sensitivity: 'base' }) || a.co.localeCompare(b.co));
 
         async function syncRoutes(force = false) {
-            const cached = await BusDB.getAll('routes');
-            const now = Date.now();
-            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-            const loadingOverlay = document.getElementById('initial-loading');
-
-            if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) {
-                allRoutes = sortRoutes(cached);
-                loadingOverlay.classList.add('hidden');
-                return;
-            }
-
-            if (cached.length === 0 || force) {
-                loadingOverlay.classList.remove('hidden');
-            }
-
-            console.log(t('syncing'));
-            const results = await Promise.allSettled([
-                BusAPI.getRouteList('KMB'),
-                BusAPI.getRouteList('CTB'),
-                BusAPI.getRouteList('NLB')
-            ]);
-
-            const timestamp = Date.now();
-            let processedRoutes = [];
-
-            // KMB
-            if (results[0].status === 'fulfilled' && results[0].value && results[0].value.length > 0) {
-                processedRoutes.push(...results[0].value.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: timestamp })));
-            } else {
-                processedRoutes.push(...cached.filter(r => r.co === 'KMB'));
-            }
-
-            // CTB
-            if (results[1].status === 'fulfilled' && results[1].value && results[1].value.length > 0) {
-                processedRoutes.push(...results[1].value.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: timestamp })));
-            } else {
-                processedRoutes.push(...cached.filter(r => r.co === 'CTB'));
-            }
-
-            // NLB
-            if (results[2].status === 'fulfilled' && results[2].value && results[2].value.length > 0) {
-                processedRoutes.push(...results[2].value.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: timestamp })));
-            } else {
-                processedRoutes.push(...cached.filter(r => r.co === 'NLB'));
-            }
-
-            if (results.some(r => r.status === 'rejected' || !r.value)) {
-                console.warn('Some bus companies failed to sync, retaining cached data.');
-            }
-
-            if (processedRoutes.length > 0) {
-                const sorted = sortRoutes(processedRoutes);
-                await BusDB.clear('routes');
-                await BusDB.putAll('routes', sorted);
-                allRoutes = sorted;
-            } else if (cached.length > 0) {
-                allRoutes = sortRoutes(cached);
-            }
-            loadingOverlay.classList.add('hidden');
+            const cached = await BusDB.getAll('routes'), now = Date.now(), SEVEN_DAYS = 604800000, loading = document.getElementById('initial-loading');
+            if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) { allRoutes = sortRoutes(cached); loading.classList.add('hidden'); return; }
+            if (cached.length === 0 || force) loading.classList.remove('hidden');
+            const res = await Promise.allSettled([BusAPI.getRouteList('KMB'), BusAPI.getRouteList('CTB'), BusAPI.getRouteList('NLB')]);
+            const ts = Date.now(); let processed = [];
+            if (res[0].status === 'fulfilled' && res[0].value?.length > 0) processed.push(...res[0].value.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'KMB'));
+            if (res[1].status === 'fulfilled' && res[1].value?.length > 0) processed.push(...res[1].value.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'CTB'));
+            if (res[2].status === 'fulfilled' && res[2].value?.length > 0) processed.push(...res[2].value.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'NLB'));
+            if (processed.length > 0) { const s = sortRoutes(processed); await BusDB.clear('routes'); await BusDB.putAll('routes', s); allRoutes = s; }
+            else if (cached.length > 0) allRoutes = sortRoutes(cached);
+            loading.classList.add('hidden');
         }
 
-        function searchRoutes(query, routes) {
-            if (!query) return [];
-            return routes.filter(r => r.route.startsWith(query)).slice(0, 50);
-        }
-
-        document.getElementById('route-input').addEventListener('input', e => {
-            const val = e.target.value.toUpperCase();
-            const matches = searchRoutes(val, allRoutes);
-            renderRouteResults(matches);
-        });
+        document.getElementById('route-input').addEventListener('input', e => renderRouteResults(allRoutes.filter(r => r.route.startsWith(e.target.value.toUpperCase())).slice(0, 50)));
 
         function renderRouteResults(routes) {
-            const container = document.getElementById('route-results');
-            container.innerHTML = '';
+            const c = document.getElementById('route-results'); c.innerHTML = '';
             routes.forEach(r => {
-                const card = document.createElement('div');
-                card.className = `card co-${r.co}`;
-                card.onclick = () => {
-                    if (r.co === 'KMB') {
-                        showStops(r);
-                    } else {
-                        selectRoute(r);
-                    }
-                };
-                
-                const info = document.createElement('div');
-                info.className = 'route-info';
-                
-                const strong = document.createElement('span');
-                strong.className = 'route-no';
-                let routeText = r.route;
-                if (r.co === 'KMB' && r.service_type > 1) {
-                    routeText += ` <small style="font-size:10px; border:1px solid; padding:1px 3px; border-radius:3px; vertical-align:middle; margin-left:2px;">T${r.service_type}</small>`;
-                }
-                strong.innerHTML = routeText;
-                
-                const dest = document.createElement('span');
-                dest.className = 'dest-name';
-                const dest_name = localized(r, 'dest');
-                const orig_name = localized(r, 'orig');
-                if (r.co === 'CTB' && orig_name) {
-                    dest.textContent = `${orig_name} ↔ ${dest_name}`;
-                } else {
-                    dest.textContent = `${t('to')} ${dest_name}`;
-                }
-                
-                const coTag = document.createElement('small');
-                coTag.style.marginLeft = 'auto';
-                coTag.textContent = r.co;
-                
-                info.appendChild(strong);
-                info.appendChild(dest);
-                info.appendChild(coTag);
-                card.appendChild(info);
-                container.appendChild(card);
+                const card = document.createElement('div'); card.className = `card co-${r.co}`;
+                card.onclick = () => r.co === 'KMB' ? showStops(r) : selectRoute(r);
+                const info = document.createElement('div'); info.className = 'route-info';
+                let rt = r.route; if (r.co === 'KMB' && r.service_type > 1) rt += ` <small style='font-size:10px;border:1px solid;padding:1px 3px;border-radius:3px;vertical-align:middle;margin-left:2px'>T${r.service_type}</small>`;
+                info.innerHTML = `<span class='route-no'>${rt}</span><span class='dest-name'>${r.co === 'CTB' && r.orig_tc ? `${localized(r, 'orig')} ↔ ${localized(r, 'dest')}` : `${t('to')} ${localized(r, 'dest')}`}</span><small style='margin-left:auto'>${r.co}</small>`;
+                card.appendChild(info); c.appendChild(card);
             });
         }
 
         async function selectRoute(r) {
-            const inputArea = document.getElementById('search-input-area');
-            const routeResults = document.getElementById('route-results');
-            const favSection = document.getElementById('favorites-section');
-            const stopResults = document.getElementById('stop-selection-results');
-
-            inputArea.classList.add('hidden');
-            routeResults.classList.add('hidden');
-            favSection.classList.add('hidden');
-            stopResults.classList.remove('hidden');
-            stopResults.innerHTML = `<p style="text-align:center;">${t('loadingDirections')}</p>`;
-
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingDirections')}</p>`;
             try {
-                const header = document.createElement('div');
-                header.className = 'results-header';
-                header.innerHTML = `<button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> ${t('back')}</button>
-                                   <span style="font-weight:bold;">${r.route} (${r.co})</span>`;
-                
                 const container = document.createElement('div');
-                
                 if (r.co === 'KMB') {
-                    const variants = allRoutes.filter(v => v.co === 'KMB' && v.route === r.route);
-                    variants.forEach(v => {
-                        const isSpecial = v.service_type !== "1" && v.service_type !== 1;
-                        const card = document.createElement('div');
-                        card.className = `card co-KMB ${isSpecial ? 'special-variant' : ''}`;
-                        let label = `${t('to')} ${localized(v, 'dest')}`;
-                        if (isSpecial) {
-                            label += ` <span class="badge" style="background: #eee; color: #d32f2f; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; border: 1px solid #d32f2f;">${t('specialVariant')} ${v.service_type}</span>`;
-                        }
-                        card.innerHTML = `${label} <small style="display:block; color:#777; margin-top:4px;">(${v.bound === 'O' ? t('outbound') : t('inbound')})</small>`;
-                        card.onclick = () => showStops(v);
-                        container.appendChild(card);
+                    allRoutes.filter(v => v.co === 'KMB' && v.route === r.route).forEach(v => {
+                        const card = document.createElement('div'); card.className = `card co-KMB ${v.service_type != 1 ? 'special-variant' : ''}`;
+                        card.innerHTML = `${t('to')} ${localized(v, 'dest')}${v.service_type != 1 ? ` <span class='badge' style='background:#eee;color:#d32f2f;padding:2px 6px;border-radius:4px;font-size:10px;margin-left:5px;border:1px solid #d32f2f'>${t('specialVariant')} ${v.service_type}</span>` : ''} <small style='display:block;color:#777;margin-top:4px'>(${v.bound === 'O' ? t('outbound') : t('inbound')})</small>`;
+                        card.onclick = () => showStops(v); container.appendChild(card);
                     });
                 } else if (r.co === 'CTB') {
-                    const d1 = document.createElement('div');
-                    d1.className = 'card co-CTB';
-                    d1.innerHTML = `${t('to')} ${localized(r, 'dest')} <small>(${t('outbound')})</small>`;
-                    d1.onclick = () => showStops({...r, direction: 'outbound'});
-                    container.appendChild(d1);
-
-                    const inboundStops = await BusAPI.fetchCTB(`/route-stop/CTB/${r.route}/inbound`);
-                    if (inboundStops && inboundStops.length > 0) {
-                        const d2 = document.createElement('div');
-                        d2.className = 'card co-CTB';
-                        d2.innerHTML = `${t('to')} ${localized(r, 'orig')} <small>(${t('inbound')})</small>`;
-                        d2.onclick = () => showStops({...r, direction: 'inbound', dest_tc: r.orig_tc, orig_tc: r.dest_tc, dest_en: r.orig_en, orig_en: r.dest_en});
-                        container.appendChild(d2);
+                    const d1 = document.createElement('div'); d1.className = 'card co-CTB'; d1.innerHTML = `${t('to')} ${localized(r, 'dest')} <small>(${t('outbound')})</small>`; d1.onclick = () => showStops({...r, direction: 'outbound'}); container.appendChild(d1);
+                    if ((await BusAPI.fetchCTB(`/route-stop/CTB/${r.route}/inbound`))?.length > 0) {
+                        const d2 = document.createElement('div'); d2.className = 'card co-CTB'; d2.innerHTML = `${t('to')} ${localized(r, 'orig')} <small>(${t('inbound')})</small>`; d2.onclick = () => showStops({...r, direction: 'inbound', dest_tc: r.orig_tc, orig_tc: r.dest_tc, dest_en: r.orig_en, orig_en: r.dest_en}); container.appendChild(d2);
                     }
-                } else if (r.co === 'NLB') {
-                    const variants = allRoutes.filter(v => v.co === 'NLB' && v.route === r.route);
-                    variants.forEach(v => {
-                        const card = document.createElement('div');
-                        card.className = `card co-NLB`;
-                        card.innerHTML = localized(v, 'dest');
-                        card.onclick = () => showStops(v);
-                        container.appendChild(card);
-                    });
-                }
-                
-                stopResults.innerHTML = '';
-                stopResults.appendChild(header);
-                stopResults.appendChild(container);
-            } catch (error) {
-                console.error('Error showing directions:', error);
-                stopResults.innerHTML = `<p style="text-align:center;color:red;">${t('failedDirections')}</p>`;
-            }
+                } else if (r.co === 'NLB') { allRoutes.filter(v => v.co === 'NLB' && v.route === r.route).forEach(v => { const card = document.createElement('div'); card.className = 'card co-NLB'; card.innerHTML = localized(v, 'dest'); card.onclick = () => showStops(v); container.appendChild(card); }); }
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div>`; sResults.appendChild(container);
+            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedDirections')}</p>`; }
         }
 
-        async function swapDirection(current) {
-            const routeNo = current.route;
-            const company = current.co;
-            const serviceType = current.service_type || 1;
-            
-            // Find potential opposites (must match route and service type)
-            let opposites = [];
-            if (company === 'KMB') {
-                const targetBound = current.bound === 'O' ? 'I' : 'O';
-                opposites = allRoutes.filter(v => 
-                    v.co === 'KMB' && 
-                    v.route === routeNo && 
-                    v.bound === targetBound && 
-                    (v.service_type || 1) == serviceType
-                );
-            } else if (company === 'CTB') {
-                const targetDir = current.direction === 'outbound' ? 'inbound' : 'outbound';
-                // For CTB, we probe the API to verify if the direction exists
-                const stops = await BusAPI.fetchCTB(`/route-stop/CTB/${routeNo}/${targetDir}`);
-                if (stops && stops.length > 0) {
-                    // Reconstruct opposite object
-                    opposites = [{
-                        ...current,
-                        direction: targetDir,
-                        dest_tc: current.orig_tc, orig_tc: current.dest_tc,
-                        dest_en: current.orig_en, orig_en: current.dest_en
-                    }];
-                }
-            } else if (company === 'NLB') {
-                // NLB usually has distinct routeIds for each direction
-                opposites = allRoutes.filter(v => v.co === 'NLB' && v.route === routeNo && v.routeId !== current.routeId);
-            }
-
-            if (opposites.length === 1) {
-                showStops(opposites[0]);
-            } else if (opposites.length > 1) {
-                // Too many variants, go to selection screen
-                selectRoute(current);
-            } else {
-                alert("No return direction found for this specific service variant.");
-            }
+        async function swapDirection(curr) {
+            let opps = [];
+            if (curr.co === 'KMB') opps = allRoutes.filter(v => v.co === 'KMB' && v.route === curr.route && v.bound === (curr.bound === 'O' ? 'I' : 'O') && (v.service_type || 1) == (curr.service_type || 1));
+            else if (curr.co === 'CTB') { const td = curr.direction === 'outbound' ? 'inbound' : 'outbound', s = await BusAPI.fetchCTB(`/route-stop/CTB/${curr.route}/${td}`); if (s?.length > 0) opps = [{...curr, direction: td, dest_tc: curr.orig_tc, orig_tc: curr.dest_tc, dest_en: curr.orig_en, orig_en: curr.dest_en}]; }
+            else if (curr.co === 'NLB') opps = allRoutes.filter(v => v.co === 'NLB' && v.route === curr.route && v.routeId !== curr.routeId);
+            if (opps.length === 1) showStops(opps[0]); else if (opps.length > 1) selectRoute(curr); else alert('No return direction found.');
         }
 
         async function showStops(r) {
-            const inputArea = document.getElementById('search-input-area');
-            const routeResults = document.getElementById('route-results');
-            const favSection = document.getElementById('favorites-section');
-            const stopResults = document.getElementById('stop-selection-results');
-
-            inputArea.classList.add('hidden');
-            routeResults.classList.add('hidden');
-            favSection.classList.add('hidden');
-            stopResults.classList.remove('hidden');
-            stopResults.innerHTML = `<p style="text-align:center;">${t('loadingStops')}</p>`;
-
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingStops')}</p>`;
             try {
-                const direction = (r.co === 'KMB') ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound');
-                const stops = await BusAPI.getStops(r.co, r.route, direction, r.service_type, r.routeId);
-                
-                stopResults.innerHTML = '';
-                const header = document.createElement('div');
-                header.className = 'results-header';
-                header.innerHTML = `
-                    <button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-left"></i> ${t('back')}</button>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:bold;">${r.route} ${t('to')} ${localized(r, 'dest')}</span>
-                        <i class="fas fa-right-left" id="swap-dir-btn" style="cursor:pointer; color:var(--kmb-red); font-size:16px;" title="Swap Direction"></i>
-                    </div>
-                `;
-                const swapBtn = header.querySelector('#swap-dir-btn');
-                swapBtn.onclick = () => swapDirection(r);
-                stopResults.appendChild(header);
-
+                const dir = r.co === 'KMB' ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound'), stops = await BusAPI.getStops(r.co, r.route, dir, r.service_type, r.routeId);
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div>`;
+                sResults.querySelector('#swap-dir-btn').onclick = () => swapDirection(r);
                 stops.forEach(s => {
-                    const card = document.createElement('div');
-                    card.className = `card station-card co-${r.co}`;
-                    card.dataset.stopId = s.stop;
-                    const main = document.createElement('div');
-                    main.className = 'station-main';
-                    main.onclick = () => toggleETADrawer(card, r, s);
-                    const info = document.createElement('div');
-                    info.className = 'station-info';
-                    info.innerHTML = `<div class="stop-name">${localized(s, 'name')}</div>`;
-                    const star = document.createElement('div');
-                    star.className = `fav-star ${_isFavorited(r, s) ? 'active' : ''}`;
-                    star.innerHTML = `<i class="${_isFavorited(r, s) ? 'fas' : 'far'} fa-star"></i>`;
-                    star.onclick = (e) => {
-                        e.stopPropagation();
-                        handleFavoriteClick(star, r, s);
-                    };
+                    const card = document.createElement('div'); card.className = `card station-card co-${r.co}`; card.dataset.stopId = s.stop;
+                    const main = document.createElement('div'); main.className = 'station-main'; main.onclick = () => toggleETADrawer(card, r, s);
+                    const star = document.createElement('div'); star.className = `fav-star ${_isFavorited(r, s) ? 'active' : ''}`; star.innerHTML = `<i class='${_isFavorited(r, s) ? 'fas' : 'far'} fa-star'></i>`;
+                    star.onclick = (e) => { e.stopPropagation(); handleFavoriteClick(star, r, s); };
+                    main.innerHTML = `<div class='station-info'><div class='stop-name'>${localized(s, 'name')}</div></div>`;
+                    main.appendChild(star); 
+                    card.appendChild(main);
+                    
                     const drawer = document.createElement('div');
                     drawer.className = 'eta-drawer';
-                    drawer.innerHTML = `<div class="eta-content">${t('loadingStops')}</div><div class="eta-status"></div>`;
-                    main.appendChild(info);
-                    main.appendChild(star);
-                    card.appendChild(main);
+                    drawer.innerHTML = `<div class='eta-content'>${t('loadingStops')}</div><div class='eta-status'></div>`;
                     card.appendChild(drawer);
-                    stopResults.appendChild(card);
+                    
+                    sResults.appendChild(card);
                 });
-
-                if (r.targetStopId) {
-                    setTimeout(() => {
-                        const targetCard = stopResults.querySelector(`.station-card[data-stop-id="${r.targetStopId}"]`);
-                        const targetStop = stops.find(s => s.stop === r.targetStopId);
-                        if (targetCard && targetStop) {
-                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            targetCard.style.transition = 'background-color 0.5s';
-                            targetCard.style.backgroundColor = '#fff3cd';
-                            setTimeout(() => { targetCard.style.backgroundColor = ''; }, 2000);
-                            toggleETADrawer(targetCard, r, targetStop);
-                        }
-                    }, 50);
-                }
-            } catch (error) {
-                console.error('Error fetching stops:', error);
-                stopResults.innerHTML = `<p style="text-align:center;color:red;">${t('failedStops')}</p>`;
-            }
+                if (r.targetStopId) setTimeout(() => { const tc = sResults.querySelector(`.station-card[data-stop-id='${r.targetStopId}']`); if (tc) { tc.scrollIntoView({ behavior: 'smooth', block: 'center' }); tc.style.backgroundColor = '#fff3cd'; setTimeout(() => tc.style.backgroundColor = '', 2000); toggleETADrawer(tc, r, stops.find(i => i.stop === r.targetStopId)); } }, 50);
+            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedStops')}</p>`; }
         }
 
-        function showHome() {
-            if (_drawerInterval) {
-                clearInterval(_drawerInterval);
-                _drawerInterval = null;
-            }
-            document.getElementById('search-input-area').classList.remove('hidden');
-            document.getElementById('route-results').classList.remove('hidden');
-            document.getElementById('favorites-section').classList.remove('hidden');
-            document.getElementById('stop-selection-results').classList.add('hidden');
-            renderFavorites();
-        }
+        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
 
         async function goToRouteStopsFromFav(f) {
-            const inputArea = document.getElementById('search-input-area');
-            const routeResults = document.getElementById('route-results');
-            const favSection = document.getElementById('favorites-section');
-            const stopResults = document.getElementById('stop-selection-results');
-            inputArea.classList.add('hidden');
-            routeResults.classList.add('hidden');
-            favSection.classList.add('hidden');
-            stopResults.classList.remove('hidden');
-
-            const r = {
-                co: f.co, route: f.route, service_type: f.serviceType || 1, routeId: f.routeId,
-                bound: f.bound || 'O', direction: f.direction || (f.bound === 'O' ? 'outbound' : 'inbound'),
-                orig_tc: f.orig_tc, dest_tc: f.dest_tc, orig_en: f.orig_en, dest_en: f.dest_en,
-                path_desc: f.path_desc, targetStopId: f.stopId
-            };
-
-            if (!r.orig_tc && f.path_desc) {
-                const parts = f.path_desc.split(' ↔ ');
-                r.orig_tc = parts[0] || '';
-                r.dest_tc = parts[1] || parts[0] || '';
-            }
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden'); document.getElementById('stop-selection-results').classList.remove('hidden');
+            const r = { co: f.co, route: f.route, service_type: f.serviceType || 1, routeId: f.routeId, bound: f.bound || 'O', direction: f.direction || (f.bound === 'O' ? 'outbound' : 'inbound'), orig_tc: f.orig_tc, dest_tc: f.dest_tc, orig_en: f.orig_en, dest_en: f.dest_en, path_desc: f.path_desc, targetStopId: f.stopId };
+            if (!r.orig_tc && f.path_desc) { const p = f.path_desc.split(' ↔ '); r.orig_tc = p[0] || ''; r.dest_tc = p[1] || p[0] || ''; }
             showStops(r);
         }
 
-        let _currentFavContext = null;
-        let _currentMoveContext = null;
+        let _currentFavContext = null, _currentMoveContext = null;
 
         async function showGroupSelector(r, s, moveFav = null) {
-            const input = document.getElementById('new-group-input');
-            _currentFavContext = { r, s };
-            _currentMoveContext = moveFav;
-            const modal = document.getElementById('group-modal');
-            const list = document.getElementById('group-list');
+            _currentFavContext = { r, s }; _currentMoveContext = moveFav;
             const groups = await BusDB.getAll('favorite_groups');
-            
-            list.innerHTML = '';
-            groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).forEach(g => {
-                const item = document.createElement('div');
-                item.className = 'group-item';
-                item.innerHTML = `<i class="fas fa-folder"></i> <span>${localized(g, 'name')}</span>`;
-                item.onclick = async () => {
-                    if (_currentMoveContext) {
-                        _currentMoveContext.groupId = g.id;
-                        await BusDB.put('favorites', _currentMoveContext);
-                        activeGroupId = g.id;
-                        closeGroupModal();
-                        renderFavorites();
-                    } else {
-                        saveFavorite(r, s, true, g.id);
-                        closeGroupModal();
-                    }
-                };
-                list.appendChild(item);
-            });
-            
-            modal.classList.remove('hidden');
-            input.value = '';
-            setTimeout(() => input.focus(), 100);
+            const body = `<div id='group-list'>${groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(g => `<div class='group-item' onclick='selectGroup(${g.id})'><i class='fas fa-folder'></i> <span>${localized(g, 'name')}</span></div>`).join('')}</div>`;
+            const footer = `<div style='width:100%'><input type='text' id='new-group-input' placeholder='${t('newGroupName')}' style='width:100%;margin-bottom:8px'><button class='btn btn-save' style='width:100%' onclick='createNewGroupAndSave()'><i class='fas fa-plus'></i> ${t('addGroup')}</button></div>`;
+            openGenericModal(t('selectGroup'), body, footer);
+            setTimeout(() => document.getElementById('new-group-input').addEventListener('keyup', e => { if (e.key === 'Enter') createNewGroupAndSave(); }), 100);
         }
-
-        function closeGroupModal() {
-            document.getElementById('group-modal').classList.add('hidden');
-            _currentFavContext = null;
-        }
+        window.selectGroup = async (id) => { if (_currentMoveContext) { _currentMoveContext.groupId = id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = id; } else await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, id); closeGenericModal(); renderFavorites(); };
 
         async function createNewGroupAndSave() {
-            const input = document.getElementById('new-group-input');
-            const name = input.value.trim();
-            if (!name) {
-                alert(t('invalidName'));
-                return;
-            }
-            
-            const groups = await BusDB.getAll('favorite_groups');
-            const nextSortOrder = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
-            
-            const newGroup = {
-                name_tc: name,
-                name_en: name,
-                sortOrder: nextSortOrder
-            };
-            
-            await BusDB.put('favorite_groups', newGroup);
-            const allGroups = await BusDB.getAll('favorite_groups');
-            const savedGroup = allGroups.reduce((prev, current) => (prev.id > current.id) ? prev : current);
-            
-            if (_currentMoveContext) {
-                _currentMoveContext.groupId = savedGroup.id;
-                await BusDB.put('favorites', _currentMoveContext);
-                activeGroupId = savedGroup.id;
-                renderFavorites();
-            } else if (_currentFavContext) {
-                saveFavorite(_currentFavContext.r, _currentFavContext.s, true, savedGroup.id);
-            }
-            closeGroupModal();
+            const name = document.getElementById('new-group-input').value.trim(); if (!name) return alert(t('invalidName'));
+            const groups = await BusDB.getAll('favorite_groups'), next = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
+            await BusDB.put('favorite_groups', { name_tc: name, name_en: name, sortOrder: next });
+            const all = await BusDB.getAll('favorite_groups'), saved = all.reduce((p, c) => (p.id > c.id) ? p : c);
+            if (_currentMoveContext) { _currentMoveContext.groupId = saved.id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = saved.id; }
+            else if (_currentFavContext) await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, saved.id);
+            closeGenericModal(); renderFavorites();
         }
 
-        async function saveFavorite(r, s, skipHome = false, groupId = 1) {
-            const dest_name = localized(r, 'dest');
-            const orig_name = localized(r, 'orig');
-            const path_desc = r.path_desc || (orig_name ? `${orig_name} ↔ ${dest_name}` : dest_name);
-            const fav = {
-                co: r.co, stopId: s.stop, route: r.route, stopName_tc: s.name_tc, stopName_en: s.name_en,
-                routeId: r.routeId, serviceType: r.service_type || 1, bound: r.bound, direction: r.direction,
-                orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en,
-                path_desc: path_desc, sortOrder: Date.now(), groupId: groupId
-            };
-            await BusDB.put('favorites', fav);
-            _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
-            
-            activeGroupId = groupId;
-            
-            if (skipHome) {
-                // Update the star in the current view if it exists
-                const star = document.querySelector(`.station-card[data-stop-id="${s.stop}"] .fav-star`);
-                if (star) {
-                    star.classList.add('active');
-                    star.innerHTML = '<i class="fas fa-star"></i>';
-                }
-            } else {
-                showHome();
-            }
+        async function saveFavorite(r, s, skip = false, gid = 1) {
+            const dest = localized(r, 'dest'), orig = localized(r, 'orig'), path = r.path_desc || (orig ? `${orig} ↔ ${dest}` : dest);
+            const fav = { co: r.co, stopId: s.stop, route: r.route, stopName_tc: s.name_tc, stopName_en: s.name_en, routeId: r.routeId, serviceType: r.service_type || 1, bound: r.bound, direction: r.direction, orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en, path_desc: path, sortOrder: Date.now(), groupId: gid };
+            await BusDB.put('favorites', fav); _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
+            activeGroupId = gid; if (skip) { const star = document.querySelector(`.station-card[data-stop-id='${s.stop}'] .fav-star`); if (star) { star.classList.add('active'); star.innerHTML = "<i class='fas fa-star'></i>"; } } else showHome();
         }
 
-        async function removeFavorite(favId) {
-            await BusDB.delete('favorites', favId);
-            renderFavorites();
-        }
-
-        let wasDragged = false;
-        let isGroupDrag = false;
-        let draggingElements = [];
-        
-        function handlePointerDown(e, card, context) {
-            if (e.target.closest('.remove-btn') || e.target.closest('.fav-star') || e.target.closest('.edit-group-btn')) return;
-            startY = e.clientY;
-            const rect = card.getBoundingClientRect();
-            wasDragged = false;
-            isGroupDrag = context && context.isGroup;
-
+        async function handlePointerDown(e, card, f) {
+            if (e.target.closest('.remove-btn, .fav-star, .edit-group-btn')) return;
+            startY = e.clientY; wasDragged = false;
             dragTimeout = setTimeout(() => {
-                isDragging = true; activeDragCard = card;
-                wasDragged = true;
-                
-                card.style.touchAction = 'none';
-                const container = document.getElementById('favorites-list');
-                const containerRect = container.getBoundingClientRect();
-
-                if (isGroupDrag) {
-                    // Collect all elements in the group
-                    draggingElements = [card];
-                    let next = card.nextElementSibling;
-                    while (next && next.classList.contains('card')) {
-                        draggingElements.push(next);
-                        next = next.nextElementSibling;
-                    }
-                    
-                    // Create placeholder for the whole group
-                    dragPlaceholder = document.createElement('div');
-                    dragPlaceholder.className = 'drag-placeholder';
-                    let totalHeight = 0;
-                    draggingElements.forEach(el => {
-                        totalHeight += el.offsetHeight + 12; // margin-bottom
-                        el.classList.add('dragging');
-                        el.style.width = `${el.offsetWidth}px`;
-                    });
-                    dragPlaceholder.style.height = `${totalHeight}px`;
-                    container.insertBefore(dragPlaceholder, card);
-                    
-                    initialTop = rect.top - containerRect.top;
-                    // Position all elements
-                    let currentOffset = 0;
-                    draggingElements.forEach(el => {
-                        el.style.position = 'absolute';
-                        el.style.top = `${initialTop + currentOffset}px`;
-                        el.style.left = `${el.offsetLeft - containerRect.left}px`;
-                        el.style.zIndex = '1000';
-                        currentOffset += el.offsetHeight + 12;
-                    });
-                } else {
-                    dragPlaceholder = document.createElement('div');
-                    dragPlaceholder.className = 'drag-placeholder';
-                    dragPlaceholder.style.height = `${rect.height}px`;
-                    card.classList.add('dragging');
-                    card.style.width = `${rect.width}px`;
-                    initialTop = rect.top - containerRect.top;
-                    card.style.top = `${initialTop}px`;
-                    card.style.left = `${rect.left - containerRect.left}px`;
-                    container.insertBefore(dragPlaceholder, card);
-                }
-            }, 300); // 300ms hold to start drag
-            
-            activePointerUpHandler = (ev) => handlePointerUp(ev, card);
-            document.addEventListener('pointermove', handlePointerMove, { passive: false });
-            document.addEventListener('pointerup', activePointerUpHandler);
-            document.addEventListener('pointercancel', activePointerUpHandler);
+                isDragging = true; activeDragCard = card; wasDragged = true; document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                const container = document.getElementById('favorites-list'), rect = card.getBoundingClientRect(), crect = container.getBoundingClientRect();
+                dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'drag-placeholder'; dragPlaceholder.style.height = `${rect.height}px`;
+                card.classList.add('dragging'); card.style.width = `${rect.width}px`; initialTop = rect.top - crect.top; card.style.top = `${initialTop}px`; card.style.left = `${rect.left - crect.left}px`;
+                container.insertBefore(dragPlaceholder, card);
+            }, 300);
+            activePointerUpHandler = ev => handlePointerUp(ev, card);
+            document.addEventListener('pointermove', handlePointerMove, { passive: false }); document.addEventListener('pointerup', activePointerUpHandler); document.addEventListener('pointercancel', activePointerUpHandler);
         }
 
         function handlePointerMove(e) {
-            if (!isDragging) {
-                if (dragTimeout && Math.abs(e.clientY - startY) > 15) { 
-                    clearTimeout(dragTimeout); 
-                    dragTimeout = null; 
-                }
-                return;
-            }
-            
-            e.preventDefault(); 
-            const deltaY = e.clientY - startY;
-            const container = document.getElementById('favorites-list');
-
-            if (isGroupDrag) {
-                let currentOffset = 0;
-                draggingElements.forEach(el => {
-                    el.style.top = `${initialTop + currentOffset + deltaY}px`;
-                    currentOffset += el.offsetHeight + 12;
-                });
-            } else {
-                activeDragCard.style.top = `${initialTop + deltaY}px`;
-            }
-
-            const afterElement = getDragAfterElement(container, e.clientY);
-            if (afterElement == null) { 
-                container.appendChild(dragPlaceholder); 
-            } else { 
-                container.insertBefore(dragPlaceholder, afterElement); 
-            }
+            if (!isDragging) { if (dragTimeout && Math.abs(e.clientY - startY) > 15) { clearTimeout(dragTimeout); dragTimeout = null; } return; }
+            e.preventDefault(); const dy = e.clientY - startY, c = document.getElementById('favorites-list');
+            activeDragCard.style.top = `${initialTop + dy}px`;
+            const after = getDragAfterElement(c, e.clientY); if (after == null) c.appendChild(dragPlaceholder); else c.insertBefore(dragPlaceholder, after);
         }
 
         function handlePointerUp(e, card) {
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', activePointerUpHandler);
-            document.removeEventListener('pointercancel', activePointerUpHandler);
-            
+            document.removeEventListener('pointermove', handlePointerMove); document.removeEventListener('pointerup', activePointerUpHandler); document.removeEventListener('pointercancel', activePointerUpHandler);
             if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-            
-            if (!isDragging) { 
-                return; 
-            }
-            
-            isDragging = false;
-            card.style.touchAction = '';
-            document.body.style.userSelect = '';
-            document.body.style.webkitUserSelect = '';
-            
-            const container = document.getElementById('favorites-list');
-            
-            if (isGroupDrag) {
-                draggingElements.forEach(el => {
-                    el.classList.remove('dragging');
-                    el.style.position = ''; el.style.top = ''; el.style.left = ''; el.style.width = ''; el.style.zIndex = '';
-                    container.insertBefore(el, dragPlaceholder);
-                });
-                saveReorderedGroups();
-            } else {
-                card.classList.remove('dragging');
-                card.style.position = ''; card.style.top = ''; card.style.left = ''; card.style.width = '';
-                container.insertBefore(card, dragPlaceholder);
-                saveReorderedFavorites();
-            }
-            
-            container.removeChild(dragPlaceholder);
-            activeDragCard = null; dragPlaceholder = null; draggingElements = [];
+            if (!isDragging) return; isDragging = false; card.style.touchAction = ''; document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            const c = document.getElementById('favorites-list'); card.classList.remove('dragging'); card.style.position = card.style.top = card.style.left = card.style.width = '';
+            c.insertBefore(card, dragPlaceholder); saveReorderedFavorites(); c.removeChild(dragPlaceholder); activeDragCard = dragPlaceholder = null;
         }
 
-        function handleTabPointerDown(e, tab, group) {
-            startX = e.clientX;
-            const rect = tab.getBoundingClientRect();
-            wasDragged = false;
-
+        function handleTabPointerDown(e, tab, g) {
+            startX = e.clientX; wasDragged = false;
             dragTimeout = setTimeout(() => {
-                isDragging = true;
-                activeDragTab = tab;
-                wasDragged = true;
-
-                tab.style.touchAction = 'none';
-                const container = document.getElementById('favorites-tabs');
-                const containerRect = container.getBoundingClientRect();
-
-                tabDragPlaceholder = document.createElement('div');
-                tabDragPlaceholder.className = 'fav-tab-placeholder';
-                tabDragPlaceholder.style.width = `${rect.width}px`;
-                tabDragPlaceholder.style.height = `${rect.height}px`;
-                
-                tab.classList.add('dragging');
-                tab.style.width = `${rect.width}px`;
-                initialLeft = rect.left - containerRect.left;
-                tab.style.left = `${initialLeft}px`;
-                tab.style.top = `${rect.top - containerRect.top}px`;
-                
-                container.insertBefore(tabDragPlaceholder, tab);
+                isDragging = true; activeDragTab = tab; wasDragged = true; document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                const c = document.getElementById('favorites-tabs'), r = tab.getBoundingClientRect(), cr = c.getBoundingClientRect();
+                tabDragPlaceholder = document.createElement('div'); tabDragPlaceholder.className = 'fav-tab-placeholder'; tabDragPlaceholder.style.width = `${r.width}px`; tabDragPlaceholder.style.height = `${r.height}px`;
+                tab.classList.add('dragging'); tab.style.width = `${r.width}px`; initialLeft = r.left - cr.left; tab.style.left = `${initialLeft}px`; tab.style.top = `${r.top - cr.top}px`;
+                c.insertBefore(tabDragPlaceholder, tab);
             }, 300);
-
-            const upHandler = (ev) => handleTabPointerUp(ev, tab);
-            const moveHandler = (ev) => handleTabPointerMove(ev);
-            
-            document.addEventListener('pointermove', moveHandler, { passive: false });
-            document.addEventListener('pointerup', upHandler, { once: true });
-            document.addEventListener('pointercancel', upHandler, { once: true });
-            
-            // Store handlers to remove move listener on up
-            tab._moveHandler = moveHandler;
+            const up = ev => handleTabPointerUp(ev, tab); tab._moveHandler = handleTabPointerMove;
+            document.addEventListener('pointermove', tab._moveHandler, { passive: false }); document.addEventListener('pointerup', up, { once: true }); document.addEventListener('pointercancel', up, { once: true });
         }
 
         function handleTabPointerMove(e) {
-            if (!isDragging) {
-                if (dragTimeout && Math.abs(e.clientX - startX) > 15) {
-                    clearTimeout(dragTimeout);
-                    dragTimeout = null;
-                }
-                return;
-            }
-
-            e.preventDefault();
-            const deltaX = e.clientX - startX;
-            const container = document.getElementById('favorites-tabs');
-
-            activeDragTab.style.left = `${initialLeft + deltaX}px`;
-
-            const afterElement = getDragAfterElementHorizontal(container, e.clientX);
-            if (afterElement == null) {
-                container.appendChild(tabDragPlaceholder);
-            } else {
-                container.insertBefore(tabDragPlaceholder, afterElement);
-            }
+            if (!isDragging) { if (dragTimeout && Math.abs(e.clientX - startX) > 15) { clearTimeout(dragTimeout); dragTimeout = null; } return; }
+            e.preventDefault(); const dx = e.clientX - startX, c = document.getElementById('favorites-tabs');
+            activeDragTab.style.left = `${initialLeft + dx}px`;
+            const after = getDragAfterElementHorizontal(c, e.clientX); if (after == null) c.appendChild(tabDragPlaceholder); else c.insertBefore(tabDragPlaceholder, after);
         }
 
         function handleTabPointerUp(e, tab) {
-            document.removeEventListener('pointermove', tab._moveHandler);
-            if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
-
-            if (!isDragging) {
-                return;
-            }
-
-            isDragging = false;
-            tab.style.touchAction = '';
-            document.body.style.userSelect = '';
-            document.body.style.webkitUserSelect = '';
-            const container = document.getElementById('favorites-tabs');
-
-            tab.classList.remove('dragging');
-            tab.style.position = ''; tab.style.left = ''; tab.style.top = ''; tab.style.width = '';
-            container.insertBefore(tab, tabDragPlaceholder);
-            container.removeChild(tabDragPlaceholder);
-
-            activeDragTab = null; tabDragPlaceholder = null;
-            saveReorderedGroups();
+            document.removeEventListener('pointermove', tab._moveHandler); if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
+            if (!isDragging) return; isDragging = false; tab.style.touchAction = ''; document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            const c = document.getElementById('favorites-tabs'); tab.classList.remove('dragging'); tab.style.position = tab.style.left = tab.style.top = tab.style.width = '';
+            c.insertBefore(tab, tabDragPlaceholder); c.removeChild(tabDragPlaceholder); activeDragTab = tabDragPlaceholder = null; saveReorderedGroups();
         }
 
         async function saveReorderedGroups() {
-            const tabContainer = document.getElementById('favorites-tabs');
-            const elements = [...tabContainer.querySelectorAll('.fav-tab')];
-            const groups = await BusDB.getAll('favorite_groups');
-            const toUpdate = [];
-            
-            let sortOrder = 1;
-            for (const el of elements) {
-                const groupId = parseInt(el.dataset.groupid, 10);
-                if (groupId) {
-                    const group = groups.find(g => g.id === groupId);
-                    if (group) {
-                        group.sortOrder = sortOrder++;
-                        toUpdate.push(group);
-                    }
-                }
-            }
-            
-            if (toUpdate.length > 0) {
-                await BusDB.putAll('favorite_groups', toUpdate);
-            }
+            const els = [...document.getElementById('favorites-tabs').querySelectorAll('.fav-tab')], gs = await BusDB.getAll('favorite_groups'), toUp = [];
+            els.forEach((el, i) => { const g = gs.find(x => x.id === parseInt(el.dataset.groupid, 10)); if (g) { g.sortOrder = i + 1; toUp.push(g); } });
+            if (toUp.length > 0) await BusDB.putAll('favorite_groups', toUp);
         }
 
         async function saveReorderedFavorites() {
-            const container = document.getElementById('favorites-list');
-            const elements = [...container.children];
-            const favs = await BusDB.getAll('favorites');
-            const toUpdate = [];
-            
-            let sortOrder = 0;
-            
-            for (const el of elements) {
-                if (el.classList.contains('card') && el.dataset.favid) {
-                    const favId = parseInt(el.dataset.favid, 10);
-                    const fav = favs.find(f => f.favId === favId);
-                    if (fav) {
-                        fav.sortOrder = sortOrder++;
-                        fav.groupId = activeGroupId;
-                        toUpdate.push(fav);
-                    }
-                }
-            }
-            if (toUpdate.length > 0) {
-                await BusDB.putAll('favorites', toUpdate);
-            }
+            const els = [...document.getElementById('favorites-list').children], fs = await BusDB.getAll('favorites'), toUp = [];
+            els.forEach((el, i) => { if (el.classList.contains('card') && el.dataset.favid) { const f = fs.find(x => x.favId === parseInt(el.dataset.favid, 10)); if (f) { f.sortOrder = i; f.groupId = activeGroupId; toUp.push(f); } } });
+            if (toUp.length > 0) await BusDB.putAll('favorites', toUp);
         }
 
         async function renderFavorites() {
-            if (_etaObserver) _etaObserver.disconnect();
-            _visibleFavIds.clear();
-
-            const favs = await BusDB.getAll('favorites');
-            const groups = await BusDB.getAll('favorite_groups');
-            
-            _favoriteStopsCache.clear();
-            favs.forEach(f => { _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${f.serviceType || 1}`); });
-            
-            groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
-            if (groups.length > 0) {
-                if (activeGroupId === null || !groups.find(g => g.id === activeGroupId)) {
-                    activeGroupId = groups[0].id;
-                }
-            }
-
-            // Render Tabs
-            const tabContainer = document.getElementById('favorites-tabs');
-            tabContainer.innerHTML = '';
-            groups.forEach(group => {
-                const isActive = activeGroupId === group.id;
-                const tab = document.createElement('div');
-                tab.className = `fav-tab ${isActive ? 'active' : ''}`;
-                tab.dataset.groupid = group.id;
-                
-                const label = document.createElement('span');
-                label.textContent = localized(group, 'name');
-                tab.appendChild(label);
-
-                if (isActive) {
-                    const editBtn = document.createElement('i');
-                    editBtn.className = 'fas fa-cog edit-group-btn';
-                    editBtn.style.opacity = '0.7';
-                    editBtn.style.cursor = 'pointer';
-                    editBtn.onclick = (e) => handleGroupEditClick(e, group.id);
-                    tab.appendChild(editBtn);
-                }
-
-                tab.addEventListener('pointerdown', (e) => handleTabPointerDown(e, tab, group));
-                tab.onclick = () => {
-                    if (wasDragged) return;
-                    activeGroupId = group.id;
-                    renderFavorites();
-                };
-                tabContainer.appendChild(tab);
+            if (_etaObserver) _etaObserver.disconnect(); _visibleFavIds.clear();
+            const fs = await BusDB.getAll('favorites'), gs = await BusDB.getAll('favorite_groups'); gs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            if (gs.length > 0 && (activeGroupId === null || !gs.find(g => g.id === activeGroupId))) activeGroupId = gs[0].id;
+            const tc = document.getElementById('favorites-tabs'); tc.innerHTML = '';
+            gs.forEach(g => {
+                const isActive = activeGroupId === g.id, tab = document.createElement('div'); tab.className = `fav-tab ${isActive ? 'active' : ''}`; tab.dataset.groupid = g.id; tab.oncontextmenu = () => false;
+                tab.innerHTML = `<span>${localized(g, 'name')}</span>${isActive ? `<i class='fas fa-cog edit-group-btn' style='opacity:0.7;cursor:pointer' onclick='handleGroupEditClick(event, ${g.id})'></i>` : ''}`;
+                tab.addEventListener('pointerdown', e => handleTabPointerDown(e, tab, g));
+                tab.onclick = () => { if (!wasDragged) { activeGroupId = g.id; renderFavorites(); } }; tc.appendChild(tab);
             });
-
-            // Render List
-            const listContainer = document.getElementById('favorites-list');
-            listContainer.innerHTML = '';
-            
-            const groupFavs = favs.filter(f => f.groupId === activeGroupId);
-            groupFavs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
-            if (groupFavs.length === 0) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.style.textAlign = 'center';
-                emptyMsg.style.padding = '20px';
-                emptyMsg.style.color = '#888';
-                emptyMsg.textContent = t('emptyGroup');
-                listContainer.appendChild(emptyMsg);
-            } else {
-                groupFavs.forEach(f => {
-                    const card = createFavoriteCard(f);
-                    listContainer.appendChild(card);
-                    if (_etaObserver) _etaObserver.observe(card);
-                });
-            }
-
+            const lc = document.getElementById('favorites-list'); lc.innerHTML = '';
+            const gfs = fs.filter(f => f.groupId === activeGroupId).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            if (gfs.length === 0) { const m = document.createElement('div'); m.style.cssText = 'text-align:center;padding:20px;color:#888'; m.textContent = t('emptyGroup'); lc.appendChild(m); }
+            else gfs.forEach(f => { const card = createFavoriteCard(f); lc.appendChild(card); if (_etaObserver) _etaObserver.observe(card); });
             refreshAllETAs();
         }
 
-        async function handleGroupEditClick(e, groupId) {
-            e.stopPropagation();
-            _editingGroupId = groupId;
-            const groups = await BusDB.getAll('favorite_groups');
-            const group = groups.find(g => g.id === groupId);
-            if (!group) return;
-
-            document.getElementById('group-action-title').textContent = localized(group, 'name');
-            
-            // Hide delete button for default groups (1 and 2)
-            const deleteBtn = document.getElementById('btn-action-delete');
-            if (groupId === 1 || groupId === 2) {
-                deleteBtn.style.display = 'none';
-            } else {
-                deleteBtn.style.display = 'flex';
-            }
-
-            document.getElementById('group-action-modal').classList.remove('hidden');
+        async function handleGroupEditClick(e, gid) {
+            e.stopPropagation(); _editingGroupId = gid; const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === gid); if (!g) return;
+            const isDef = (gid === 1 || gid === 2), body = `<div style='display:flex;flex-direction:column;gap:10px'><button class='btn btn-save' onclick='openRenameModal()' style='width:100%;display:flex;justify-content:center;gap:8px;background:#eee;color:#333'><i class='fas fa-edit'></i> ${t('renameGroup')}</button>${isDef ? '' : `<button class='btn btn-save' onclick='openDeleteConfirmModal()' style='width:100%;display:flex;justify-content:center;gap:8px;background:#ffeeee;color:var(--kmb-red)'><i class='fas fa-trash'></i> ${t('deleteGroup')}</button>`}</div>`;
+            openGenericModal(localized(g, 'name'), body);
         }
-
-        function closeGroupActionModal() { document.getElementById('group-action-modal').classList.add('hidden'); }
 
         async function openRenameModal() {
-            closeGroupActionModal();
-            const groups = await BusDB.getAll('favorite_groups');
-            const group = groups.find(g => g.id === _editingGroupId);
-            if (!group) return;
-
-            const input = document.getElementById('rename-group-input');
-            input.value = localized(group, 'name');
-            document.getElementById('rename-group-modal').classList.remove('hidden');
-            setTimeout(() => input.focus(), 100);
+            const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === _editingGroupId); if (!g) return;
+            const body = `<input type='text' id='rename-group-input' value='${localized(g, 'name')}' style='width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box'>`;
+            const footer = `<button class='btn btn-cancel' onclick='closeGenericModal()'>${t('cancel')}</button><button class='btn btn-save' onclick='submitRenameGroup()'>${t('save')}</button>`;
+            openGenericModal(t('renameGroup'), body, footer);
+            setTimeout(() => { const i = document.getElementById('rename-group-input'); i.focus(); i.addEventListener('keyup', e => { if (e.key === 'Enter') submitRenameGroup(); }); }, 100);
         }
-
-        function closeRenameModal() { document.getElementById('rename-group-modal').classList.add('hidden'); }
 
         async function submitRenameGroup() {
-            const input = document.getElementById('rename-group-input');
-            const newName = input.value.trim();
-            if (!newName) {
-                alert(t('invalidName'));
-                return;
-            }
-
-            const groups = await BusDB.getAll('favorite_groups');
-            const group = groups.find(g => g.id === _editingGroupId);
-            if (group) {
-                group.name_tc = newName;
-                group.name_en = newName;
-                await BusDB.put('favorite_groups', group);
-                closeRenameModal();
-                renderFavorites();
-            }
+            const name = document.getElementById('rename-group-input').value.trim(); if (!name) return alert(t('invalidName'));
+            const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === _editingGroupId); if (g) { g.name_tc = g.name_en = name; await BusDB.put('favorite_groups', g); closeGenericModal(); renderFavorites(); }
         }
 
-        function openDeleteConfirmModal() {
-            closeGroupActionModal();
-            document.getElementById('delete-confirm-modal').classList.remove('hidden');
-        }
+        function openDeleteConfirmModal() { openGenericModal(`${t('deleteGroup')}?`, `<p style='margin:0;font-size:14px;color:#555'>${t('deleteGroupConfirm')}</p>`, `<button class='btn btn-cancel' onclick='closeGenericModal()'>${t('cancel')}</button><button class='btn btn-save' onclick='submitDeleteGroup()' style='background:var(--kmb-red)'>${t('deleteGroup')}</button>`, true); }
 
-        function closeDeleteConfirmModal() { document.getElementById('delete-confirm-modal').classList.add('hidden'); }
+        async function submitDeleteGroup() { await deleteGroup(_editingGroupId); closeGenericModal(); if (activeGroupId === _editingGroupId) activeGroupId = 1; renderFavorites(); }
 
-        async function submitDeleteGroup() {
-            await deleteGroup(_editingGroupId);
-            closeDeleteConfirmModal();
-            // If we deleted the active tab, switch to group 1
-            if (activeGroupId === _editingGroupId) {
-                activeGroupId = 1;
-            }
-            renderFavorites();
-        }
-
-        async function deleteGroup(groupId) {
-            // Delete group
-            await BusDB.delete('favorite_groups', groupId);
-            
-            // Delete all favorites in this group
-            const favs = await BusDB.getAll('favorites');
-            const toDelete = favs.filter(f => f.groupId === groupId);
-            for (const f of toDelete) {
-                await BusDB.delete('favorites', f.favId);
-            }
-        }
-
-        // Enter key support for Rename Modal
-        document.addEventListener('DOMContentLoaded', () => {
-            const renameInput = document.getElementById('rename-group-input');
-            if (renameInput) {
-                renameInput.addEventListener('keyup', (e) => {
-                    if (e.key === 'Enter') submitRenameGroup();
-                });
-            }
-        });
+        async function deleteGroup(gid) { await BusDB.delete('favorite_groups', gid); const fs = await BusDB.getAll('favorites'); for (const f of fs.filter(x => x.groupId === gid)) await BusDB.delete('favorites', f.favId); }
 
         function createFavoriteCard(f) {
-            const card = document.createElement('div');
-            card.className = `card co-${f.co}`;
-            card.dataset.favid = f.favId;
-            card.oncontextmenu = () => false; // Prevent context menu on long press
-            card.addEventListener('pointerdown', (e) => handlePointerDown(e, card, f));
-            card.onclick = (e) => {
-                if (wasDragged) return;
-                if (e.target.closest('.remove-btn') || e.target.closest('.fav-star')) return;
-                goToRouteStopsFromFav(f);
-            };
-            const header = document.createElement('div');
-            header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
+            const card = document.createElement('div'); card.className = `card co-${f.co}`; card.dataset.favid = f.favId; card.oncontextmenu = () => false; card.addEventListener('pointerdown', e => handlePointerDown(e, card, f));
+            card.onclick = e => { if (!wasDragged && !e.target.closest('.remove-btn, .fav-star')) goToRouteStopsFromFav(f); };
+            
+            const header = document.createElement('div'); header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
             const info = document.createElement('div');
-            info.innerHTML = `<div class="route-info"><span class="route-no">${f.route}</span> <span class="dest-name">${f.co}</span></div>
-                             <div class="path-info" style="font-size: 12px; color: #777; margin-bottom: 4px;">${f.path_desc || ''}</div>
-                             <div class="stop-name"><i class="fas fa-map-marker-alt"></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}</div>`;
+            info.innerHTML = `<div class='route-info'><span class='route-no'>${f.route}</span> <span class='dest-name'>${f.co}</span></div><div class='path-info' style='font-size:12px;color:#777;margin-bottom:4px'>${f.path_desc || ''}</div><div class='stop-name'><i class='fas fa-map-marker-alt'></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}</div>`;
             
-            const actionArea = document.createElement('div');
-            actionArea.style.display = 'flex';
-            
-            const moveBtn = document.createElement('button');
-            moveBtn.className = 'remove-btn';
-            moveBtn.style.marginRight = '8px';
-            moveBtn.innerHTML = '<i class="fas fa-folder-open"></i>';
-            moveBtn.title = t('move');
+            const actions = document.createElement('div'); actions.style.display = 'flex';
+            const moveBtn = document.createElement('button'); moveBtn.className = 'remove-btn'; moveBtn.style.marginRight = '8px'; moveBtn.innerHTML = "<i class='fas fa-folder-open'></i>"; moveBtn.title = t('move');
             moveBtn.onclick = (e) => { e.stopPropagation(); showGroupSelector(null, null, f); };
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-btn'; removeBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
-            removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t('removeFavorite'))) removeFavorite(f.favId); };
             
-            actionArea.appendChild(moveBtn);
-            actionArea.appendChild(removeBtn);
+            const removeBtn = document.createElement('button'); removeBtn.className = 'remove-btn'; removeBtn.innerHTML = "<i class='fas fa-trash-can'></i>";
+            removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t("removeFavorite"))) removeFavorite(f.favId); };
             
-            header.appendChild(info); header.appendChild(actionArea);
-            const etaDiv = document.createElement('div');
-            etaDiv.className = 'eta-row';
-            etaDiv.innerHTML = `<span><i class="fas fa-clock"></i> ${t('next')}</span><div class="eta-list" id="eta-${f.favId}">${t('loadingStops')}</div>`;
-            card.appendChild(header); card.appendChild(etaDiv);
+            actions.appendChild(moveBtn); actions.appendChild(removeBtn);
+            header.appendChild(info); header.appendChild(actions);
+            
+            const etaRow = document.createElement('div'); etaRow.className = 'eta-row';
+            etaRow.innerHTML = `<span><i class='fas fa-clock'></i> ${t('next')}</span><div class='eta-list' id='eta-${f.favId}'>${t('loadingStops')}</div>`;
+            
+            card.appendChild(header); card.appendChild(etaRow);
             return card;
         }
 
         async function refreshAllETAs() {
-            const btn = document.getElementById('refresh-btn');
-            if (btn) btn.classList.add('fa-spin');
-            
-            try {
-                if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
-                const favs = await BusDB.getAll('favorites');
-                // Only refresh buses that are in the active tab AND visible on screen
-                const toRefresh = favs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId));
-                await Promise.all(toRefresh.map(f => updateETA(f)));
-            } catch (e) {
-                console.error('Refresh Error:', e);
-            } finally {
-                if (btn) btn.classList.remove('fa-spin');
-            }
+            const b = document.getElementById('refresh-btn'); if (b) b.classList.add('fa-spin');
+            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); }
+            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
         }
 
-        function getRelativeTime(etaStr) {
-            if (!etaStr) return t('scheduled');
-            const eta = new Date(etaStr.replace(' ', 'T'));
-            const diffMin = Math.floor((eta - new Date()) / 60000);
-            return diffMin <= 0 ? `0 ${t('min')}` : `${diffMin} ${t('min')}`;
-        }
+        function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
 
         async function updateETA(f) {
             try {
-                const etaContainer = document.getElementById(`eta-${f.favId}`);
-                if (!etaContainer) return;
-                const serviceType = f.serviceType || 1;
-                const cached = getFlashCache(f.co, f.stopId, f.route, serviceType);
-                const render = (etas) => {
-                    if (!etas || etas.length === 0) { etaContainer.textContent = t('noETA'); return; }
-                    const formattedEtas = etas.slice(0, 3).map(item => getRelativeTime(f.co === 'NLB' ? item.estimatedArrivalTime : item.eta));
-                    etaContainer.innerHTML = '';
-                    formattedEtas.forEach((time, index) => {
-                        const span = document.createElement('span'); span.textContent = time; etaContainer.appendChild(span);
-                        if (index < formattedEtas.length - 1) etaContainer.appendChild(document.createTextNode(', '));
-                    });
-                };
-                if (cached) render(cached);
-                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, serviceType, f.routeId, f.bound, f.direction);
-                if (etas !== null) {
-                    setFlashCache(f.co, f.stopId, f.route, serviceType, etas);
-                    render(etas);
-                }
-            } catch (e) { console.error('Error fetching ETA', e); }
+                const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
+                const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
+                const r = (etas) => { if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); };
+                if (cached) r(cached); const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
+                if (etas !== null) { setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); r(etas); }
+            } catch (e) {}
         }
 
         function toggleETADrawer(card, r, s) {
-            const drawer = card.querySelector('.eta-drawer');
-            const isOpen = drawer.classList.contains('open');
+            const d = card.querySelector('.eta-drawer'), isOpen = d.classList.contains('open');
             if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
-            document.querySelectorAll('.eta-drawer.open').forEach(d => { if (d !== drawer) d.classList.remove('open'); });
-            drawer.classList.toggle('open', !isOpen);
-            if (drawer.classList.contains('open')) {
-                updateDrawerETA(drawer, r, s);
-                _drawerInterval = setInterval(() => updateDrawerETA(drawer, r, s), 30000);
-            }
+            document.querySelectorAll('.eta-drawer.open').forEach(x => { if (x !== d) x.classList.remove('open'); });
+            d.classList.toggle('open', !isOpen); if (d.classList.contains('open')) { updateDrawerETA(d, r, s); _drawerInterval = setInterval(() => updateDrawerETA(d, r, s), 30000); }
         }
 
         const _drawerFetching = new Set();
-
-        async function updateDrawerETA(drawer, r, s, isManual = false) {
-            const content = drawer.querySelector('.eta-content');
-            const status = drawer.querySelector('.eta-status');
-            const serviceType = r.service_type || 1;
-            const cooldownKey = `${r.co}-${s.stop}-${r.route}-${serviceType}`;
-
-            // 1. Prevent overlapping requests
-            if (_drawerFetching.has(cooldownKey)) return;
-
-            // 2. Check cooldown for manual requests
-            if (isManual) {
-                const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
-                if (Date.now() - lastRefresh < 5000) {
-                    return; // Still in cooldown
-                }
-            }
-
-            _drawerFetching.add(cooldownKey);
-            
-            try {
-                // If manual, start spinning the existing icon immediately
-                if (isManual) {
-                    const existingIcon = status.querySelector('.fa-sync-alt');
-                    if (existingIcon) existingIcon.classList.add('fa-spin');
-                }
-
-                const cached = getFlashCache(r.co, s.stop, r.route, serviceType);
-                const render = (etas) => {
-                    if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
-                    
-                    // Visual feedback for content update
-                    content.style.opacity = '0.5';
-                    content.style.transition = 'opacity 0.2s';
-                    
-                    setTimeout(() => {
-                        content.innerHTML = '';
-                        etas.slice(0, 3).forEach(item => {
-                            const row = document.createElement('div'); row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.marginBottom = '4px';
-                            const timeStr = getRelativeTime(r.co === 'NLB' ? item.estimatedArrivalTime : item.eta);
-                            const timeSpan = document.createElement('span'); timeSpan.textContent = timeStr; timeSpan.style.fontWeight = 'bold';
-                            const remarkSpan = document.createElement('span'); remarkSpan.textContent = localized(item, 'rmk') || '';
-                            remarkSpan.style.fontSize = '12px'; remarkSpan.style.color = '#777';
-                            row.appendChild(timeSpan); row.appendChild(remarkSpan); content.appendChild(row);
-                        });
-                        content.style.opacity = '1';
-                    }, 50);
-
-                    const refreshIcon = document.createElement('i');
-                    refreshIcon.className = 'fas fa-sync-alt';
-                    refreshIcon.style.cursor = 'pointer';
-                    refreshIcon.style.marginLeft = '8px';
-                    refreshIcon.style.transition = 'opacity 0.3s';
-                    
-                    refreshIcon.onclick = (e) => {
-                        e.stopPropagation();
-                        updateDrawerETA(drawer, r, s, true);
-                    };
-
-                    // Handle visual dimming state
-                    const lastRefresh = _stationRefreshCooldowns.get(cooldownKey) || 0;
-                    const timeSinceRefresh = Date.now() - lastRefresh;
-                    if (timeSinceRefresh < 5000) {
-                        refreshIcon.style.opacity = '0.3';
-                        refreshIcon.style.cursor = 'not-allowed';
-                        setTimeout(() => {
-                            // Only reset if this icon is still the one in the DOM
-                            if (status.contains(refreshIcon)) {
-                                refreshIcon.style.opacity = '1';
-                                refreshIcon.style.cursor = 'pointer';
-                            }
-                        }, 5000 - timeSinceRefresh);
-                    }
-
-                    status.innerHTML = '';
-                    status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`;
-                    status.appendChild(refreshIcon);
-                };
-
-                if (cached) { render(cached); } else { content.textContent = t('loadingStops'); }
-
-                const etas = await BusAPI.getETA(r.co, s.stop, r.route, serviceType, r.routeId, r.bound, r.direction);
-                if (etas !== null) {
-                    setFlashCache(r.co, s.stop, r.route, serviceType, etas);
-                    render(etas);
-                }
-            } catch (error) { 
-                console.error('Error updating drawer ETA:', error); 
-            } finally {
-                _drawerFetching.delete(cooldownKey);
-                if (isManual) {
-                    const now = Date.now();
-                    _stationRefreshCooldowns.set(cooldownKey, now);
-                    
-                    // Visual feedback completion
-                    setTimeout(() => {
-                        const icon = status.querySelector('.fa-sync-alt');
-                        if (icon) {
-                            icon.classList.remove('fa-spin');
-                            icon.style.opacity = '0.3';
-                            icon.style.cursor = 'not-allowed';
-                            
-                            // Schedule the UN-DIM here
-                            setTimeout(() => {
-                                // Check if this icon is still in the DOM and still has this specific cooldown
-                                if (status.contains(icon) && _stationRefreshCooldowns.get(cooldownKey) === now) {
-                                    icon.style.opacity = '1';
-                                    icon.style.cursor = 'pointer';
-                                }
-                            }, 5000);
-                        }
-                    }, 500);
-                }
-            }
+        async function updateDrawerETA(d, r, s, manual = false) {
+            const content = d.querySelector('.eta-content'), status = d.querySelector('.eta-status'), st = r.service_type || 1, key = `${r.co}-${s.stop}-${r.route}-${st}`;
+            if (_drawerFetching.has(key)) return; if (manual && (Date.now() - (_stationRefreshCooldowns.get(key) || 0) < 5000)) return;
+            _drawerFetching.add(key); if (manual) { const i = status.querySelector('.fa-sync-alt'); if (i) i.classList.add('fa-spin'); }
+            const cached = getFlashCache(r.co, s.stop, r.route, st);
+            const render = (etas) => {
+                if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
+                content.style.opacity = '0.5'; setTimeout(() => {
+                    content.innerHTML = etas.slice(0, 3).map(i => `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span style='font-weight:bold'>${getRelativeTime(r.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`).join('');
+                    content.style.opacity = '1';
+                }, 50);
+                const i = document.createElement('i'); i.className = 'fas fa-sync-alt'; i.style.cssText = 'cursor:pointer;margin-left:8px;transition:opacity 0.3s';
+                i.onclick = (e) => { e.stopPropagation(); updateDrawerETA(d, r, s, true); };
+                const lr = Date.now() - (_stationRefreshCooldowns.get(key) || 0); if (lr < 5000) { i.style.opacity = '0.3'; i.style.cursor = 'not-allowed'; setTimeout(() => { if (status.contains(i)) { i.style.opacity = '1'; i.style.cursor = 'pointer'; } }, 5000 - lr); }
+                status.innerHTML = ''; status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`; status.appendChild(i);
+            };
+            if (cached) render(cached); else content.textContent = t('loadingStops');
+            const etas = await BusAPI.getETA(r.co, s.stop, r.route, st, r.routeId, r.bound, r.direction);
+            if (etas !== null) { setFlashCache(r.co, s.stop, r.route, st, etas); render(etas); }
+            _drawerFetching.delete(key); if (manual) { const now = Date.now(); _stationRefreshCooldowns.set(key, now); setTimeout(() => { const i = status.querySelector('.fa-sync-alt'); if (i) { i.classList.remove('fa-spin'); i.style.opacity = '0.3'; i.style.cursor = 'not-allowed'; setTimeout(() => { if (status.contains(i) && _stationRefreshCooldowns.get(key) === now) { i.style.opacity = '1'; i.style.cursor = 'pointer'; } }, 5000); } }, 500); }
         }
 
         async function handleFavoriteClick(star, r, s) {
-            const serviceType = r.service_type || 1;
-            const cacheKey = `${r.co}-${r.route}-${s.stop}-${serviceType}`;
-            const isFav = _favoriteStopsCache.has(cacheKey);
-            if (isFav) {
-                _favoriteStopsCache.delete(cacheKey); star.classList.remove('active'); star.innerHTML = '<i class="far fa-star"></i>';
-                const favs = await BusDB.getAll('favorites');
-                const f = favs.find(f => f.co === r.co && f.stopId === s.stop && f.route === r.route && (f.serviceType || 1) === serviceType);
-                if (f) await BusDB.delete('favorites', f.favId);
-            } else {
-                showGroupSelector(r, s);
-            }
+            const st = r.service_type || 1, key = `${r.co}-${r.route}-${s.stop}-${st}`;
+            if (_favoriteStopsCache.has(key)) { _favoriteStopsCache.delete(key); star.classList.remove('active'); star.innerHTML = "<i class='far fa-star'></i>"; const f = (await BusDB.getAll('favorites')).find(x => x.co === r.co && x.stopId === s.stop && x.route === r.route && (x.serviceType || 1) === st); if (f) await BusDB.delete('favorites', f.favId); }
+            else showGroupSelector(r, s);
         }
 
-        async function migrateFavorites() {
-            const oldFavsJson = localStorage.getItem('bus_favs');
-            if (oldFavsJson) {
-                try {
-                    const oldFavs = JSON.parse(oldFavsJson);
-                    const toPut = oldFavs.map(f => {
-                        if (!f.path_desc) f.path_desc = '';
-                        if (!f.groupId) f.groupId = 1;
-                        return f;
-                    });
-                    if (toPut.length > 0) {
-                        await BusDB.putAll('favorites', toPut);
-                    }
-                    localStorage.removeItem('bus_favs');
-                } catch (e) { console.error('Migration failed', e); }
-            }
-        }
-
-        setInterval(() => { refreshAllETAs(); }, 60000);
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                setupETAObserver();
-                await BusDB.init(); 
-                await migrateFavorites(); 
-                await syncRoutes(); 
-            } catch (e) {
-                console.error("App initialization failed", e);
-            } finally {
-                const loadingOverlay = document.getElementById('initial-loading');
-                if (loadingOverlay) loadingOverlay.classList.add('hidden');
-                renderFavorites();
-            }
-        });
-
-        let headerTapCount = 0;
-        let lastHeaderTapTime = 0;
-
-        document.querySelector('header h1').addEventListener('click', () => {
-            const now = Date.now();
-            if (now - lastHeaderTapTime > 500) {
-                headerTapCount = 1;
-            } else {
-                headerTapCount++;
-            }
-            lastHeaderTapTime = now;
-
-            if (headerTapCount === 10) {
-                headerTapCount = 0;
-                DebugLogger.toggle(true);
-            }
-        });
+        async function migrateFavorites() { const j = localStorage.getItem('bus_favs'); if (j) { try { const f = JSON.parse(j); if (f.length > 0) await BusDB.putAll('favorites', f.map(x => ({...x, path_desc: x.path_desc || '', groupId: x.groupId || 1}))); localStorage.removeItem('bus_favs'); } catch (e) {} } }
+        setInterval(() => refreshAllETAs(), 60000);
+        document.addEventListener('DOMContentLoaded', async () => { try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); renderFavorites(); } });
+        let tapCount = 0, lastTap = 0; document.querySelector('header h1').addEventListener('click', () => { const now = Date.now(); if (now - lastTap > 500) tapCount = 1; else tapCount++; lastTap = now; if (tapCount === 10) { tapCount = 0; DebugLogger.toggle(true); } });
     </script>
-    <div id="debug-console" class="hidden">
-        <div id="debug-header">
-            <span><i class="fas fa-terminal"></i> Debug Console</span>
-            <div id="debug-controls">
-                <button onclick="DebugLogger.clear()">Clear</button>
-                <button onclick="DebugLogger.toggle(false)">Close</button>
-            </div>
-        </div>
-        <div id="debug-logs"></div>
-    </div>
-
-    <!-- Group Action Menu -->
-    <div id="group-action-modal" class="modal-overlay hidden" onclick="closeGroupActionModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span id="group-action-title">Manage Group</span>
-                <i class="fas fa-times" onclick="closeGroupActionModal()" style="cursor: pointer;"></i>
-            </div>
-            <div class="modal-content" style="display:flex; flex-direction:column; gap:10px;">
-                <button class="btn btn-save" onclick="openRenameModal()" style="width: 100%; display: flex; justify-content: center; gap: 8px; background: #eee; color: #333;"><i class="fas fa-edit"></i> <span id="label-action-rename">Rename</span></button>
-                <button id="btn-action-delete" class="btn btn-save" onclick="openDeleteConfirmModal()" style="width: 100%; display: flex; justify-content: center; gap: 8px; background: #ffeeee; color: var(--kmb-red);"><i class="fas fa-trash"></i> <span id="label-action-delete">Delete</span></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rename Group Modal -->
-    <div id="rename-group-modal" class="modal-overlay hidden" onclick="closeRenameModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span id="label-rename-title">Rename Group</span>
-                <i class="fas fa-times" onclick="closeRenameModal()" style="cursor: pointer;"></i>
-            </div>
-            <div class="modal-content">
-                <input type="text" id="rename-group-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" onclick="closeRenameModal()"><span id="label-rename-cancel">Cancel</span></button>
-                <button class="btn btn-save" onclick="submitRenameGroup()"><span id="label-rename-save">Save</span></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirm Modal -->
-    <div id="delete-confirm-modal" class="modal-overlay hidden" onclick="closeDeleteConfirmModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header" style="background: var(--kmb-red);">
-                <span id="label-delete-title">Delete Group?</span>
-                <i class="fas fa-times" onclick="closeDeleteConfirmModal()" style="cursor: pointer;"></i>
-            </div>
-            <div class="modal-content">
-                <p style="margin: 0; font-size: 14px; color: #555;" id="label-delete-desc">This will also remove all saved buses in this group. Are you sure?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" onclick="closeDeleteConfirmModal()"><span id="label-delete-cancel">Cancel</span></button>
-                <button class="btn btn-save" onclick="submitDeleteGroup()" style="background: var(--kmb-red);"><span id="label-delete-confirm">Delete</span></button>
-            </div>
-        </div>
-    </div>
+    <div id="debug-console" class="hidden"><div id="debug-header"><span>Debug Console</span><div id="debug-controls"><button onclick="DebugLogger.clear()">Clear</button><button onclick="DebugLogger.toggle(false)">Close</button></div></div><div id="debug-logs"></div></div>
+    <div id="generic-modal" class="modal-overlay hidden" onclick="closeGenericModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="g-modal-header"><span id="g-modal-title"></span><i class="fas fa-times" onclick="closeGenericModal()" style="cursor:pointer"></i></div><div class="modal-content" id="g-modal-body"></div><div class="modal-footer" id="g-modal-footer"></div></div></div>
 </body>
 </html>
