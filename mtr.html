@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HK MTR Arrivals</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Variable overrides matching MTR dark-mode visual branding */
+        :root {
+            --bg-main: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f5f5f7;
+            --text-sub: #86868b;
+            --border-color: #2d2d2f;
+            --accent-color: #005A9C;
+            --star-active: #ffc107;
+            --arriving-color: #ff9f0a;
+            --normal-green: #34c759;
+            
+            /* Premium design tokens */
+            --glass-bg: rgba(30, 30, 30, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+            padding-bottom: 70px; /* Space for bottom nav-bar */
+        }
+
+        /* Glassmorphism Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title i {
+            color: var(--accent-color);
+            font-size: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* GPS Pill & Alerts */
+        .gps-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            user-select: none;
+        }
+
+        .gps-pill:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .gps-pill.active {
+            background: rgba(52, 199, 89, 0.15);
+            border-color: var(--normal-green);
+            color: var(--normal-green);
+        }
+
+        .gps-pill.acquiring {
+            background: rgba(255, 159, 10, 0.15);
+            border-color: var(--arriving-color);
+            color: var(--arriving-color);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+        }
+
+        .status-badge span {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Language Switcher */
+        .lang-switch {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            user-select: none;
+        }
+
+        .lang-switch:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        /* Main Content Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 76px 16px 20px 16px; /* 76px to clear sticky header */
+        }
+
+        .view-content {
+            animation: fadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Welcome / Empty Shell card */
+        .welcome-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: var(--shadow-premium);
+        }
+
+        .welcome-card i {
+            font-size: 48px;
+            color: var(--accent-color);
+            margin-bottom: 16px;
+        }
+
+        .welcome-card h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .welcome-card p {
+            color: var(--text-sub);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Sticky Navigation Tab Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 11px;
+            height: 100%;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            user-select: none;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-main);
+        }
+
+        .nav-tab.active {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .nav-tab i {
+            font-size: 20px;
+            margin-bottom: 4px;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-tab.active i {
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header bar with branding, status alerts, GPS, and language switcher -->
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <i class="fas fa-train-subway"></i>
+                <span id="header-brand-name">HK MTR</span>
+            </h1>
+            <div id="mtr-status-badge" class="status-badge">
+                <span style="background:var(--normal-green); color:#121212;"><i class="fas fa-circle-check"></i> Normal</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="gps-pill" id="gps-pill" onclick="startGPSWatch()">
+                <i class="fas fa-location-dot"></i>
+                <span data-i18n="gpsOff">GPS Off</span>
+            </div>
+            <div class="lang-switch" id="lang-switch" onclick="toggleLanguage()">EN</div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- View 1: Favorites -->
+        <div id="view-favorites" class="view-content">
+            <div class="welcome-card">
+                <i class="fas fa-star"></i>
+                <h2 data-i18n="favorites">收藏</h2>
+                <p data-i18n="favoritesDesc">尚未收藏任何路綫。請前往搜尋或地鐵路綫圖添加收藏！</p>
+            </div>
+        </div>
+
+        <!-- View 2: Map -->
+        <div id="view-map" class="view-content hidden">
+            <div class="welcome-card">
+                <i class="fas fa-map"></i>
+                <h2 data-i18n="map">路綫圖</h2>
+                <p data-i18n="mapDesc">交互式地鐵路綫圖即將加載...</p>
+            </div>
+        </div>
+
+        <!-- View 3: Search -->
+        <div id="view-search" class="view-content hidden">
+            <div class="welcome-card">
+                <i class="fas fa-search"></i>
+                <h2 data-i18n="search">搜尋</h2>
+                <p data-i18n="searchDesc">搜尋地鐵站或路綫即將加載...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-tab active" onclick="switchMainTab('favorites')" id="tab-favorites">
+            <i class="fas fa-star"></i>
+            <span data-i18n="favorites">收藏</span>
+        </div>
+        <div class="nav-tab" onclick="switchMainTab('map')" id="tab-map">
+            <i class="fas fa-map"></i>
+            <span data-i18n="map">路綫圖</span>
+        </div>
+        <div class="nav-tab" onclick="switchMainTab('search')" id="tab-search">
+            <i class="fas fa-search"></i>
+            <span data-i18n="search">搜尋</span>
+        </div>
+    </nav>
+
+    <!-- Core App Logic & Translations -->
+    <script>
+        // Version tracker
+        const APP_VERSION = '1.0.0';
+
+        // Translation Dictionary (English & Traditional Chinese)
+        const TRANSLATIONS = {
+            'zh-HK': {
+                favorites: "收藏",
+                favoritesDesc: "尚未收藏任何路綫。請前往搜尋或路綫圖添加收藏！",
+                map: "路綫圖",
+                mapDesc: "交互式地鐵路綫圖即將加載...",
+                search: "搜尋",
+                searchDesc: "搜尋地鐵站或路綫即將加載...",
+                to: "往",
+                arriving: "正在抵站",
+                mins: "分鐘",
+                platform: "月台",
+                back: "返回",
+                loading: "載入中...",
+                noETA: "暫無班次數據",
+                gpsOff: "GPS 關閉",
+                gpsActive: "GPS 啟用",
+                gpsAcquiring: "GPS 定位中",
+                brandName: "港鐵到站",
+                normal: "正常",
+                delays: "受阻"
+            },
+            'en': {
+                favorites: "Favorites",
+                favoritesDesc: "No favorites yet. Go to Search or Route Map to add favorites!",
+                map: "Route Map",
+                mapDesc: "Interactive MTR route map loading soon...",
+                search: "Search",
+                searchDesc: "Search MTR stations or lines loading soon...",
+                to: "to",
+                arriving: "Arriving",
+                mins: "mins",
+                platform: "Plat.",
+                back: "Back",
+                loading: "Loading...",
+                noETA: "No ETA Data",
+                gpsOff: "GPS Off",
+                gpsActive: "GPS Active",
+                gpsAcquiring: "GPS Locating",
+                brandName: "HK MTR",
+                normal: "Normal",
+                delays: "Delays"
+            }
+        };
+
+        // Initialize active language from localStorage or default
+        let currentLang = localStorage.getItem('mtr_lang') || 'zh-HK';
+
+        // Translate helper function
+        function t(key) {
+            return TRANSLATIONS[currentLang][key] || key;
+        }
+
+        // Toggle Language action
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh-HK' ? 'en' : 'zh-HK';
+            localStorage.setItem('mtr_lang', currentLang);
+            updateUILabels();
+        }
+
+        // Update all UI labels dynamic elements based on language
+        function updateUILabels() {
+            // Update lang switch button text
+            const langBtn = document.getElementById('lang-switch');
+            langBtn.textContent = currentLang === 'zh-HK' ? 'EN' : '中';
+
+            // Update brand name
+            const brandSpan = document.getElementById('header-brand-name');
+            brandSpan.textContent = t('brandName');
+
+            // Select and update elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+
+            // Handle description texts separately if they have custom data-i18n attributes
+            document.querySelectorAll('[data-i18n-desc]').forEach(el => {
+                const key = el.getAttribute('data-i18n-desc');
+                el.textContent = t(key);
+            });
+            
+            // Re-render other custom dynamic labels as needed
+            updateGPSPillLabel();
+        }
+
+        // Mock functions for Shell navigation
+        function switchMainTab(tabId) {
+            // Hide all views
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.classList.add('hidden');
+            });
+            // Show selected view
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            // Deactivate all navigation tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Activate selected tab
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // Mock functions for GPS state representation
+        let gpsState = 'off'; // 'off', 'acquiring', 'active'
+        
+        function startGPSWatch() {
+            const gpsPill = document.getElementById('gps-pill');
+            if (gpsState === 'off') {
+                gpsState = 'acquiring';
+                gpsPill.className = 'gps-pill acquiring';
+                gpsPill.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span data-i18n="gpsAcquiring">GPS Locating</span>`;
+                updateUILabels();
+                
+                // Simulate successful coordinate match after 1.5 seconds
+                setTimeout(() => {
+                    gpsState = 'active';
+                    gpsPill.className = 'gps-pill active';
+                    gpsPill.innerHTML = `<i class="fas fa-location-crosshairs pulsing"></i> <span data-i18n="gpsActive">GPS Active</span>`;
+                    updateUILabels();
+                }, 1500);
+            } else {
+                gpsState = 'off';
+                gpsPill.className = 'gps-pill';
+                gpsPill.innerHTML = `<i class="fas fa-location-dot"></i> <span data-i18n="gpsOff">GPS Off</span>`;
+                updateUILabels();
+            }
+        }
+
+        function updateGPSPillLabel() {
+            const gpsPillSpan = document.querySelector('#gps-pill span');
+            if (!gpsPillSpan) return;
+            if (gpsState === 'off') {
+                gpsPillSpan.textContent = t('gpsOff');
+            } else if (gpsState === 'acquiring') {
+                gpsPillSpan.textContent = t('gpsAcquiring');
+            } else if (gpsState === 'active') {
+                gpsPillSpan.textContent = t('gpsActive');
+            }
+        }
+
+        // Run on initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateUILabels();
+        });
+    </script>
+</body>
+</html>
