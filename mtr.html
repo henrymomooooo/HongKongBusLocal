@@ -483,20 +483,174 @@
         </div>
 
         <!-- View 2: Map -->
-        <div id="view-map" class="view-content hidden">
-            <div class="welcome-card">
-                <i class="fas fa-map"></i>
-                <h2 data-i18n="map">路綫圖</h2>
-                <p data-i18n="mapDesc">交互式地鐵路綫圖即將加載...</p>
+        <div id="view-map" class="view-content hidden" style="padding:0;">
+            <div style="text-align: center; margin-bottom: 12px;">
+                <h2 style="font-size: 16px; font-weight: 700;" data-i18n="map">路綫圖</h2>
+                <p style="font-size: 11px; color: var(--text-sub);">Tap any station node to open departures</p>
+            </div>
+            <div style="overflow-x: auto; width: 100%; border: 1px solid var(--border-color); border-radius: 16px; background: #161618; box-shadow: var(--shadow-premium);">
+                <svg viewBox="0 0 650 480" width="650" height="480" style="display: block; margin: 0 auto; user-select: none;">
+                    <!-- SVG Grid lines for dark background aesthetics -->
+                    <defs>
+                        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.015)" stroke-width="1" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <!-- Rail tracks (Lines) -->
+                    <!-- Island Line (Blue) -->
+                    <path d="M 50,320 L 580,320" fill="none" stroke="#005A9C" stroke-width="6" stroke-linecap="round" />
+                    
+                    <!-- Tsuen Wan Line (Red) -->
+                    <path d="M 120,320 L 120,100" fill="none" stroke="#E2231A" stroke-width="6" stroke-linecap="round" />
+                    <path d="M 120,320 L 220,320" fill="none" stroke="#E2231A" stroke-width="6" stroke-linecap="round" />
+                    
+                    <!-- East Rail Line (Light Blue) -->
+                    <path d="M 220,320 L 320,250 L 320,100" fill="none" stroke="#5CBFEB" stroke-width="6" stroke-linecap="round" />
+
+                    <!-- Kwun Tong Line (Green) -->
+                    <path d="M 120,210 L 320,100 L 480,100 L 480,250 L 480,320" fill="none" stroke="#009A44" stroke-width="6" stroke-linecap="round" />
+
+                    <!-- South Island Line (Lime Green) -->
+                    <path d="M 220,320 L 220,400" fill="none" stroke="#B5C800" stroke-width="6" stroke-linecap="round" />
+
+                    <!-- Station Nodes and Labels -->
+                    <!-- Central (CEN) -->
+                    <g onclick="showStationDetails('CEN')" cursor="pointer">
+                        <circle cx="120" cy="320" r="18" fill="transparent" />
+                        <circle cx="120" cy="320" r="7" fill="#fff" stroke="#E2231A" stroke-width="3" />
+                        <text x="120" y="345" fill="#f5f5f7" font-size="10" font-weight="700" text-anchor="middle">中環 Central</text>
+                    </g>
+
+                    <!-- Admiralty (ADM) - Major 4-line Interchange -->
+                    <g onclick="showStationDetails('ADM')" cursor="pointer">
+                        <circle cx="220" cy="320" r="22" fill="transparent" />
+                        <circle cx="220" cy="320" r="10" fill="#fff" stroke="#005A9C" stroke-width="4" />
+                        <circle cx="220" cy="320" r="4" fill="#121212" />
+                        <text x="220" y="348" fill="#ff9f0a" font-size="11" font-weight="800" text-anchor="middle">金鐘 Admiralty</text>
+                    </g>
+
+                    <!-- Sheung Wan (SHW) -->
+                    <g onclick="showStationDetails('SHW')" cursor="pointer">
+                        <circle cx="50" cy="320" r="18" fill="transparent" />
+                        <circle cx="50" cy="320" r="6" fill="#fff" stroke="#005A9C" stroke-width="2.5" />
+                        <text x="50" y="342" fill="#86868b" font-size="9" text-anchor="middle">上環 Sheung Wan</text>
+                    </g>
+
+                    <!-- Wan Chai (WAC) -->
+                    <g onclick="showStationDetails('WAC')" cursor="pointer">
+                        <circle cx="300" cy="320" r="18" fill="transparent" />
+                        <circle cx="300" cy="320" r="6" fill="#fff" stroke="#005A9C" stroke-width="2.5" />
+                        <text x="300" y="342" fill="#86868b" font-size="9" text-anchor="middle">灣仔 Wan Chai</text>
+                    </g>
+
+                    <!-- Causeway Bay (CAB) -->
+                    <g onclick="showStationDetails('CAB')" cursor="pointer">
+                        <circle cx="380" cy="320" r="18" fill="transparent" />
+                        <circle cx="380" cy="320" r="6" fill="#fff" stroke="#005A9C" stroke-width="2.5" />
+                        <text x="380" y="342" fill="#86868b" font-size="9" text-anchor="middle">銅鑼灣 C. Bay</text>
+                    </g>
+
+                    <!-- North Point (NOP) -->
+                    <g onclick="showStationDetails('NOP')" cursor="pointer">
+                        <circle cx="480" cy="320" r="18" fill="transparent" />
+                        <circle cx="480" cy="320" r="7" fill="#fff" stroke="#005A9C" stroke-width="3" />
+                        <text x="500" y="342" fill="#86868b" font-size="9" text-anchor="start">北角 NOP</text>
+                    </g>
+
+                    <!-- Quarry Bay (QUB) -->
+                    <g onclick="showStationDetails('QUB')" cursor="pointer">
+                        <circle cx="560" cy="320" r="18" fill="transparent" />
+                        <circle cx="560" cy="320" r="6" fill="#fff" stroke="#005A9C" stroke-width="2.5" />
+                        <text x="560" y="342" fill="#86868b" font-size="9" text-anchor="middle">鰂魚涌 Q. Bay</text>
+                    </g>
+
+                    <!-- Tsim Sha Tsui (TST) -->
+                    <g onclick="showStationDetails('TST')" cursor="pointer">
+                        <circle cx="120" cy="270" r="18" fill="transparent" />
+                        <circle cx="120" cy="270" r="6" fill="#fff" stroke="#E2231A" stroke-width="2.5" />
+                        <text x="105" y="274" fill="#86868b" font-size="9" text-anchor="end">尖沙咀 TST</text>
+                    </g>
+
+                    <!-- Jordan (JOR) -->
+                    <g onclick="showStationDetails('JOR')" cursor="pointer">
+                        <circle cx="120" cy="210" r="18" fill="transparent" />
+                        <circle cx="120" cy="210" r="6" fill="#fff" stroke="#E2231A" stroke-width="2.5" />
+                        <text x="105" y="214" fill="#86868b" font-size="9" text-anchor="end">佐敦 Jordan</text>
+                    </g>
+
+                    <!-- Yau Ma Tei (YMT) - Red/Green Interchange -->
+                    <g onclick="showStationDetails('YMT')" cursor="pointer">
+                        <circle cx="120" cy="160" r="18" fill="transparent" />
+                        <circle cx="120" cy="160" r="7" fill="#fff" stroke="#E2231A" stroke-width="3" />
+                        <text x="105" y="164" fill="#86868b" font-size="9" text-anchor="end">油麻地 YMT</text>
+                    </g>
+
+                    <!-- Mong Kok (MOK) - Major Red/Green Interchange -->
+                    <g onclick="showStationDetails('MOK')" cursor="pointer">
+                        <circle cx="120" cy="110" r="18" fill="transparent" />
+                        <circle cx="120" cy="110" r="7" fill="#fff" stroke="#009A44" stroke-width="3" />
+                        <circle cx="120" cy="110" r="3" fill="#E2231A" />
+                        <text x="105" y="114" fill="#f5f5f7" font-size="9" font-weight="700" text-anchor="end">旺角 Mong Kok</text>
+                    </g>
+
+                    <!-- Kowloon Tong (KOT) - Green/East Rail Interchange -->
+                    <g onclick="showStationDetails('KOT')" cursor="pointer">
+                        <circle cx="320" cy="100" r="20" fill="transparent" />
+                        <circle cx="320" cy="100" r="8" fill="#fff" stroke="#009A44" stroke-width="3.5" />
+                        <circle cx="320" cy="100" r="3" fill="#5CBFEB" />
+                        <text x="320" y="85" fill="#f5f5f7" font-size="9" font-weight="700" text-anchor="middle">九龍塘 K. Tong</text>
+                    </g>
+
+                    <!-- Diamond Hill (DIH) -->
+                    <g onclick="showStationDetails('DIH')" cursor="pointer">
+                        <circle cx="410" cy="100" r="18" fill="transparent" />
+                        <circle cx="410" cy="100" r="6" fill="#fff" stroke="#009A44" stroke-width="2.5" />
+                        <text x="410" y="85" fill="#86868b" font-size="9" text-anchor="middle">鑽石山 D. Hill</text>
+                    </g>
+
+                    <!-- Kwun Tong (KUT) -->
+                    <g onclick="showStationDetails('KUT')" cursor="pointer">
+                        <circle cx="480" cy="200" r="18" fill="transparent" />
+                        <circle cx="480" cy="200" r="6" fill="#fff" stroke="#009A44" stroke-width="2.5" />
+                        <text x="495" y="204" fill="#86868b" font-size="9" text-anchor="start">觀塘 Kwun Tong</text>
+                    </g>
+
+                    <!-- Yau Tong (YAT) -->
+                    <g onclick="showStationDetails('YAT')" cursor="pointer">
+                        <circle cx="480" cy="270" r="18" fill="transparent" />
+                        <circle cx="480" cy="270" r="6" fill="#fff" stroke="#009A44" stroke-width="2.5" />
+                        <text x="495" y="274" fill="#86868b" font-size="9" text-anchor="start">油塘 Yau Tong</text>
+                    </g>
+
+                    <!-- Hung Hom (HUH) -->
+                    <g onclick="showStationDetails('HUH')" cursor="pointer">
+                        <circle cx="320" cy="230" r="18" fill="transparent" />
+                        <circle cx="320" cy="230" r="6" fill="#fff" stroke="#5CBFEB" stroke-width="2.5" />
+                        <text x="335" y="234" fill="#86868b" font-size="9" text-anchor="start">紅磡 Hung Hom</text>
+                    </g>
+
+                    <!-- Ocean Park (OCP) -->
+                    <g onclick="showStationDetails('OCP')" cursor="pointer">
+                        <circle cx="220" cy="390" r="18" fill="transparent" />
+                        <circle cx="220" cy="390" r="6" fill="#fff" stroke="#B5C800" stroke-width="2.5" />
+                        <text x="235" y="394" fill="#86868b" font-size="9" text-anchor="start">海洋公園 O. Park</text>
+                    </g>
+                </svg>
             </div>
         </div>
 
         <!-- View 3: Search -->
         <div id="view-search" class="view-content hidden">
-            <div class="welcome-card">
-                <i class="fas fa-search"></i>
-                <h2 data-i18n="search">搜尋</h2>
-                <p data-i18n="searchDesc">搜尋地鐵站或路綫即將加載...</p>
+            <div class="search-bar-container" style="margin-bottom: 16px;">
+                <div style="position: relative;">
+                    <input type="text" id="search-input" placeholder="Search station (e.g. Admiralty, 金鐘)..." oninput="onSearchInput()" style="width: 100%; padding: 12px 16px 12px 40px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 14px; outline: none; transition: var(--transition-smooth);">
+                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+                </div>
+            </div>
+            <div id="search-results" class="interchange-grid">
+                <!-- Search matches will render here dynamically -->
             </div>
         </div>
 
@@ -1016,6 +1170,15 @@
             const activeTab = document.getElementById(`tab-${tabId}`);
             activeTab.classList.add('active');
             activeTab.setAttribute('aria-selected', 'true');
+
+            // Trigger dynamic tab rendering logic
+            if (tabId === 'favorites') {
+                renderFavoritesDashboard();
+            } else if (tabId === 'search') {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) searchInput.value = '';
+                renderSearchResults();
+            }
         }
 
         // Close overlay panel
@@ -1106,10 +1269,18 @@
                     }
 
                     card.innerHTML = `
-                        <div class="line-card-header">
+                        <div class="line-card-header" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
                             <span class="line-card-title" style="color:${lineInfo.color};">${lineTitle}</span>
+                            <div style="display:flex; gap:6px;">
+                                <button class="overlay-back-btn" id="fav-${stationCode}-${lineCode}-UP" onclick="toggleFavorite('${stationCode}', '${lineCode}', 'UP')" style="padding:4px 8px; font-size:10px; border-radius:12px; gap:4px;" title="Favorite UP">
+                                    <i class="far fa-star"></i>
+                                </button>
+                                <button class="overlay-back-btn" id="fav-${stationCode}-${lineCode}-DOWN" onclick="toggleFavorite('${stationCode}', '${lineCode}', 'DOWN')" style="padding:4px 8px; font-size:10px; border-radius:12px; gap:4px;" title="Favorite DOWN">
+                                    <i class="far fa-star"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="direction-section">
+                        <div class="direction-section" style="margin-top:8px;">
                             <div class="direction-title"><i class="fas fa-circle-chevron-up"></i> ${currentLang === 'zh-HK' ? '上行' : 'UP'}</div>
                             ${upHtml}
                         </div>
@@ -1123,6 +1294,9 @@
 
                 contentEl.innerHTML = '';
                 contentEl.appendChild(grid);
+                
+                // Update active favorite stars
+                await updateFavoriteStarStates(stationCode);
 
             } catch (err) {
                 console.error("Failed to render station departures:", err);
@@ -1537,12 +1711,253 @@
             contentEl.appendChild(modulesCard);
         }
 
+        // Dynamic Favorites CRUD Controller & star binder
+        async function toggleFavorite(stationCode, lineCode, direction) {
+            try {
+                const favs = await MTR_DB.getFavorites();
+                const match = favs.find(f => f.stationCode === stationCode && f.lineCode === lineCode && f.direction === direction);
+                
+                if (match) {
+                    await MTR_DB.deleteFavorite(match.favId);
+                } else {
+                    await MTR_DB.addFavorite({
+                        stationCode,
+                        lineCode,
+                        direction,
+                        sortOrder: Date.now()
+                    });
+                }
+                
+                // Re-render favorites tab
+                renderFavoritesDashboard();
+                
+                // If details overlay is open, refresh stars
+                const overlay = document.getElementById('station-detail-overlay');
+                if (overlay.classList.contains('open')) {
+                    updateFavoriteStarStates(stationCode);
+                }
+            } catch (err) {
+                console.error("Error toggling favorite:", err);
+            }
+        }
+
+        async function updateFavoriteStarStates(stationCode) {
+            try {
+                const favs = await MTR_DB.getFavorites();
+                const sta = STATIONS_INDEX.get(stationCode);
+                if (!sta) return;
+
+                sta.lines.forEach(lineCode => {
+                    ['UP', 'DOWN'].forEach(dir => {
+                        const btn = document.getElementById(`fav-${stationCode}-${lineCode}-${dir}`);
+                        if (!btn) return;
+                        
+                        const isFav = favs.some(f => f.stationCode === stationCode && f.lineCode === lineCode && f.direction === dir);
+                        if (isFav) {
+                            btn.innerHTML = `<i class="fas fa-star" style="color:var(--star-active);"></i>`;
+                            btn.style.color = 'var(--star-active)';
+                            btn.style.background = 'rgba(255, 193, 7, 0.15)';
+                            btn.style.borderColor = 'rgba(255, 193, 7, 0.3)';
+                        } else {
+                            btn.innerHTML = `<i class="far fa-star"></i>`;
+                            btn.style.color = 'var(--text-sub)';
+                            btn.style.background = 'rgba(255, 255, 255, 0.05)';
+                            btn.style.borderColor = 'var(--glass-border)';
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error("Error updating star states:", err);
+            }
+        }
+
+        async function renderFavoritesDashboard() {
+            const container = document.getElementById('view-favorites');
+            if (!container) return;
+
+            const favs = await MTR_DB.getFavorites();
+            
+            if (!favs || favs.length === 0) {
+                container.innerHTML = `
+                    <div class="welcome-card">
+                        <i class="fas fa-star"></i>
+                        <h2 data-i18n="favorites">${t('favorites')}</h2>
+                        <p data-i18n="favoritesDesc">${t('favoritesDesc')}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="font-size: 18px; font-weight: 700;">${t('favorites')}</h2>
+                    <button class="overlay-back-btn" onclick="renderFavoritesDashboard()" style="padding: 6px 12px; font-size: 12px; border-radius: 20px; gap: 6px;" title="Refresh Arrivals">
+                        <i class="fas fa-arrows-rotate"></i> Refresh
+                    </button>
+                </div>
+                <div class="interchange-grid" id="favorites-grid">
+                    <div class="loading-container" style="padding: 40px 0;">
+                        <i class="fas fa-spinner loading-spinner"></i>
+                        <span>${t('loading')}</span>
+                    </div>
+                </div>
+            `;
+
+            const grid = document.getElementById('favorites-grid');
+            
+            try {
+                // Fetch schedules in parallel using Promise.allSettled
+                const promises = favs.map(async (fav) => {
+                    const sched = await MtrAPI.getSchedule(fav.lineCode, fav.stationCode);
+                    return { fav, sched };
+                });
+                
+                const results = await Promise.all(promises);
+                grid.innerHTML = '';
+                
+                results.forEach(({ fav, sched }) => {
+                    const sta = STATIONS_INDEX.get(fav.stationCode);
+                    const lineInfo = MTR_LINES[fav.lineCode];
+                    if (!sta || !lineInfo) return;
+
+                    const stationName = currentLang === 'zh-HK' ? sta.name_tc : sta.name_en;
+                    const lineName = currentLang === 'zh-HK' ? lineInfo.name_tc : lineInfo.name_en;
+                    const dirText = fav.direction === 'UP' ? (currentLang === 'zh-HK' ? '上行' : 'UP') : (currentLang === 'zh-HK' ? '下行' : 'DOWN');
+
+                    const trains = sched ? sched[fav.direction] : [];
+                    let etaHtml = '';
+                    
+                    if (trains && trains.length > 0) {
+                        const train = trains[0];
+                        const timeVal = train.ttnt;
+                        let timeDisplay = '';
+                        if (timeVal === '0' || timeVal === '1') {
+                            timeDisplay = `<span class="arriving-indicator" style="font-size:14px;"><i class="fas fa-train pulsing"></i> ${t('arriving')}</span>`;
+                        } else {
+                            timeDisplay = `<span class="train-time" style="font-size:18px; color:var(--arriving-color); font-weight:700;">${timeVal} <span style="font-size:12px; font-weight:normal; color:var(--text-sub);">${t('mins')}</span></span>`;
+                        }
+                        
+                        const destName = currentLang === 'zh-HK' 
+                            ? (STATIONS_INDEX.get(train.dest) ? STATIONS_INDEX.get(train.dest).name_tc : train.dest)
+                            : (STATIONS_INDEX.get(train.dest) ? STATIONS_INDEX.get(train.dest).name_en : train.dest);
+
+                        etaHtml = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <div style="font-weight:600; font-size:14px; color:var(--text-main);">${t('to')} ${destName}</div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="train-platform" style="font-size:10px; padding:1px 4px;">${t('platform')} ${train.plat}</span>
+                                    ${timeDisplay}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        etaHtml = `<div style="color:var(--text-sub); font-size:12px; margin-top:8px; text-align:center;">${t('noETA')}</div>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'line-card';
+                    card.style.borderTop = `4px solid ${lineInfo.color}`;
+                    
+                    card.innerHTML = `
+                        <div class="line-card-header" style="border-bottom:none; padding-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column; gap:2px; cursor:pointer;" onclick="showStationDetails('${fav.stationCode}')">
+                                <span style="font-size:15px; font-weight:700; color:var(--text-main);">${stationName}</span>
+                                <span style="font-size:11px; color:var(--text-sub);">${lineName} • ${dirText}</span>
+                            </div>
+                            <button onclick="toggleFavorite('${fav.stationCode}', '${fav.lineCode}', '${fav.direction}'); event.stopPropagation();" style="background:none; border:none; color:var(--star-active); font-size:18px; cursor:pointer; padding:4px;" title="Remove Favorite">
+                                <i class="fas fa-star"></i>
+                            </button>
+                        </div>
+                        ${etaHtml}
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Error loading favorites ETAs:", err);
+                grid.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub);">Failed to load departures. Please refresh.</div>`;
+            }
+        }
+
+        // Search Controller
+        function onSearchInput() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            renderSearchResults(query);
+        }
+
+        function renderSearchResults(query = '') {
+            const resultsEl = document.getElementById('search-results');
+            if (!resultsEl) return;
+            resultsEl.innerHTML = '';
+
+            const matches = [];
+            STATIONS_INDEX.forEach((sta, code) => {
+                const matchNameEn = sta.name_en.toLowerCase();
+                const matchNameTc = sta.name_tc;
+                const matchCode = code.toLowerCase();
+                
+                if (query === '' || matchNameEn.includes(query) || matchNameTc.includes(query) || matchCode.includes(query)) {
+                    matches.push(sta);
+                }
+            });
+
+            if (matches.length === 0) {
+                resultsEl.innerHTML = `
+                    <div style="text-align:center; padding:40px 0; color:var(--text-sub); width:100%;">
+                        <i class="fas fa-circle-question" style="font-size:28px; margin-bottom:8px; display:inline-block;"></i>
+                        <div>No stations found matching "${query}"</div>
+                    </div>
+                `;
+                return;
+            }
+
+            matches.forEach(sta => {
+                const card = document.createElement('div');
+                card.className = 'line-card';
+                card.style.cursor = 'pointer';
+                card.style.borderTop = '3px solid var(--accent-color)';
+                card.onclick = () => showStationDetails(sta.code);
+
+                const linesBadges = sta.lines.map(lineCode => {
+                    const color = MTR_LINES[lineCode].color;
+                    return `<span style="background:${color}15; color:${color}; border:1px solid ${color}30; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; display:inline-block; margin-right:4px;">${lineCode}</span>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <span style="font-weight:700; font-size:14px; color:var(--text-main);">${currentLang === 'zh-HK' ? sta.name_tc : sta.name_en}</span>
+                            <div>${linesBadges}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:var(--text-sub); font-size:12px;"></i>
+                    </div>
+                `;
+                resultsEl.appendChild(card);
+            });
+        }
+
+        // Auto-refresh timer in background
+        let favoritesInterval = null;
+        function startFavoritesAutoRefresh() {
+            if (favoritesInterval) clearInterval(favoritesInterval);
+            favoritesInterval = setInterval(() => {
+                const favView = document.getElementById('view-favorites');
+                if (favView && !favView.classList.contains('hidden')) {
+                    console.log("⏰ Auto-refreshing Favorites dashboard ETAs...");
+                    renderFavoritesDashboard();
+                }
+            }, 30000);
+        }
+
         // Run on initial load
         window.addEventListener('DOMContentLoaded', () => {
             updateUILabels();
             MTR_DB.open().then(() => {
                 console.log("Database connection established.");
                 console.log("Static station index compiled successfully:", STATIONS_INDEX);
+                // Render initial favorites tab
+                renderFavoritesDashboard();
+                // Start favorites background refresh
+                startFavoritesAutoRefresh();
             }).catch(err => {
                 console.error("Database connection failed:", err);
             });
