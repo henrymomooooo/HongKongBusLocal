@@ -648,6 +648,58 @@
             });
         });
 
+        // Real-time Next Train API Integrator
+        const MtrAPI = {
+            BASE_URL: "https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php",
+            async getSchedule(line, station) {
+                const url = `${this.BASE_URL}?line=${line}&sta=${station}&lang=${currentLang === 'zh-HK' ? 'TC' : 'EN'}`;
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    
+                    // Validate that DATA.GOV.HK response structure contains data
+                    if (data.status === 0) {
+                        // Special status 0 from DATA.GOV.HK means system delay or no schedule data (e.g. non-operating hours)
+                        console.warn(`No schedule data for ${line}-${station}: ${data.message}`);
+                        return null;
+                    }
+                    
+                    const key = `${line}-${station}`;
+                    if (data.data && data.data[key]) {
+                        return data.data[key];
+                    }
+                    return null;
+                } catch (e) {
+                    console.error("MTR Fetch Error:", e);
+                    return null;
+                }
+            }
+        };
+
+        // Asynchronous parallel scheduler fetching all passing lines for interchanges
+        async function fetchStationDepartures(stationCode) {
+            const staInfo = STATIONS_INDEX.get(stationCode);
+            if (!staInfo) return {};
+            
+            const lines = staInfo.lines;
+            const promises = lines.map(line => MtrAPI.getSchedule(line, stationCode).then(data => ({ line, data })));
+            
+            const results = await Promise.allSettled(promises);
+            const departures = {};
+            
+            results.forEach(res => {
+                if (res.status === 'fulfilled' && res.value.data) {
+                    departures[res.value.line] = res.value.data;
+                } else if (res.status === 'fulfilled') {
+                    // Store null to represent no ETA data returned
+                    departures[res.value.line] = null;
+                }
+            });
+            
+            return departures;
+        }
+
         // Translation Dictionary (English & Traditional Chinese)
         const TRANSLATIONS = {
             'zh-HK': {
