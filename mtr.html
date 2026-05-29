@@ -255,6 +255,190 @@
             transform: translateY(-2px);
         }
 
+        /* Station Detail Overlay styling */
+        .station-overlay {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-main);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 76px 16px 20px 16px; /* Space for overlay header */
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .station-overlay.open {
+            transform: translateY(0);
+        }
+
+        .overlay-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 2100;
+        }
+
+        .overlay-back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            user-select: none;
+        }
+
+        .overlay-back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Interchange departures grid */
+        .interchange-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .interchange-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Line Cards */
+        .line-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition-smooth);
+        }
+
+        .line-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .line-card-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .direction-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .direction-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .train-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .train-dest {
+            font-weight: 600;
+        }
+
+        .train-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .train-platform {
+            color: var(--text-sub);
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .train-time {
+            font-weight: 700;
+            color: var(--arriving-color);
+        }
+
+        /* Pulsing Arriving Indicator */
+        .arriving-indicator {
+            color: var(--normal-green);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+            color: var(--text-sub);
+            gap: 16px;
+        }
+
+        .loading-spinner {
+            font-size: 32px;
+            color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -313,6 +497,20 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Station Detail Overlay Panel (Slides up from the bottom) -->
+    <div id="station-detail-overlay" class="station-overlay">
+        <div class="overlay-header">
+            <h2 id="overlay-station-title" style="font-size: 18px; font-weight: 700;">金鐘 Admiralty</h2>
+            <div class="overlay-back-btn" role="button" tabindex="0" onclick="closeStationOverlay()" onkeydown="if(event.key==='Enter'||event.key===' ') closeStationOverlay()" aria-label="Close">
+                <i class="fas fa-chevron-down"></i>
+                <span data-i18n="back">返回</span>
+            </div>
+        </div>
+        <div id="overlay-content">
+            <!-- Dynamic interchange grid or loading state will render here -->
+        </div>
     </div>
 
     <!-- Sticky Bottom Navigation Bar -->
@@ -799,6 +997,124 @@
             const activeTab = document.getElementById(`tab-${tabId}`);
             activeTab.classList.add('active');
             activeTab.setAttribute('aria-selected', 'true');
+        }
+
+        // Close overlay panel
+        function closeStationOverlay() {
+            const overlay = document.getElementById('station-detail-overlay');
+            overlay.classList.remove('open');
+        }
+
+        // Open and render station details
+        async function showStationDetails(stationCode) {
+            const sta = STATIONS_INDEX.get(stationCode);
+            if (!sta) return;
+
+            const overlay = document.getElementById('station-detail-overlay');
+            const titleEl = document.getElementById('overlay-station-title');
+            const contentEl = document.getElementById('overlay-content');
+
+            // Set overlay header title
+            titleEl.textContent = currentLang === 'zh-HK' ? sta.name_tc : sta.name_en;
+
+            // Show loading state
+            contentEl.innerHTML = `
+                <div class="loading-container">
+                    <i class="fas fa-spinner loading-spinner"></i>
+                    <span data-i18n="loading">${t('loading')}</span>
+                </div>
+            `;
+
+            // Slide up the overlay panel
+            overlay.classList.add('open');
+
+            try {
+                const schedules = await fetchStationDepartures(stationCode);
+                
+                // Construct Grid
+                const grid = document.createElement('div');
+                grid.className = 'interchange-grid';
+
+                sta.lines.forEach(lineCode => {
+                    const lineInfo = MTR_LINES[lineCode];
+                    const sched = schedules[lineCode];
+                    const card = document.createElement('div');
+                    card.className = 'line-card';
+                    card.style.borderTop = `4px solid ${lineInfo.color}`;
+
+                    // Card title
+                    const lineTitle = currentLang === 'zh-HK' ? lineInfo.name_tc : lineInfo.name_en;
+                    
+                    // Helpers for train row html mapping
+                    const renderTrainRows = (trains) => {
+                        if (!trains || trains.length === 0) {
+                            return `<div class="train-row" style="color:var(--text-sub);">${t('noETA')}</div>`;
+                        }
+                        return trains.map(train => {
+                            const timeVal = train.ttnt;
+                            let timeDisplay = '';
+                            if (timeVal === '0' || timeVal === '1') {
+                                timeDisplay = `<span class="arriving-indicator"><i class="fas fa-train pulsing"></i> ${t('arriving')}</span>`;
+                            } else {
+                                timeDisplay = `<span class="train-time">${timeVal} ${t('mins')}</span>`;
+                            }
+                            const destName = currentLang === 'zh-HK' 
+                                ? (STATIONS_INDEX.get(train.dest) ? STATIONS_INDEX.get(train.dest).name_tc : train.dest)
+                                : (STATIONS_INDEX.get(train.dest) ? STATIONS_INDEX.get(train.dest).name_en : train.dest);
+
+                            return `
+                                <div class="train-row">
+                                    <div class="train-dest">${t('to')} ${destName}</div>
+                                    <div class="train-info">
+                                        <span class="train-platform">${t('platform')} ${train.plat}</span>
+                                        ${timeDisplay}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    };
+
+                    // Construct bound HTML blocks
+                    let upHtml = '';
+                    let downHtml = '';
+
+                    if (sched) {
+                        upHtml = renderTrainRows(sched.UP);
+                        downHtml = renderTrainRows(sched.DOWN);
+                    } else {
+                        upHtml = `<div class="train-row" style="color:var(--text-sub);">${t('noETA')}</div>`;
+                        downHtml = `<div class="train-row" style="color:var(--text-sub);">${t('noETA')}</div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="line-card-header">
+                            <span class="line-card-title" style="color:${lineInfo.color};">${lineTitle}</span>
+                        </div>
+                        <div class="direction-section">
+                            <div class="direction-title"><i class="fas fa-circle-chevron-up"></i> ${currentLang === 'zh-HK' ? '上行' : 'UP'}</div>
+                            ${upHtml}
+                        </div>
+                        <div class="direction-section">
+                            <div class="direction-title"><i class="fas fa-circle-chevron-down"></i> ${currentLang === 'zh-HK' ? '下行' : 'DOWN'}</div>
+                            ${downHtml}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                contentEl.innerHTML = '';
+                contentEl.appendChild(grid);
+
+            } catch (err) {
+                console.error("Failed to render station departures:", err);
+                contentEl.innerHTML = `
+                    <div class="welcome-card" style="margin-top:20px; border-color:var(--arriving-color);">
+                        <i class="fas fa-circle-exclamation" style="color:var(--arriving-color);"></i>
+                        <h2>載入失敗 Load Failed</h2>
+                        <p>無法獲取實時班次數據，請稍後重試。 Failed to load live ETAs, please try again.</p>
+                    </div>
+                `;
+            }
         }
 
         // Mock functions for GPS state representation
