@@ -336,6 +336,89 @@
         // Version tracker
         const APP_VERSION = '1.0.0';
 
+        // Isolated IndexedDB Storage Manager
+        const MTR_DB = {
+            db: null,
+            open() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open('MTR_DB', 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('favorites')) {
+                            db.createObjectStore('favorites', { keyPath: 'favId', autoIncrement: true });
+                        }
+                        if (!db.objectStoreNames.contains('user_settings')) {
+                            db.createObjectStore('user_settings', { keyPath: 'key' });
+                        }
+                        if (!db.objectStoreNames.contains('metadata')) {
+                            db.createObjectStore('metadata', { keyPath: 'key' });
+                        }
+                    };
+                    req.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        console.log("MTR_DB initialized successfully");
+                        resolve(this.db);
+                    };
+                    req.onerror = (e) => {
+                        console.error("MTR_DB failed to initialize:", e.target.error);
+                        reject(e.target.error);
+                    };
+                });
+            },
+            getFavorites() {
+                return new Promise((res) => {
+                    if (!this.db) return res([]);
+                    const tx = this.db.transaction('favorites', 'readonly');
+                    const req = tx.objectStore('favorites').getAll();
+                    req.onsuccess = () => res(req.result);
+                });
+            },
+            addFavorite(fav) {
+                return new Promise((res) => {
+                    if (!this.db) return res();
+                    const tx = this.db.transaction('favorites', 'readwrite');
+                    tx.objectStore('favorites').add(fav).onsuccess = () => res();
+                });
+            },
+            deleteFavorite(favId) {
+                return new Promise((res) => {
+                    if (!this.db) return res();
+                    const tx = this.db.transaction('favorites', 'readwrite');
+                    tx.objectStore('favorites').delete(favId).onsuccess = () => res();
+                });
+            },
+            getSetting(key) {
+                return new Promise((res) => {
+                    if (!this.db) return res(null);
+                    const tx = this.db.transaction('user_settings', 'readonly');
+                    const req = tx.objectStore('user_settings').get(key);
+                    req.onsuccess = () => res(req.result ? req.result.value : null);
+                });
+            },
+            setSetting(key, value) {
+                return new Promise((res) => {
+                    if (!this.db) return res();
+                    const tx = this.db.transaction('user_settings', 'readwrite');
+                    tx.objectStore('user_settings').put({ key, value }).onsuccess = () => res();
+                });
+            },
+            getMetadata(key) {
+                return new Promise((res) => {
+                    if (!this.db) return res(null);
+                    const tx = this.db.transaction('metadata', 'readonly');
+                    const req = tx.objectStore('metadata').get(key);
+                    req.onsuccess = () => res(req.result ? req.result.value : null);
+                });
+            },
+            setMetadata(key, value) {
+                return new Promise((res) => {
+                    if (!this.db) return res();
+                    const tx = this.db.transaction('metadata', 'readwrite');
+                    tx.objectStore('metadata').put({ key, value }).onsuccess = () => res();
+                });
+            }
+        };
+
         // Translation Dictionary (English & Traditional Chinese)
         const TRANSLATIONS = {
             'zh-HK': {
@@ -478,6 +561,11 @@
         // Run on initial load
         window.addEventListener('DOMContentLoaded', () => {
             updateUILabels();
+            MTR_DB.open().then(() => {
+                console.log("Database connection established.");
+            }).catch(err => {
+                console.error("Database connection failed:", err);
+            });
         });
     </script>
 </body>
