@@ -275,11 +275,11 @@
             </div>
         </div>
         <div class="header-right">
-            <div class="gps-pill" id="gps-pill" onclick="startGPSWatch()">
+            <div class="gps-pill" id="gps-pill" role="button" tabindex="0" onclick="startGPSWatch()" onkeydown="if(event.key==='Enter'||event.key===' ') startGPSWatch()">
                 <i class="fas fa-location-dot"></i>
                 <span data-i18n="gpsOff">GPS Off</span>
             </div>
-            <div class="lang-switch" id="lang-switch" onclick="toggleLanguage()">EN</div>
+            <div class="lang-switch" id="lang-switch" role="button" tabindex="0" onclick="toggleLanguage()" onkeydown="if(event.key==='Enter'||event.key===' ') toggleLanguage()">EN</div>
         </div>
     </header>
 
@@ -291,7 +291,7 @@
             <div class="welcome-card">
                 <i class="fas fa-star"></i>
                 <h2 data-i18n="favorites">收藏</h2>
-                <p data-i18n="favoritesDesc">尚未收藏任何路綫。請前往搜尋或地鐵路綫圖添加收藏！</p>
+                <p data-i18n="favoritesDesc">尚未收藏任何路綫。請前往搜尋或路綫圖添加收藏！</p>
             </div>
         </div>
 
@@ -316,16 +316,16 @@
     </div>
 
     <!-- Sticky Bottom Navigation Bar -->
-    <nav class="nav-bar">
-        <div class="nav-tab active" onclick="switchMainTab('favorites')" id="tab-favorites">
+    <nav class="nav-bar" role="tablist">
+        <div class="nav-tab active" role="tab" tabindex="0" aria-selected="true" onclick="switchMainTab('favorites')" onkeydown="if(event.key==='Enter'||event.key===' ') switchMainTab('favorites')" id="tab-favorites">
             <i class="fas fa-star"></i>
             <span data-i18n="favorites">收藏</span>
         </div>
-        <div class="nav-tab" onclick="switchMainTab('map')" id="tab-map">
+        <div class="nav-tab" role="tab" tabindex="0" aria-selected="false" onclick="switchMainTab('map')" onkeydown="if(event.key==='Enter'||event.key===' ') switchMainTab('map')" id="tab-map">
             <i class="fas fa-map"></i>
             <span data-i18n="map">路綫圖</span>
         </div>
-        <div class="nav-tab" onclick="switchMainTab('search')" id="tab-search">
+        <div class="nav-tab" role="tab" tabindex="0" aria-selected="false" onclick="switchMainTab('search')" onkeydown="if(event.key==='Enter'||event.key===' ') switchMainTab('search')" id="tab-search">
             <i class="fas fa-search"></i>
             <span data-i18n="search">搜尋</span>
         </div>
@@ -412,12 +412,6 @@
                 const key = el.getAttribute('data-i18n');
                 el.textContent = t(key);
             });
-
-            // Handle description texts separately if they have custom data-i18n attributes
-            document.querySelectorAll('[data-i18n-desc]').forEach(el => {
-                const key = el.getAttribute('data-i18n-desc');
-                el.textContent = t(key);
-            });
             
             // Re-render other custom dynamic labels as needed
             updateGPSPillLabel();
@@ -435,9 +429,12 @@
             // Deactivate all navigation tabs
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
             });
             // Activate selected tab
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            activeTab.classList.add('active');
+            activeTab.setAttribute('aria-selected', 'true');
         }
 
         // Mock functions for GPS state representation
