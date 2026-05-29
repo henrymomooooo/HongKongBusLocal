@@ -487,6 +487,167 @@
             }
         };
 
+        // Static database of MTR Lines and Stations
+        const MTR_LINES = {
+            "ISL": {
+                name_tc: "港島綫", name_en: "Island Line", color: "#005A9C", stations: [
+                    { code: "KEN", name_tc: "堅尼地城", name_en: "Kennedy Town", lat: 22.2818, long: 114.1278 },
+                    { code: "HKU", name_tc: "香港大學", name_en: "HKU", lat: 22.2829, long: 114.1350 },
+                    { code: "SYP", name_tc: "西營盤", name_en: "Sai Ying Pun", lat: 22.2863, long: 114.1427 },
+                    { code: "SHW", name_tc: "上環", name_en: "Sheung Wan", lat: 22.2867, long: 114.1521 },
+                    { code: "CEN", name_tc: "中環", name_en: "Central", lat: 22.2818, long: 114.1581 },
+                    { code: "ADM", name_tc: "金鐘", name_en: "Admiralty", lat: 22.2794, long: 114.1645 },
+                    { code: "WAC", name_tc: "灣仔", name_en: "Wan Chai", lat: 22.2778, long: 114.1731 },
+                    { code: "CAB", name_tc: "銅鑼灣", name_en: "Causeway Bay", lat: 22.2801, long: 114.1851 },
+                    { code: "TIH", name_tc: "天后", name_en: "Tin Hau", lat: 22.2821, long: 114.1915 },
+                    { code: "FOH", name_tc: "炮台山", name_en: "Fortress Hill", lat: 22.2882, long: 114.1938 },
+                    { code: "NOP", name_tc: "北角", name_en: "North Point", lat: 22.2913, long: 114.2007 },
+                    { code: "QUB", name_tc: "鰂魚涌", name_en: "Quarry Bay", lat: 22.2884, long: 114.2114 },
+                    { code: "TAK", name_tc: "太古", name_en: "Tai Koo", lat: 22.2858, long: 114.2163 },
+                    { code: "SWH", name_tc: "西灣河", name_en: "Sai Wan Ho", lat: 22.2823, long: 114.2223 },
+                    { code: "SKW", name_tc: "筲箕灣", name_en: "Shau Kei Wan", lat: 22.2794, long: 114.2295 },
+                    { code: "HFC", name_tc: "杏花邨", name_en: "Heng Fa Chuen", lat: 22.2768, long: 114.2396 },
+                    { code: "CHW", name_tc: "柴灣", name_en: "Chai Wan", lat: 22.2647, long: 114.2363 }
+                ]
+            },
+            "TWL": {
+                name_tc: "荃灣綫", name_en: "Tsuen Wan Line", color: "#E2231A", stations: [
+                    { code: "CEN", name_tc: "中環", name_en: "Central", lat: 22.2818, long: 114.1581 },
+                    { code: "ADM", name_tc: "金鐘", name_en: "Admiralty", lat: 22.2794, long: 114.1645 },
+                    { code: "TST", name_tc: "尖沙咀", name_en: "Tsim Sha Tsui", lat: 22.2988, long: 114.1722 },
+                    { code: "JOR", name_tc: "佐敦", name_en: "Jordan", lat: 22.3049, long: 114.1717 },
+                    { code: "YMT", name_tc: "油麻地", name_en: "Yau Ma Tei", lat: 22.3129, long: 114.1708 },
+                    { code: "MOK", name_tc: "旺角", name_en: "Mong Kok", lat: 22.3197, long: 114.1685 },
+                    { code: "PRE", name_tc: "太子", name_en: "Prince Edward", lat: 22.3245, long: 114.1686 },
+                    { code: "SSP", name_tc: "深水埗", name_en: "Sham Shui Po", lat: 22.3302, long: 114.1616 },
+                    { code: "CSW", name_tc: "長沙灣", name_en: "Cheung Sha Wan", lat: 22.3359, long: 114.1578 },
+                    { code: "LCK", name_tc: "荔枝角", name_en: "Lai Chi Kok", lat: 22.3371, long: 114.1487 },
+                    { code: "MEF", name_tc: "美孚", name_en: "Mei Foo", lat: 22.3373, long: 114.1396 },
+                    { code: "LAK", name_tc: "荔景", name_en: "Lai King", lat: 22.3486, long: 114.1264 },
+                    { code: "KWF", name_tc: "葵芳", name_en: "Kwai Fong", lat: 22.3570, long: 114.1278 },
+                    { code: "KWH", name_tc: "葵興", name_en: "Kwai Hing", lat: 22.3629, long: 114.1301 },
+                    { code: "TWH", name_tc: "大窩口", name_en: "Tai Wo Hau", lat: 22.3708, long: 114.1243 },
+                    { code: "TSW", name_tc: "荃灣", name_en: "Tsuen Wan", lat: 22.3738, long: 114.1178 }
+                ]
+            },
+            "KTL": {
+                name_tc: "觀塘綫", name_en: "Kwun Tong Line", color: "#009A44", stations: [
+                    { code: "WHA", name_tc: "黃埔", name_en: "Whampoa", lat: 22.3028, long: 114.1901 },
+                    { code: "HOM", name_tc: "何文田", name_en: "Ho Man Tin", lat: 22.3093, long: 114.1813 },
+                    { code: "YMT", name_tc: "油麻地", name_en: "Yau Ma Tei", lat: 22.3129, long: 114.1708 },
+                    { code: "MOK", name_tc: "旺角", name_en: "Mong Kok", lat: 22.3197, long: 114.1685 },
+                    { code: "PRE", name_tc: "太子", name_en: "Prince Edward", lat: 22.3245, long: 114.1686 },
+                    { code: "SKM", name_tc: "石硤尾", name_en: "Shek Kip Mei", lat: 22.3323, long: 114.1688 },
+                    { code: "KOT", name_tc: "九龍塘", name_en: "Kowloon Tong", lat: 22.3373, long: 114.1764 },
+                    { code: "LOF", name_tc: "樂富", name_en: "Lok Fu", lat: 22.3385, long: 114.1866 },
+                    { code: "WTS", name_tc: "黃大仙", name_en: "Wong Tai Sin", lat: 22.3424, long: 114.1932 },
+                    { code: "DIH", name_tc: "鑽石山", name_en: "Diamond Hill", lat: 22.3402, long: 114.2015 },
+                    { code: "CHH", name_tc: "彩虹", name_en: "Choi Hung", lat: 22.3418, long: 114.2096 },
+                    { code: "KOB", name_tc: "九龍灣", name_en: "Kowloon Bay", lat: 22.3240, long: 114.2140 },
+                    { code: "NTK", name_tc: "牛頭角", name_en: "Ngau Tau Kok", lat: 22.3155, long: 114.2195 },
+                    { code: "KUT", name_tc: "觀塘", name_en: "Kwun Tong", lat: 22.3120, long: 114.2251 },
+                    { code: "LAT", name_tc: "藍田", name_en: "Lam Tin", lat: 22.3060, long: 114.2335 },
+                    { code: "YAT", name_tc: "油塘", name_en: "Yau Tong", lat: 22.2982, long: 114.2373 },
+                    { code: "TIK", name_tc: "調景嶺", name_en: "Tiu Keng Leng", lat: 22.3050, long: 114.2526 }
+                ]
+            },
+            "EAL": {
+                name_tc: "東鐵綫", name_en: "East Rail Line", color: "#5CBFEB", stations: [
+                    { code: "ADM", name_tc: "金鐘", name_en: "Admiralty", lat: 22.2794, long: 114.1645 },
+                    { code: "EXC", name_tc: "會展", name_en: "Exhibition Centre", lat: 22.2825, long: 114.1750 },
+                    { code: "HUH", name_tc: "紅磡", name_en: "Hung Hom", lat: 22.3029, long: 114.1818 },
+                    { code: "MKK", name_tc: "旺角東", name_en: "Mong Kok East", lat: 22.3223, long: 114.1724 },
+                    { code: "KOT", name_tc: "九龍塘", name_en: "Kowloon Tong", lat: 22.3373, long: 114.1764 },
+                    { code: "TAW", name_tc: "大圍", name_en: "Tai Wai", lat: 22.3725, long: 114.1784 },
+                    { code: "SHT", name_tc: "沙田", name_en: "Sha Tin", lat: 22.3831, long: 114.1873 },
+                    { code: "FOT", name_tc: "火炭", name_en: "Fo Tan", lat: 22.3962, long: 114.1959 },
+                    { code: "RAC", name_tc: "馬場", name_en: "Racecourse", lat: 22.4005, long: 114.2045 },
+                    { code: "UNI", name_tc: "大學", name_en: "University", lat: 22.4132, long: 114.2104 },
+                    { code: "TAP", name_tc: "大埔墟", name_en: "Tai Po Market", lat: 22.4442, long: 114.1691 },
+                    { code: "TWO", name_tc: "太和", name_en: "Tai Wo", lat: 22.4507, long: 114.1611 },
+                    { code: "FAN", name_tc: "粉嶺", name_en: "Fanling", lat: 22.4925, long: 114.1388 },
+                    { code: "SHS", name_tc: "上水", name_en: "Sheung Shui", lat: 22.5015, long: 114.1278 },
+                    { code: "LOW", name_tc: "羅湖", name_en: "Lo Wu", lat: 22.5289, long: 114.1130 },
+                    { code: "LMC", name_tc: "落馬洲", name_en: "Lok Ma Chau", lat: 22.5137, long: 114.0664 }
+                ]
+            },
+            "TKL": {
+                name_tc: "將軍澳綫", name_en: "Tseung Kwan O Line", color: "#7A1F82", stations: [
+                    { code: "NOP", name_tc: "北角", name_en: "North Point", lat: 22.2913, long: 114.2007 },
+                    { code: "QUB", name_tc: "鰂魚涌", name_en: "Quarry Bay", lat: 22.2884, long: 114.2114 },
+                    { code: "YAT", name_tc: "油塘", name_en: "Yau Tong", lat: 22.2982, long: 114.2373 },
+                    { code: "TIK", name_tc: "調景嶺", name_en: "Tiu Keng Leng", lat: 22.3050, long: 114.2526 },
+                    { code: "TKO", name_tc: "將軍澳", name_en: "Tseung Kwan O", lat: 22.3073, long: 114.2599 },
+                    { code: "LHP", name_tc: "康城", name_en: "LOHAS Park", lat: 22.2952, long: 114.2689 },
+                    { code: "HAH", name_tc: "坑口", name_en: "Hang Hau", lat: 22.3159, long: 114.2643 },
+                    { code: "POA", name_tc: "寶琳", name_en: "Po Lam", lat: 22.3227, long: 114.2581 }
+                ]
+            },
+            "TCL": {
+                name_tc: "東涌綫", name_en: "Tung Chung Line", color: "#F39200", stations: [
+                    { code: "HOK", name_tc: "香港", name_en: "Hong Kong", lat: 22.2847, long: 114.1582 },
+                    { code: "KOW", name_tc: "九龍", name_en: "Kowloon", lat: 22.3040, long: 114.1614 },
+                    { code: "OLY", name_tc: "奧運", name_en: "Olympic", lat: 22.3178, long: 114.1602 },
+                    { code: "NAC", name_tc: "南昌", name_en: "Nam Cheong", lat: 22.3275, long: 114.1535 },
+                    { code: "LAK", name_tc: "荔景", name_en: "Lai King", lat: 22.3486, long: 114.1264 },
+                    { code: "TSY", name_tc: "青衣", name_en: "Tsing Yi", lat: 22.3582, long: 114.1073 },
+                    { code: "SUN", name_tc: "欣澳", name_en: "Sunny Bay", lat: 22.3664, long: 114.0226 },
+                    { code: "TUC", name_tc: "東涌", name_en: "Tung Chung", lat: 22.2891, long: 113.9412 }
+                ]
+            },
+            "AEL": {
+                name_tc: "機場快綫", name_en: "Airport Express", color: "#007A87", stations: [
+                    { code: "HOK", name_tc: "香港", name_en: "Hong Kong", lat: 22.2847, long: 114.1582 },
+                    { code: "KOW", name_tc: "九龍", name_en: "Kowloon", lat: 22.3040, long: 114.1614 },
+                    { code: "TSY", name_tc: "青衣", name_en: "Tsing Yi", lat: 22.3582, long: 114.1073 },
+                    { code: "AIR", name_tc: "機場", name_en: "Airport", lat: 22.3087, long: 113.9268 },
+                    { code: "AWE", name_tc: "博覽館", name_en: "AsiaWorld-Expo", lat: 22.3213, long: 113.9427 }
+                ]
+            },
+            "SIL": {
+                name_tc: "南港島綫", name_en: "South Island Line", color: "#B5C800", stations: [
+                    { code: "ADM", name_tc: "金鐘", name_en: "Admiralty", lat: 22.2794, long: 114.1645 },
+                    { code: "OCP", name_tc: "海洋公園", name_en: "Ocean Park", lat: 22.2472, long: 114.1770 },
+                    { code: "WCH", name_tc: "黃竹坑", name_en: "Wong Chuk Hang", lat: 22.2483, long: 114.1685 },
+                    { code: "LET", name_tc: "利東", name_en: "Lei Tung", lat: 22.2427, long: 114.1545 },
+                    { code: "SOH", name_tc: "海怡半島", name_en: "South Horizons", lat: 22.2435, long: 114.1487 }
+                ]
+            },
+            "DRL": {
+                name_tc: "迪士尼綫", name_en: "Disneyland Resort Line", color: "#F5A1C8", stations: [
+                    { code: "SUN", name_tc: "欣澳", name_en: "Sunny Bay", lat: 22.3664, long: 114.0226 },
+                    { code: "DIS", name_tc: "迪士尼", name_en: "Disneyland Resort", lat: 22.3154, long: 114.0450 }
+                ]
+            },
+            "TML": {
+                name_tc: "屯馬綫", name_en: "Tuen Ma Line", color: "#9A3822", stations: [
+                    { code: "WKS", name_tc: "烏溪沙", name_en: "Wu Kai Sha", lat: 22.4283, long: 114.2443 },
+                    { code: "MOS", name_tc: "馬鞍山", name_en: "Ma On Shan", lat: 22.4227, long: 114.2315 },
+                    { code: "HOM", name_tc: "何文田", name_en: "Ho Man Tin", lat: 22.3093, long: 114.1813 },
+                    { code: "HUH", name_tc: "紅磡", name_en: "Hung Hom", lat: 22.3029, long: 114.1818 },
+                    { code: "ETS", name_tc: "尖東", name_en: "East Tsim Sha Tsui", lat: 22.2965, long: 114.1741 },
+                    { code: "AUS", name_tc: "柯士甸", name_en: "Austin", lat: 22.3039, long: 114.1666 },
+                    { code: "NAC", name_tc: "南昌", name_en: "Nam Cheong", lat: 22.3275, long: 114.1535 },
+                    { code: "MEF", name_tc: "美孚", name_en: "Mei Foo", lat: 22.3373, long: 114.1396 },
+                    { code: "TWW", name_tc: "荃灣西", name_en: "Tsuen Wan West", lat: 22.3686, long: 114.1114 },
+                    { code: "TUM", name_tc: "屯門", name_en: "Tuen Mun", lat: 22.3929, long: 113.9732 }
+                ]
+            }
+        };
+
+        // Precompiled static index of station metadata and passing lines
+        const STATIONS_INDEX = new Map();
+        Object.keys(MTR_LINES).forEach(lineKey => {
+            MTR_LINES[lineKey].stations.forEach(sta => {
+                if (!STATIONS_INDEX.has(sta.code)) {
+                    STATIONS_INDEX.set(sta.code, { ...sta, lines: [] });
+                }
+                if (!STATIONS_INDEX.get(sta.code).lines.includes(lineKey)) {
+                    STATIONS_INDEX.get(sta.code).lines.push(lineKey);
+                }
+            });
+        });
+
         // Translation Dictionary (English & Traditional Chinese)
         const TRANSLATIONS = {
             'zh-HK': {
@@ -631,6 +792,7 @@
             updateUILabels();
             MTR_DB.open().then(() => {
                 console.log("Database connection established.");
+                console.log("Static station index compiled successfully:", STATIONS_INDEX);
             }).catch(err => {
                 console.error("Database connection failed:", err);
             });
