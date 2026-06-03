@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">HK Bus Arrivals</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%23d32f2f' d='M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='15%' fill='%23d32f2f'/><path fill='%23ffffff' d='M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --kmb-red: #d32f2f; --ctb-blue: #00529b; --ctb-yellow: #ffdf00; --nlb-green: #2e7d32; --bg-color: #f4f4f9; --card-bg: #ffffff; --text-main: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; }
+        header h1 { margin: 0; font-size: 24px; padding: 5px 0; }
+        .lang-switch { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; min-width: 28px; text-align: center; line-height: 1; }
+        .header-gps { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; line-height: 1; transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
+        .header-gps:hover { background: rgba(255,255,255,0.3); }
+        .header-gps.active { background: #2e7d32; border-color: #4caf50; box-shadow: 0 0 8px rgba(76, 175, 80, 0.5); }
+        .header-gps.connecting { background: #e65100; border-color: #ff9800; }
+        .section { margin-bottom: 25px; }
+        h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; user-select: none; -webkit-user-select: none; }
+        .card, .group-header, .fav-tab { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; position: relative; transition: transform 0.1s; touch-action: pan-y; }
+        .card:active { transform: scale(0.98); }
+        .card.co-KMB { border-left: 5px solid var(--kmb-red); }
+        .card.co-CTB { border-left: 5px solid var(--ctb-yellow); }
+        .card.co-NLB { border-left: 5px solid var(--nlb-green); }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
+        .tab.active { background: var(--kmb-red); color: white; }
+        .hidden { display: none !important; }
+        .eta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .eta-list { display: flex; gap: 8px; font-weight: bold; color: var(--kmb-red); }
+        .co-NLB .eta-list { color: var(--nlb-green); }
+        .co-CTB .eta-list { color: var(--ctb-blue); }
+        .remove-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .remove-btn:hover { color: #ff4444; }
+        .route-info { display: flex; align-items: baseline; gap: 8px; }
+        .route-no { font-size: 18px; font-weight: 800; }
+        .dest-name { color: #666; font-size: 14px; }
+        .stop-name { font-size: 14px; margin-top: 4px; color: #444; }
+        .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .back-btn { background: none; border: none; color: var(--kmb-red); cursor: pointer; font-size: 16px; font-weight: bold; padding: 5px 0; }
+        .station-card { padding: 0 !important; }
+        .station-main { display: flex; align-items: center; padding: 15px; width: 100%; box-sizing: border-box; }
+        .station-info { flex-grow: 1; }
+        .fav-star { font-size: 20px; color: #ccc; padding: 10px; cursor: pointer; transition: color 0.2s; }
+        .fav-star.active { color: #ffc107; }
+        .eta-drawer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #f9f9f9; border-top: 1px solid #eee; }
+        .eta-drawer.open { max-height: 200px; padding: 10px 15px; }
+        .eta-content { font-size: 14px; }
+        .eta-status { font-size: 11px; color: #999; margin-top: 5px; }
+        .card.dragging, .group-header.dragging, .fav-tab.dragging { opacity: 0.8; transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: absolute; z-index: 1000; pointer-events: none; margin: 0; }
+        .drag-placeholder, .fav-tab-placeholder { background: transparent; border: 2px dashed #ccc; border-radius: 8px; box-sizing: border-box; }
+        .drag-placeholder { margin-bottom: 12px; }
+        #favorites-list, .fav-tab-bar { position: relative; }
+
+        #initial-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; color: var(--text-main); }
+        #debug-console { width: 100%; height: 50vh; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; display: flex; flex-direction: column; z-index: 3000; border-top: 2px solid #444; }
+        body:not(.debug-active) #debug-console { position: fixed; bottom: 0; left: 0; }
+        #debug-header { background: #333; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
+        #debug-logs { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        .log-entry { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .log-meta { display: flex; gap: 10px; color: #888; margin-bottom: 2px; }
+        .log-req { color: #569cd6; } .log-res { color: #4ec9b0; } .log-err { color: #f44747; }
+        .log-payload { white-space: pre-wrap; word-break: break-all; }
+        body.debug-active { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        body.debug-active .container { flex: 1; overflow-y: auto; padding-bottom: 20px; max-width: 600px; width: 100%; box-sizing: border-box; }
+        body.debug-active header { border-radius: 0; margin-bottom: 0; flex-shrink: 0; }
+        #debug-console { flex-shrink: 0; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal { background: white; width: 90%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px; background: var(--kmb-red); color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .modal-content { padding: 15px; max-height: 60vh; overflow-y: auto; }
+        .group-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .add-group-area { padding: 15px; border-top: 1px solid #eee; background: #f9f9f9; }
+        .modal-footer { padding: 10px 15px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; }
+        .btn { padding: 8px 16px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background: #eee; color: #666; }
+        .btn-save { background: var(--kmb-red); color: white; }
+        .group-header { font-size: 16px; font-weight: bold; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #ddd; color: #666; display: flex; align-items: center; gap: 8px; touch-action: pan-y; }
+        .fav-tab-bar { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; position: relative; -webkit-overflow-scrolling: touch; }
+        .fav-tab-bar::-webkit-scrollbar { display: none; }
+        .fav-tab { flex: 0 0 auto; padding: 8px 15px; background: #eee; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 5px; border: 1px solid transparent; touch-action: pan-x; }
+        .fav-tab.active { background: var(--kmb-red); color: white; }
+        .fav-tab-placeholder { flex: 0 0 auto; width: 80px; height: 33px; }
+        
+        /* GPS & Sort controls */
+        .fav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; user-select: none; -webkit-user-select: none; }
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .switch input:checked + .slider { background-color: var(--kmb-red); }
+        .switch input:checked + .slider:before { transform: translateX(16px); }
+        #sort-mode-btn { padding: 4px 8px; font-size: 12px; border-radius: 12px; display: flex; align-items: center; gap: 4px; background: #eee; color: #666; border: 1px solid #ddd; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        #sort-mode-btn.active { background-color: var(--kmb-red); color: white; border-color: var(--kmb-red); }
+        
+        /* Stop Search CSS Extensions */
+        .stop-detail-header { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .stop-route-card { transition: transform 0.1s; }
+        .stop-route-card:active { transform: scale(0.98); }
+        .operator-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; text-align: center; }
+        .badge-KMB { background: var(--kmb-red); }
+        .badge-CTB { background: var(--ctb-blue); color: var(--ctb-yellow); }
+        .badge-NLB { background: var(--nlb-green); }
+    </style>
+</head>
+<body>
+    <div id="initial-loading">
+        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px; color: var(--kmb-red);"></i>
+        <span data-i18n="initializing">Initializing routes...</span>
+    </div>
+    <header>
+        <div class="header-gps" id="gps-toggle-pill" onclick="toggleHeaderGPS()">
+            <i class="fas fa-location-arrow" id="gps-icon" style="color: rgba(255,255,255,0.6);"></i>
+            <span id="gps-status-text" data-i18n="gpsDisabled">GPS Off</span>
+        </div>
+        <h1><i class="fas fa-bus"></i> <span data-i18n="title">HK Bus Arrivals</span></h1>
+        <div class="lang-switch" id="lang-switch" onclick="toggleLanguage()"></div>
+    </header>
+    <div class="container">
+        <div id="favorites-section" class="section">
+            <h2 style="justify-content: space-between;">
+                <span><i class="fas fa-star" style="color: #ffc107;"></i> <span data-i18n="favorites">Favorites</span></span>
+                <i class="fas fa-sync-alt" id="refresh-btn" style="cursor: pointer; font-size: 18px; color: #666;" onclick="refreshAllETAs()" data-i18n-title="refreshETAs"></i>
+            </h2>
+            <div id="favorites-tabs" class="fav-tab-bar"></div>
+            <div class="fav-controls" style="justify-content: flex-end;">
+                <!-- Hidden GPS checkbox to preserve existing JS logic compatibility -->
+                <input type="checkbox" id="gps-toggle" style="display: none;">
+                <!-- Sort Mode Toggle Button -->
+                <button id="sort-mode-btn" onclick="toggleSortMode()">
+                    <i class="fas fa-sort"></i> <span id="sort-mode-text" data-i18n="sortCustom">Custom</span>
+                </button>
+            </div>
+            <div id="favorites-list"></div>
+        </div>
+        <div class="section">
+            <div class="tabs">
+                <button id="tab-route" class="tab active" onclick="switchTab(event, 'route')"><i class="fas fa-search"></i> <span data-i18n="route">Route</span></button>
+                <button id="tab-stop" class="tab" onclick="switchTab(event, 'stop')"><i class="fas fa-map-marker-alt"></i> <span data-i18n="stop">Stop</span></button>
+            </div>
+            <div id="route-search-ui">
+                <div id="search-input-area" style="display: flex; gap: 10px; align-items: flex-start;">
+                    <input type="text" id="route-input" data-i18n-placeholder="enterRoute">
+                    <button onclick="syncRoutes(true)" class="tab" style="flex: 0 0 auto; width: auto; padding: 12px;" data-i18n-title="refreshCache">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div id="route-results" class="results-list"></div>
+                <div id="stop-selection-results" class="results-list hidden"></div>
+            </div>
+            <div id="stop-search-ui" class="hidden">
+                <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;">
+                    <input type="text" id="stop-input" data-i18n-placeholder="enterStop">
+                    <button id="sync-stops-btn" onclick="syncStops(true)" class="tab" style="flex: 0 0 auto; width: auto; padding: 12px;" data-i18n-title="refreshStopsCache">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div id="stop-sync-status" class="hidden" style="font-size: 12px; color: #666; margin-bottom: 10px; text-align: center;"></div>
+                <div id="stop-results" class="results-list"></div>
+                <div id="stop-details-view" class="results-list hidden"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const APP_VERSION = '1.2.0';
+        const UNIFIED_STOPS_DATA = [];
+        let activeGroupId = null, _editingGroupId = null, _etaObserver = null;
+        const _visibleFavIds = new Set();
+
+        function setupETAObserver() {
+            _etaObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const favId = parseInt(entry.target.dataset.favid, 10);
+                    if (entry.isIntersecting) {
+                        _visibleFavIds.add(favId);
+                        if (entry.target.dataset.skipObserver === 'true') {
+                            entry.target.removeAttribute('data-skip-observer');
+                            return;
+                        }
+                        BusDB.get('favorites', favId).then(fav => { if (fav) updateETA(fav); });
+                    } else {
+                        _visibleFavIds.delete(favId);
+                    }
+                });
+            }, { threshold: 0.1 });
+        }
+
+        let userLang = localStorage.getItem('app_lang') || ((navigator.language || navigator.userLanguage).startsWith('zh') ? 'tc' : 'en');
+        const I18N = {
+            tc: {
+                title: "香港巴士到站時間", favorites: "我的最愛車站", route: "搜尋路線", stop: "搜尋車站",
+                enterRoute: "輸入路線 (例如 1A, 962X, 3M)...", enterStop: "輸入車站名稱...",
+                refreshETAs: "重新整理到站時間", refreshCache: "更新路線緩存",
+                loadingStops: "正在載入車站...", loadingDirections: "正在載入方向...",
+                failedStops: "載入車站失敗。", failedDirections: "載入方向失敗。",
+                noFavorites: "尚未有最愛車站。請搜尋路線並添加！", emptyGroup: "搜尋路線以加入此群組",
+                removeFavorite: "移除此最愛車站？", syncing: "正在從 API 同步路線...",
+                initializing: "正在初始化路線...", next: "下班車:", noETA: "暫無預計到站時間",
+                error: "錯誤", lastUpdated: "最後更新:", scheduled: "預定班次", min: "分鐘",
+                back: "返回", to: "往", outbound: "去程", inbound: "回程", specialVariant: "特別班次",
+                selectGroup: "選擇群組", addGroup: "新增群組", newGroupName: "新群組名稱",
+                move: "移動", cancel: "取消", others: "其他", manageGroup: "管理群組",
+                renameGroup: "重命名群組", deleteGroup: "刪除群組",
+                deleteGroupConfirm: "這將同時移除此群組中的所有已儲存巴士。確定嗎？", save: "儲存", invalidName: "請輸入有效的名稱。", gpsDisabled: "GPS 關閉", gpsAcquiring: "獲取 GPS 中...", gpsEnabled: "GPS 運作中", sortCustom: "手動排序", sortDistance: "距離排序", distanceMeter: "{m} 米", distanceKm: "{km} 公里", gpsDenied: "GPS 定位權限被拒絕。", refreshStopsCache: "更新車站緩存",
+                corsWarningTitle: "正在以本地檔案協定運行 (受 CORS 限制)", corsWarningDesc: "KMB 開放數據 API 限制了從 `file:///` 協定發起的直接請求。為了獲得極速、穩定且免 Proxy 的即時更新，請使用本地 Web 伺服器託管此儀表板：", corsWarningUrl: "然後訪問：", copyCommand: "複製命令", copied: "已複製！",
+                openMapTitle: "打開 Google 地圖", openMapDirectionsBody: "您想打開 Google 地圖並規劃前往「{stop}」的步行路線嗎？", openMapSearchBody: "您想在 Google 地圖中查看「{stop}」的位置嗎？", open: "打開"
+            },
+            en: {
+                title: "HK Bus Arrivals", favorites: "Favorites", route: "Route", stop: "Stop",
+                enterRoute: "Enter Route (e.g. 1A, 962X, 3M)...", enterStop: "Enter Stop Name...",
+                refreshETAs: "Refresh ETAs", refreshCache: "Refresh Route Cache",
+                loadingStops: "Loading stops...", loadingDirections: "Loading directions...",
+                failedStops: "Failed to load stops.", failedDirections: "Failed to load directions.",
+                noFavorites: "No favorites yet. Search a route to add one!", emptyGroup: "Search for a route to add it to this group",
+                removeFavorite: "Remove this favorite?", syncing: "Syncing routes from API...",
+                initializing: "Initializing routes...", next: "Next:", noETA: "No ETA",
+                error: "Error", lastUpdated: "Last updated:", scheduled: "Scheduled", min: "min",
+                back: "Back", to: "to", outbound: "Outbound", inbound: "Inbound", specialVariant: "Special Variant",
+                selectGroup: "Select Group", addGroup: "Add Group", newGroupName: "New Group Name",
+                move: "Move", cancel: "Cancel", others: "Others", manageGroup: "Manage Group",
+                renameGroup: "Rename Group", deleteGroup: "Delete Group",
+                deleteGroupConfirm: "This will also remove all saved buses in this group. Are you sure?", save: "Save", invalidName: "Please enter a valid name.", gpsDisabled: "GPS Off", gpsAcquiring: "Acquiring GPS...", gpsEnabled: "GPS Active", sortCustom: "Custom Sort", sortDistance: "Distance Sort", distanceMeter: "{m}m", distanceKm: "{km}km", gpsDenied: "GPS Permission denied.", refreshStopsCache: "Refresh Stops Cache",
+                corsWarningTitle: "Running via Local File Protocol (CORS Restricted)", corsWarningDesc: "KMB Open Data API restricts direct requests from `file:///` URLs. For instant, high-speed, and proxy-free updates, please host this dashboard using a local web server:", corsWarningUrl: "Then visit:", copyCommand: "Copy Command", copied: "Copied!",
+                openMapTitle: "Open Google Maps", openMapDirectionsBody: "Would you like to open Google Maps and get walking directions to \"{stop}\"?", openMapSearchBody: "Would you like to view \"{stop}\" on Google Maps?", open: "Open"
+            }
+        };
+        const t = (key) => I18N[userLang][key] || key;
+        const localized = (obj, fieldBase) => obj[`${fieldBase}_${userLang}`] || obj[`${fieldBase}_tc`] || obj[fieldBase];
+
+        function toggleLanguage() {
+            userLang = userLang === 'tc' ? 'en' : 'tc';
+            localStorage.setItem('app_lang', userLang);
+            updateLabels();
+            renderFavorites();
+        }
+
+        function updateLabels() {
+            document.getElementById('page-title').textContent = t('title');
+            document.getElementById('lang-switch').textContent = userLang === 'tc' ? 'EN' : '中';
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+        }
+
+        function openGenericModal(title, bodyHtml, footerHtml, isDanger = false) {
+            document.getElementById('g-modal-title').textContent = title;
+            document.getElementById('g-modal-body').innerHTML = bodyHtml;
+            const footer = document.getElementById('g-modal-footer');
+            footer.innerHTML = footerHtml || '';
+            footer.style.display = footerHtml ? 'flex' : 'none';
+            document.getElementById('g-modal-header').style.backgroundColor = isDanger ? 'var(--kmb-red)' : '';
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+        function closeGenericModal() { document.getElementById('generic-modal').classList.add('hidden'); }
+
+        const _etaFlashCache = new Map(), _stationRefreshCooldowns = new Map(), FLASH_CACHE_TTL = 300000;
+        let _drawerInterval = null, activeDragCard = null, dragPlaceholder = null, startY = 0, initialTop = 0, dragTimeout = null, isDragging = false, activePointerUpHandler = null;
+        let activeDragTab = null, tabDragPlaceholder = null, startX = 0, initialLeft = 0, wasDragged = false;
+
+        let gpsWatchId = null;
+        let userCoords = null;
+        let gpsEnabled = localStorage.getItem('app_gps_enabled') === 'true';
+        let favSortMode = localStorage.getItem('app_fav_sort_mode') || 'custom';
+
+        function startGPS() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by this browser.");
+                document.getElementById('gps-toggle').checked = false;
+                gpsEnabled = false;
+                localStorage.setItem('app_gps_enabled', 'false');
+                updateGPSUI(false);
+                return;
+            }
+            updateGPSUI('connecting');
+            gpsWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    userCoords = {
+                        lat: position.coords.latitude,
+                        long: position.coords.longitude
+                    };
+                    gpsEnabled = true;
+                    localStorage.setItem('app_gps_enabled', 'true');
+                    updateGPSUI(true);
+                    renderFavorites(true);
+                },
+                (error) => {
+                    console.error("GPS Error:", error);
+                    gpsEnabled = false;
+                    localStorage.setItem('app_gps_enabled', 'false');
+                    const toggle = document.getElementById('gps-toggle');
+                    if (toggle) toggle.checked = false;
+                    updateGPSUI(false);
+                    userCoords = null;
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert(t('gpsDenied'));
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function stopGPS() {
+            if (gpsWatchId) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+            userCoords = null;
+            gpsEnabled = false;
+            localStorage.setItem('app_gps_enabled', 'false');
+            updateGPSUI(false);
+            if (favSortMode === 'distance') {
+                favSortMode = 'custom';
+                localStorage.setItem('app_fav_sort_mode', 'custom');
+                updateSortModeUI();
+            }
+            renderFavorites();
+        }
+
+        function toggleGPS(checked) {
+            if (checked) startGPS();
+            else stopGPS();
+        }
+
+        function toggleHeaderGPS() {
+            const toggle = document.getElementById('gps-toggle');
+            if (toggle) {
+                toggleGPS(!toggle.checked);
+            }
+        }
+
+        function updateGPSUI(state) {
+            const icon = document.getElementById('gps-icon');
+            const text = document.getElementById('gps-status-text');
+            const toggle = document.getElementById('gps-toggle');
+            const pill = document.getElementById('gps-toggle-pill');
+            if (!icon || !text || !toggle) return;
+            if (pill) {
+                pill.classList.remove('active', 'connecting');
+            }
+            if (state === 'connecting') {
+                icon.className = 'fas fa-spinner fa-spin';
+                icon.style.color = '#ff9800'; // Match orange on header
+                text.textContent = t('gpsAcquiring');
+                toggle.checked = true;
+                if (pill) pill.classList.add('connecting');
+            } else if (state === true) {
+                icon.className = 'fas fa-location-crosshairs';
+                icon.style.color = '#fff'; // White color on header
+                text.textContent = t('gpsEnabled');
+                toggle.checked = true;
+                if (pill) pill.classList.add('active');
+            } else {
+                icon.className = 'fas fa-location-arrow';
+                icon.style.color = 'rgba(255,255,255,0.6)'; // Translucent white on header
+                text.textContent = t('gpsDisabled');
+                toggle.checked = false;
+            }
+        }
+
+        function updateSortModeUI() {
+            const btn = document.getElementById('sort-mode-btn');
+            const text = document.getElementById('sort-mode-text');
+            if (!btn || !text) return;
+            if (favSortMode === 'distance') {
+                btn.classList.add('active');
+                text.textContent = t('sortDistance');
+            } else {
+                btn.classList.remove('active');
+                text.textContent = t('sortCustom');
+            }
+        }
+
+        function toggleSortMode() {
+            if (favSortMode === 'custom') {
+                if (!gpsEnabled) {
+                    gpsEnabled = true;
+                    const toggle = document.getElementById('gps-toggle');
+                    if (toggle) toggle.checked = true;
+                    startGPS();
+                }
+                favSortMode = 'distance';
+            } else {
+                favSortMode = 'custom';
+            }
+            localStorage.setItem('app_fav_sort_mode', favSortMode);
+            updateSortModeUI();
+            renderFavorites(true); // Skip network API ETA refresh during sorting
+        }
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // meters
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+            const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function formatDistance(meters) {
+            if (meters < 1000) return t('distanceMeter').replace('{m}', Math.round(meters));
+            return t('distanceKm').replace('{km}', (meters / 1000).toFixed(1));
+        }
+
+        async function ensureFavoriteCoordinates(f) {
+            if (f.lat !== undefined && f.long !== undefined) return f;
+            try {
+                let lat = null, long = null;
+                if (f.co === 'KMB') {
+                    const all = await BusAPI.getKMBStops();
+                    const info = all.get(f.stopId);
+                    if (info) { lat = info.lat; long = info.long; }
+                } else if (f.co === 'CTB') {
+                    const info = await BusAPI.getCTBStopInfo(f.stopId);
+                    if (info) { lat = info.lat; long = info.long; }
+                } else if (f.co === 'NLB') {
+                    if (f.routeId) {
+                        const d = await BusAPI.fetchNLB(`stop.php?action=list&routeId=${f.routeId}`);
+                        const stopObj = d?.stops?.find(i => i.stopId === f.stopId);
+                        if (stopObj) { lat = stopObj.latitude; long = stopObj.longitude; }
+                    }
+                }
+                if (lat !== null && long !== null) {
+                    f.lat = lat;
+                    f.long = long;
+                    await BusDB.put('favorites', f);
+                }
+            } catch (e) {
+                console.warn('Failed backfilling coordinates for favId:', f.favId, e);
+            }
+            return f;
+        }
+
+        // Global touchmove blocker to prevent iOS scrolling during JS drag
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) e.preventDefault();
+        }, { passive: false });
+
+        function getDragAfterElementHorizontal(container, x) {
+            const draggableElements = [...container.querySelectorAll('.fav-tab:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = x - box.left - box.width / 2;
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging), .group-header:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        const _favoriteStopsCache = new Set();
+        function _isFavorited(r, s) { return _favoriteStopsCache.has(`${r.co}-${r.route}-${s.stop}-${r.service_type || 1}`); }
+
+        function getFlashCache(co, sid, r, st) { const c = _etaFlashCache.get(`${co}-${sid}-${r}-${st || 1}`); return (c && (Date.now() - c.timestamp < FLASH_CACHE_TTL)) ? c.data : null; }
+        function setFlashCache(co, sid, r, st, d) { _etaFlashCache.set(`${co}-${sid}-${r}-${st || 1}`, { data: d, timestamp: Date.now() }); }
+
+        const BusDB = {
+            DB_NAME: 'HKBusDB_enhanced', DB_VERSION: 6, db: null,
+            async init() {
+                return new Promise((resolve) => {
+                    if (!window.indexedDB) return resolve();
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        // Demonstrating support for adding a new table 'stops' in version 6
+                        ['routes', 'favorites', 'metadata', 'favorite_groups', 'route_stops', 'user_settings', 'stops'].forEach(s => {
+                            if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { 
+                                keyPath: (s === 'routes' || s === 'route_stops' || s === 'stops' ? 'id' : (s === 'favorites' ? 'favId' : (s === 'favorite_groups' ? 'id' : 'key'))), 
+                                autoIncrement: (s === 'favorites' || s === 'favorite_groups') 
+                            });
+                        });
+                    };
+                    request.onsuccess = async (e) => { this.db = e.target.result; await this.checkMigrations(); resolve(); };
+                    request.onerror = resolve;
+                });
+            },
+            async checkMigrations() {
+                const migrated = await this.getMetadata('migrated_from_legacy');
+                if (!migrated) {
+                    await this.migrateFromLegacy();
+                }
+                const storedAppVersion = await this.getMetadata('app_version'), dbVer = await this.getMetadata('db_version');
+                const groups = await this.getAll('favorite_groups');
+                if (!groups.find(g => g.id === 1) || !groups.find(g => g.id === 2)) {
+                    if (!groups.find(g => g.id === 1)) await this.put('favorite_groups', { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 });
+                    if (!groups.find(g => g.id === 2)) await this.put('favorite_groups', { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 });
+                }
+                if (storedAppVersion !== APP_VERSION || !dbVer || dbVer < 6) {
+                    if (!dbVer || dbVer < 3) {
+                        await this.putAll('favorite_groups', [{ id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 }, { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }]);
+                        const fs = await this.getAll('favorites'), toUp = fs.filter(f => !f.groupId).map(f => ({...f, groupId: 1}));
+                        if (toUp.length > 0) await this.putAll('favorites', toUp);
+                    }
+                    if (!dbVer || dbVer < 5) {
+                        // Backfill coordinates on startup for existing favorites
+                        try {
+                            const fs = await this.getAll('favorites');
+                            for (const f of fs) {
+                                await ensureFavoriteCoordinates(f);
+                            }
+                        } catch (e) { console.warn('Failed backfilling on migration:', e); }
+                    }
+                    await this.setMetadata('app_version', APP_VERSION); await this.setMetadata('db_version', this.DB_VERSION);
+                    if (!await this.getMetadata('install_date')) await this.setMetadata('install_date', Date.now());
+                }
+            },
+            async migrateFromLegacy() {
+                return new Promise((resolve) => {
+                    // Open the legacy database without specifying a version number to avoid VersionError
+                    const req = indexedDB.open('HKBusDB');
+                    req.onsuccess = async (e) => {
+                        const legacyDb = e.target.result;
+                        try {
+                            const stores = legacyDb.objectStoreNames;
+                            if (stores.contains('favorite_groups')) {
+                                const tx = legacyDb.transaction('favorite_groups', 'readonly');
+                                const groups = await new Promise((res, rej) => {
+                                    const r = tx.objectStore('favorite_groups').getAll();
+                                    r.onsuccess = () => res(r.result);
+                                    r.onerror = () => rej(r.error);
+                                });
+                                if (groups && groups.length > 0) {
+                                    await this.clear('favorite_groups');
+                                    await this.putAll('favorite_groups', groups);
+                                }
+                            }
+                            if (stores.contains('favorites')) {
+                                const tx = legacyDb.transaction('favorites', 'readonly');
+                                const favorites = await new Promise((res, rej) => {
+                                    const r = tx.objectStore('favorites').getAll();
+                                    r.onsuccess = () => res(r.result);
+                                    r.onerror = () => rej(r.error);
+                                });
+                                if (favorites && favorites.length > 0) {
+                                    await this.clear('favorites');
+                                    await this.putAll('favorites', favorites);
+                                }
+                            }
+                        } catch (err) {
+                            console.warn("Error during legacy data migration:", err);
+                        } finally {
+                            legacyDb.close();
+                            await this.setMetadata('migrated_from_legacy', 'true');
+                            resolve();
+                        }
+                    };
+                    req.onerror = async () => {
+                        console.warn("Legacy HKBusDB database not found or couldn't be opened.");
+                        await this.setMetadata('migrated_from_legacy', 'true');
+                        resolve();
+                    };
+                });
+            },
+            async _op(storeName, mode, callback) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve(mode === 'readonly' ? [] : null);
+                    try {
+                        const tx = this.db.transaction(storeName, mode), store = tx.objectStore(storeName), res = callback(store);
+                        if (res instanceof IDBRequest) {
+                            res.onsuccess = () => resolve(res.result);
+                            res.onerror = (e) => reject(e.target.error);
+                        } else {
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = (e) => reject(e.target.error);
+                        }
+                    } catch (e) { reject(e); }
+                });
+            },
+            getAll(s) { return this._op(s, 'readonly', st => st.getAll()); },
+            get(s, k) { return this._op(s, 'readonly', st => st.get(k)); },
+            put(s, d) { return this._op(s, 'readwrite', st => st.put(d)); },
+            clear(s) { return this._op(s, 'readwrite', st => st.clear()); },
+            delete(s, k) { return this._op(s, 'readwrite', st => st.delete(k)); },
+            putAll(s, a) { return this._op(s, 'readwrite', st => a.forEach(i => st.put(i))); },
+            async getMetadata(k) { const d = await this.get('metadata', k); return d ? d.value : null; },
+            setMetadata(k, v) { return this.put('metadata', { key: k, value: v }); }
+        };
+
+        const DebugLogger = {
+            logs: [], maxLogs: 50, active: false,
+            toggle(force) {
+                this.active = force !== undefined ? force : !this.active;
+                const el = document.getElementById('debug-console');
+                if (this.active) {
+                    document.querySelector('#debug-header span').innerHTML = `<i class='fas fa-terminal'></i> Debug Console <small style='opacity:0.7'>(v${APP_VERSION})</small>`;
+                    el.classList.remove('hidden'); document.body.classList.add('debug-active'); this.render();
+                } else { el.classList.add('hidden'); document.body.classList.remove('debug-active'); }
+            },
+            log(type, method, url, payload, status = '') {
+                this.logs.push({ timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'), type, method, url, payload, status });
+                if (this.logs.length > this.maxLogs) this.logs.shift();
+                if (this.active) this.render();
+            },
+            clear() { this.logs = []; this.render(); },
+            render() {
+                const c = document.getElementById('debug-logs'); if (!c) return;
+                c.innerHTML = this.logs.map(l => `<div class='log-entry'><div class='log-meta'><span>[${l.timestamp}]</span><span class='log-${l.type.toLowerCase()}'>${l.type} ${l.method}</span><span>${l.status}</span></div><div style='color:#bbb'>${l.url}</div><div class='log-payload'>${typeof l.payload === 'object' ? JSON.stringify(l.payload, null, 2) : l.payload}</div></div>`).join('');
+                c.scrollTop = c.scrollHeight;
+            }
+        };
+
+        const BusAPI = {
+            KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb', CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus', NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
+            _ctbStopCache: new Map(), _kmbStopCache: new Map(),
+            async _fetch(url, method = 'GET') {
+                DebugLogger.log('REQ', method, url, '...');
+                try {
+                    const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json(), data = json.data || json;
+                    DebugLogger.log('RES', method, url, data, res.status); return data;
+                } catch (e) { DebugLogger.log('ERR', method, url, e.message); return null; }
+            },
+            async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
+            async fetchKMB(e) {
+                const url = `${this.KMB_BASE}${e}`;
+                if (window.location.protocol === 'file:') {
+                    const proxies = [
+                        u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+                        u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+                        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+                    ];
+                    for (let i = 0; i < proxies.length; i++) {
+                        const proxyUrl = proxies[i](url);
+                        const data = await this._fetch(proxyUrl);
+                        if (data && Array.isArray(data)) {
+                            return data;
+                        }
+                        console.warn(`Proxy #${i + 1} failed or returned unexpected format for ${e}. Trying next backup...`);
+                    }
+                    console.warn(`All proxies failed for ${e}. Retrying via direct API call...`);
+                }
+                return this._fetch(url);
+            },
+            fetchCTB(e) { return this._fetch(`${this.CTB_BASE}${e}`); }, fetchNLB(e) { return this._fetch(`${this.NLB_BASE}/${e}`); },
+            async getCTBStopInfo(id) { if (!id) return null; if (this._ctbStopCache.has(id)) return this._ctbStopCache.get(id); const d = await this.fetchCTB(`/stop/${id}`); if (d) this._ctbStopCache.set(id, d); return d; },
+            async getRouteList(co) {
+                if (co === 'KMB') return this.fetchKMB('/route/'); if (co === 'CTB') return this.fetchCTB('/route/CTB');
+                if (co === 'NLB') { const d = await this.fetchNLB('route.php?action=list'); return (d?.routes || []).map(r => ({ route: r.routeNo, dest_tc: r.routeName_c, dest_en: r.routeName_e, routeId: r.routeId })); }
+            },
+            async getStops(co, route, direction, type, rid) {
+                const dir = direction === 'outbound' ? 'outbound' : 'inbound';
+                const cacheId = `${co}_${route}_${dir}_${type || 1}_${rid || ''}`;
+                
+                // 1. Check Cache
+                try {
+                    const cached = await BusDB.get('route_stops', cacheId);
+                    if (cached && (new Date(cached.last_updated).toDateString() === new Date().toDateString())) {
+                        return cached.stops;
+                    }
+                } catch (e) { console.warn('Cache read error', e); }
+
+                // 2. Fetch from API
+                let stops = [];
+                if (co === 'KMB') { const s = await this.fetchKMB(`/route-stop/${route}/${dir}/${type || 1}`), all = await this.getKMBStops(); stops = (s || []).map(i => { const info = all.get(i.stop); return { stop: i.stop, name_tc: info?.name_tc || i.stop, name_en: info?.name_en || i.stop, lat: info?.lat, long: info?.long }; }); }
+                if (co === 'CTB') { const s = await this.fetchCTB(`/route-stop/CTB/${route}/${dir}`), data = await Promise.all((s || []).map(async i => { const info = await this.getCTBStopInfo(i.stop); return info ? { stop: i.stop, name_tc: info.name_tc, name_en: info.name_en, lat: info.lat, long: info.long } : null; })); stops = data.filter(i => i); }
+                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=list&routeId=${rid}`); stops = (d?.stops || []).map(i => ({ stop: i.stopId, name_tc: i.stopName_c, name_en: i.stopName_e, lat: i.latitude, long: i.longitude })); }
+
+                // 3. Save to Cache
+                if (stops && stops.length > 0) {
+                    try {
+                        await BusDB.put('route_stops', { id: cacheId, stops: stops, last_updated: Date.now() });
+                    } catch (e) { console.warn('Cache write error', e); }
+                }
+                return stops;
+            },
+            async getETA(co, sid, r, type = 1, rid, bound, direction) {
+                if (co === 'KMB') { const d = await this.fetchKMB(`/eta/${sid}/${r}/${type}`), kdir = bound || (direction === 'inbound' ? 'I' : 'O'); return (d || []).filter(i => i.dir === kdir); }
+                if (co === 'CTB') { const d = await this.fetchCTB(`/eta/CTB/${sid}/${r}`), cdir = (direction === 'inbound' || bound === 'I') ? 'I' : 'O'; return (d || []).filter(i => i.dir === cdir); }
+                if (co === 'NLB') { const d = await this.fetchNLB(`stop.php?action=estimatedArrivals&routeId=${rid}&stopId=${sid}`); return d?.estimatedArrivals || (d === null ? null : []); }
+            }
+        };
+
+        function switchTab(e, type) {
+            if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.currentTarget.classList.add('active');
+            document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
+            document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
+            if (type === 'route') { document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); }
+            if (type === 'stop') { loadStopsIntoMemory().then(() => { searchStops(document.getElementById('stop-input').value.trim().toUpperCase()); }); }
+        }
+
+        let allRoutes = [];
+        const sortRoutes = (rs) => rs.sort((a, b) => a.route.localeCompare(b.route, undefined, { numeric: true, sensitivity: 'base' }) || a.co.localeCompare(b.co));
+
+        async function syncRoutes(force = false) {
+            const cached = await BusDB.getAll('routes'), now = Date.now(), SEVEN_DAYS = 604800000, loading = document.getElementById('initial-loading');
+            if (!force && cached.length > 0 && (now - (cached[0].last_updated || 0) < SEVEN_DAYS)) { allRoutes = sortRoutes(cached); loading.classList.add('hidden'); return; }
+            if (cached.length === 0 || force) loading.classList.remove('hidden');
+            const res = await Promise.allSettled([BusAPI.getRouteList('KMB'), BusAPI.getRouteList('CTB'), BusAPI.getRouteList('NLB')]);
+            const ts = Date.now(); let processed = [];
+            if (res[0].status === 'fulfilled' && res[0].value?.length > 0) processed.push(...res[0].value.map(r => ({ ...r, id: `KMB_${r.route}_${r.bound}_${r.service_type}`, co: 'KMB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'KMB'));
+            if (res[1].status === 'fulfilled' && res[1].value?.length > 0) processed.push(...res[1].value.map(r => ({ ...r, id: `CTB_${r.route}_${r.dest_tc}`, co: 'CTB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'CTB'));
+            if (res[2].status === 'fulfilled' && res[2].value?.length > 0) processed.push(...res[2].value.map(r => ({ ...r, id: `NLB_${r.route}_${r.routeId}`, co: 'NLB', last_updated: ts })));
+            else processed.push(...cached.filter(r => r.co === 'NLB'));
+            if (processed.length > 0) { const s = sortRoutes(processed); await BusDB.clear('routes'); await BusDB.putAll('routes', s); allRoutes = s; }
+            else if (cached.length > 0) allRoutes = sortRoutes(cached);
+            loading.classList.add('hidden');
+            // Lazy load stops on startup if needed
+            setTimeout(() => syncStops(), 1000);
+        }
+
+        document.getElementById('route-input').addEventListener('input', e => renderRouteResults(allRoutes.filter(r => r.route.startsWith(e.target.value.toUpperCase())).slice(0, 50)));
+        document.getElementById('stop-input').addEventListener('input', e => {
+            const q = e.target.value.trim().toUpperCase();
+            searchStops(q);
+        });
+
+        let allStopsInMemory = [];
+        async function loadStopsIntoMemory() {
+            if (allStopsInMemory.length === 0) {
+                allStopsInMemory = await BusDB.getAll('stops');
+            }
+            return allStopsInMemory;
+        }
+
+        async function searchStops(q) {
+            const resultsEl = document.getElementById('stop-results');
+            const detailsEl = document.getElementById('stop-details-view');
+            if (detailsEl) detailsEl.classList.add('hidden');
+            if (resultsEl) resultsEl.classList.remove('hidden');
+            
+            if (!q) {
+                if (gpsEnabled && userCoords) {
+                    showNearbyStops();
+                } else {
+                    if (resultsEl) resultsEl.innerHTML = `<div style="text-align:center;padding:30px;color:#888;">
+                        <i class="fas fa-search-location" style="font-size:32px;margin-bottom:12px;color:#ccc;"></i>
+                        <div>${t('enterStop')}</div>
+                        <div style="font-size:12px;margin-top:6px;opacity:0.7;">Enable GPS to see nearby stops</div>
+                    </div>`;
+                }
+                return;
+            }
+            
+            const stops = await loadStopsIntoMemory();
+            const matches = stops.filter(s => 
+                s.name_tc.toUpperCase().includes(q) || 
+                s.name_en.toUpperCase().includes(q) ||
+                (s.stopId && s.stopId.includes(q))
+            ).slice(0, 50);
+            
+            renderStopSearchResults(matches);
+        }
+
+        async function showNearbyStops() {
+            const resultsEl = document.getElementById('stop-results');
+            if (!userCoords || !resultsEl) return;
+            
+            const stops = await loadStopsIntoMemory();
+            if (stops.length === 0) {
+                resultsEl.innerHTML = `<div style="text-align:center;padding:20px;color:#888;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading stops database...
+                </div>`;
+                syncStops();
+                return;
+            }
+            
+            stops.forEach(s => {
+                if (s.lat && s.long) {
+                    s._distance = getDistance(userCoords.lat, userCoords.long, s.lat, s.long);
+                } else {
+                    s._distance = Infinity;
+                }
+            });
+            
+            const nearby = stops.filter(s => s._distance < 10000).sort((a, b) => a._distance - b._distance).slice(0, 10);
+            
+            resultsEl.innerHTML = `<h3 style="margin: 10px 0; font-size:14px; color:#666; display:flex; align-items:center; gap:6px;">
+                <i class="fas fa-location-crosshairs" style="color:#2e7d32"></i> Nearby Stops
+            </h3>`;
+            
+            if (nearby.length === 0) {
+                resultsEl.innerHTML += `<div style="text-align:center;padding:20px;color:#888;">No bus stops found within 10km.</div>`;
+                return;
+            }
+            
+            const container = document.createElement('div');
+            nearby.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `card co-${s.co}`;
+                card.onclick = () => showStopDetails(s);
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div>
+                            <span class="operator-badge badge-${s.co}">${s.co}</span>
+                            <strong style="margin-left:6px; font-size:14px;">${localized(s, 'name')}</strong>
+                        </div>
+                        <span class="distance-badge" onclick="event.stopPropagation(); openMapDirections(\`${localized(s, 'name')}\`, ${s.lat}, ${s.long})" style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;">
+                            <i class="fas fa-location-dot" style="font-size: 9px;"></i> ${formatDistance(s._distance)}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            resultsEl.appendChild(container);
+        }
+
+        function renderStopSearchResults(matches) {
+            const resultsEl = document.getElementById('stop-results');
+            if (!resultsEl) return;
+            resultsEl.innerHTML = '';
+            
+            if (matches.length === 0) {
+                resultsEl.innerHTML = `<div style="text-align:center;padding:20px;color:#888;">No stops found matching query.</div>`;
+                return;
+            }
+            
+            const container = document.createElement('div');
+            matches.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `card co-${s.co}`;
+                card.onclick = () => showStopDetails(s);
+                
+                let distBadge = '';
+                if (userCoords && s.lat && s.long) {
+                    const d = getDistance(userCoords.lat, userCoords.long, s.lat, s.long);
+                    distBadge = `<span class="distance-badge" onclick="event.stopPropagation(); openMapDirections(\`${localized(s, 'name')}\`, ${s.lat}, ${s.long})" style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;">
+                        <i class="fas fa-location-dot" style="font-size: 9px;"></i> ${formatDistance(d)}
+                    </span>`;
+                }
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div>
+                            <span class="operator-badge badge-${s.co}">${s.co}</span>
+                            <strong style="margin-left:6px; font-size:14px;">${localized(s, 'name')}</strong>
+                        </div>
+                        ${distBadge}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            resultsEl.appendChild(container);
+        }
+
+        let _stopsSyncing = false;
+        async function syncStops(force = false) {
+            if (_stopsSyncing) return;
+            const cached = await BusDB.getAll('stops');
+            const now = Date.now();
+            const THIRTY_DAYS = 2592000000;
+            const lastUpdated = await BusDB.getMetadata('stops_last_updated') || 0;
+            
+            if (!force && cached.length > 0 && (now - lastUpdated < THIRTY_DAYS)) {
+                indexCTBRouteStopsInBackground();
+                return;
+            }
+            
+            _stopsSyncing = true;
+            const statusEl = document.getElementById('stop-sync-status');
+            if (statusEl) {
+                statusEl.classList.remove('hidden');
+                statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Initializing stops database...</span>`;
+            }
+            
+            try {
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching KMB stops...</span>`;
+                const kmbStopsRes = await BusAPI.fetchKMB('/stop', true);
+                if (!kmbStopsRes) throw new Error("Failed to fetch KMB stops");
+                
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching KMB route mappings...</span>`;
+                const kmbRouteStopsRes = await BusAPI.fetchKMB('/route-stop', true);
+                if (!kmbRouteStopsRes) throw new Error("Failed to fetch KMB route stops");
+                
+                const kmbStopToRoutes = new Map();
+                kmbRouteStopsRes.forEach(item => {
+                    if (!kmbStopToRoutes.has(item.stop)) {
+                        kmbStopToRoutes.set(item.stop, []);
+                    }
+                    kmbStopToRoutes.get(item.stop).push({
+                        route: item.route,
+                        bound: item.bound,
+                        serviceType: parseInt(item.service_type, 10) || 1
+                    });
+                });
+                
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching Citybus stops...</span>`;
+                const ctbStopsRes = await BusAPI.fetchCTB('/stop/CTB');
+                if (!ctbStopsRes) throw new Error("Failed to fetch CTB stops");
+                
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching NLB route mappings...</span>`;
+                const nlbRoutes = allRoutes.filter(r => r.co === 'NLB');
+                const nlbStopToRoutes = new Map();
+                const nlbStopsTemp = new Map();
+
+                // Fetch NLB stops in parallel batches of 5 to avoid hammering the API
+                const NLB_BATCH_SIZE = 5;
+                for (let i = 0; i < nlbRoutes.length; i += NLB_BATCH_SIZE) {
+                    const batch = nlbRoutes.slice(i, i + NLB_BATCH_SIZE);
+                    if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching NLB stops... (${Math.min(i + NLB_BATCH_SIZE, nlbRoutes.length)}/${nlbRoutes.length} routes)</span>`;
+                    await Promise.all(batch.map(async r => {
+                        try {
+                            const d = await BusAPI.fetchNLB(`stop.php?action=list&routeId=${r.routeId}`);
+                            if (d && d.stops) {
+                                d.stops.forEach(s => {
+                                    const stopId = s.stopId;
+                                    if (!nlbStopsTemp.has(stopId)) {
+                                        nlbStopsTemp.set(stopId, {
+                                            stopId: stopId,
+                                            name_tc: s.stopName_c,
+                                            name_en: s.stopName_e,
+                                            lat: s.latitude,
+                                            long: s.longitude
+                                        });
+                                    }
+                                    if (!nlbStopToRoutes.has(stopId)) {
+                                        nlbStopToRoutes.set(stopId, []);
+                                    }
+                                    nlbStopToRoutes.get(stopId).push({
+                                        route: r.route,
+                                        bound: 'O',
+                                        serviceType: 1,
+                                        routeId: r.routeId
+                                    });
+                                });
+                            }
+                        } catch(e) { console.warn("Failed fetching stops for NLB route:", r.route, e); }
+                    }));
+                }
+                
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Assembling stop database...</span>`;
+                const stopsToWrite = [];
+                
+                kmbStopsRes.forEach(s => {
+                    stopsToWrite.push({
+                        id: `KMB_${s.stop}`,
+                        co: 'KMB',
+                        stopId: s.stop,
+                        name_tc: s.name_tc,
+                        name_en: s.name_en,
+                        lat: parseFloat(s.lat),
+                        long: parseFloat(s.long),
+                        routes: kmbStopToRoutes.get(s.stop) || []
+                    });
+                });
+                
+                // Ensure CTB stops are in an array; handle possible {data: [...] } wrapper
+                const ctbStopsArray = Array.isArray(ctbStopsRes) ? ctbStopsRes : (ctbStopsRes && Array.isArray(ctbStopsRes.data) ? ctbStopsRes.data : []);
+                ctbStopsArray.forEach(s => {
+                    stopsToWrite.push({
+                        id: `CTB_${s.stop}`,
+                        co: 'CTB',
+                        stopId: s.stop,
+                        name_tc: s.name_tc,
+                        name_en: s.name_en,
+                        lat: parseFloat(s.lat),
+                        long: parseFloat(s.long),
+                        routes: [] // populated later by background indexer
+                    });
+                });
+                
+                nlbStopsTemp.forEach((s, stopId) => {
+                    stopsToWrite.push({
+                        id: `NLB_${stopId}`,
+                        co: 'NLB',
+                        stopId: stopId,
+                        name_tc: s.name_tc,
+                        name_en: s.name_en,
+                        lat: parseFloat(s.lat),
+                        long: parseFloat(s.long),
+                        routes: nlbStopToRoutes.get(stopId) || []
+                    });
+                });
+                
+                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Saving to local database...</span>`;
+                
+                const tx = BusDB.db.transaction('stops', 'readwrite');
+                const store = tx.objectStore('stops');
+                store.clear();
+                stopsToWrite.forEach(s => store.put(s));
+                
+                await new Promise((res, rej) => {
+                    tx.oncomplete = res;
+                    tx.onerror = (e) => rej(e.target.error);
+                });
+                
+                await BusDB.setMetadata('stops_last_updated', Date.now());
+                allStopsInMemory = []; // Reset fast cache to force reload
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle" style="color:#2e7d32"></i> <span>Stop database synchronized!</span>`;
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                }
+                
+                indexCTBRouteStopsInBackground();
+                
+            } catch (e) {
+                console.error("Stop synchronization failed:", e);
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:var(--kmb-red)"></i> <span>Sync failed. Keeping old stop data.</span>`;
+                    setTimeout(() => statusEl.classList.add('hidden'), 5000);
+                }
+            } finally {
+                _stopsSyncing = false;
+            }
+        }
+
+        let _ctbIndexingActive = false;
+        async function indexCTBRouteStopsInBackground() {
+            if (_ctbIndexingActive) return;
+            _ctbIndexingActive = true;
+            try {
+                const routes = await BusDB.getAll('routes');
+                const ctbRoutes = routes.filter(r => r.co === 'CTB');
+                const cachedStops = await BusDB.getAll('route_stops');
+                const cachedIds = new Set(cachedStops.map(s => s.id));
+                
+                const toIndex = [];
+                for (const r of ctbRoutes) {
+                    const idOut = `CTB_${r.route}_outbound_1_`;
+                    const idIn = `CTB_${r.route}_inbound_1_`;
+                    if (!cachedIds.has(idOut)) toIndex.push({ r, dir: 'outbound', cacheId: idOut });
+                    if (!cachedIds.has(idIn)) toIndex.push({ r, dir: 'inbound', cacheId: idIn });
+                }
+                
+                if (toIndex.length === 0) {
+                    _ctbIndexingActive = false;
+                    return;
+                }
+                
+                const stops = await BusDB.getAll('stops');
+                const ctbStopsMap = new Map();
+                stops.filter(s => s.co === 'CTB').forEach(s => ctbStopsMap.set(s.stopId, s));
+                
+                let index = 0;
+                const batchSize = 2;
+                const interval = setInterval(async () => {
+                    if (index >= toIndex.length) {
+                        clearInterval(interval);
+                        _ctbIndexingActive = false;
+                        return;
+                    }
+                    const batch = toIndex.slice(index, index + batchSize);
+                    index += batchSize;
+                    
+                    await Promise.all(batch.map(async task => {
+                        try {
+                            const routeStops = await BusAPI.fetchCTB(`/route-stop/CTB/${task.r.route}/${task.dir}`);
+                            if (routeStops && routeStops.length > 0) {
+                                const matchedStops = routeStops.map(item => {
+                                    const details = ctbStopsMap.get(item.stop);
+                                    return details ? {
+                                        stop: item.stop,
+                                        name_tc: details.name_tc,
+                                        name_en: details.name_en,
+                                        lat: details.lat,
+                                        long: details.long
+                                    } : null;
+                                }).filter(x => x);
+                                
+                                if (matchedStops.length > 0) {
+                                    await BusDB.put('route_stops', {
+                                        id: task.cacheId,
+                                        stops: matchedStops,
+                                        last_updated: Date.now()
+                                    });
+                                    
+                                    for (const s of matchedStops) {
+                                        const stopRecord = ctbStopsMap.get(s.stop);
+                                        if (stopRecord) {
+                                            if (!stopRecord.routes) stopRecord.routes = [];
+                                            const alreadyMapped = stopRecord.routes.some(x => x.route === task.r.route && x.bound === (task.dir === 'outbound' ? 'O' : 'I'));
+                                            if (!alreadyMapped) {
+                                                stopRecord.routes.push({
+                                                    route: task.r.route,
+                                                    bound: task.dir === 'outbound' ? 'O' : 'I',
+                                                    serviceType: 1
+                                                });
+                                                await BusDB.put('stops', stopRecord);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Background CTB indexing error for route:", task.r.route, e);
+                        }
+                    }));
+                }, 4000);
+            } catch(e) {
+                console.error("CTB background indexing loop failed:", e);
+                _ctbIndexingActive = false;
+            }
+        }
+
+        function getStopRouteDestination(co, route, bound, serviceType, routeId) {
+            let match = null;
+            if (co === 'KMB') {
+                match = allRoutes.find(x => x.co === 'KMB' && x.route === route && x.bound === bound && (x.service_type || 1) === (serviceType || 1));
+                if (!match) match = allRoutes.find(x => x.co === 'KMB' && x.route === route && x.bound === bound);
+            } else if (co === 'CTB') {
+                match = allRoutes.find(x => x.co === 'CTB' && x.route === route);
+            } else if (co === 'NLB') {
+                match = allRoutes.find(x => x.co === 'NLB' && x.route === route && x.routeId === routeId);
+                if (!match) match = allRoutes.find(x => x.co === 'NLB' && x.route === route);
+            }
+            if (!match) return routeId || '';
+            if (co === 'CTB') {
+                const isBack = (bound === 'I' || bound === 'inbound');
+                const field = isBack ? 'orig' : 'dest';
+                return localized(match, field);
+            } else {
+                return localized(match, 'dest');
+            }
+        }
+
+        let _stopDetailsRefreshInterval = null;
+        async function showStopDetails(s) {
+            if (_stopDetailsRefreshInterval) {
+                clearInterval(_stopDetailsRefreshInterval);
+                _stopDetailsRefreshInterval = null;
+            }
+            
+            const resultsEl = document.getElementById('stop-results');
+            const detailsEl = document.getElementById('stop-details-view');
+            if (resultsEl) resultsEl.classList.add('hidden');
+            if (detailsEl) {
+                detailsEl.classList.remove('hidden');
+                
+                let distHtml = '';
+                if (userCoords && s.lat && s.long) {
+                    const d = getDistance(userCoords.lat, userCoords.long, s.lat, s.long);
+                    distHtml = `<span style="font-size:12px;color:#2e7d32;font-weight:bold;"><i class="fas fa-location-dot"></i> ${formatDistance(d)} away</span>`;
+                }
+                
+                detailsEl.innerHTML = `
+                    <div class="stop-detail-header" style="background:var(--card-bg); padding:15px; border-radius:8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <button class="back-btn" onclick="exitStopDetails()" style="color:var(--kmb-red); background:none; border:none; font-weight:bold; font-size:16px; cursor:pointer; padding:5px 0;">
+                                <i class="fas fa-arrow-left"></i> ${t('back')}
+                            </button>
+                            <span class="operator-badge badge-${s.co}" style="font-size:12px;">${s.co}</span>
+                        </div>
+                        <h3 style="margin:10px 0 5px 0; font-size:18px;">${localized(s, 'name')}</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:5px;">
+                            <span style="font-size:12px; color:#777;">ID: ${s.stopId}</span>
+                            ${distHtml}
+                        </div>
+                    </div>
+                    <div id="stop-routes-list" style="margin-top:15px;"></div>
+                `;
+                
+                const listContainer = document.getElementById('stop-routes-list');
+                if (!s.routes || s.routes.length === 0) {
+                    listContainer.innerHTML = `<div style="text-align:center;padding:20px;color:#888;">
+                        No routes mapped for this stop yet.
+                        ${s.co === 'CTB' ? '<div style="font-size:12px;margin-top:6px;opacity:0.7;">Indexing in progress...</div>' : ''}
+                    </div>`;
+                    return;
+                }
+                
+                s.routes.forEach(r => {
+                    const card = document.createElement('div');
+                    card.className = 'stop-route-card';
+                    card.style.cssText = "background:var(--card-bg); padding:12px 15px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;";
+                    
+                    const st = r.serviceType || 1;
+                    const isFav = _favoriteStopsCache.has(`${s.co}-${r.route}-${s.stopId}-${st}`);
+                    
+                    card.innerHTML = `
+                        <div style="flex-grow:1; text-align:left;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <strong style="font-size:18px; font-weight:800; color:var(--text-main);">${r.route}</strong>
+                                <span style="font-size:12px; color:#777;">${t('to')} ${getStopRouteDestination(s.co, r.route, r.bound, r.serviceType || 1, r.routeId)}</span>
+                            </div>
+                            <div class="stop-eta-display" id="stop-eta-${s.co}-${s.stopId}-${r.route}-${st}" style="font-size:14px; font-weight:bold; color:var(--kmb-red); margin-top:6px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading ETA...
+                            </div>
+                        </div>
+                        <div class="fav-star ${isFav ? 'active' : ''}" id="stop-star-${s.co}-${s.stopId}-${r.route}-${st}" style="font-size:20px; color:${isFav ? '#ffc107' : '#ccc'}; cursor:pointer; padding:10px;" onclick="handleStopRouteFavorite(event, '${s.co}', '${s.stopId}', '${r.route}', ${st}, '${s.name_tc}', '${s.name_en}', '${r.routeId || ''}', '${r.bound || 'O'}')">
+                            <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+                
+                fetchStopRoutesETAs(s);
+                _stopDetailsRefreshInterval = setInterval(() => fetchStopRoutesETAs(s), 30000);
+            }
+        }
+        
+        function exitStopDetails() {
+            if (_stopDetailsRefreshInterval) {
+                clearInterval(_stopDetailsRefreshInterval);
+                _stopDetailsRefreshInterval = null;
+            }
+            const resultsEl = document.getElementById('stop-results');
+            const detailsEl = document.getElementById('stop-details-view');
+            if (resultsEl) resultsEl.classList.remove('hidden');
+            if (detailsEl) detailsEl.classList.add('hidden');
+        }
+
+        async function fetchStopRoutesETAs(s) {
+            s.routes.forEach(async r => {
+                const st = r.serviceType || 1;
+                const etaEl = document.getElementById(`stop-eta-${s.co}-${s.stopId}-${r.route}-${st}`);
+                if (!etaEl) return;
+                
+                try {
+                    const etas = await BusAPI.getETA(s.co, s.stopId, r.route, st, r.routeId, r.bound);
+                    if (!etas || etas.length === 0) {
+                        etaEl.textContent = t('noETA');
+                        etaEl.style.color = '#777';
+                        return;
+                    }
+                    
+                    etaEl.innerHTML = etas.slice(0, 3).map(i => {
+                        const relTime = getRelativeTime(s.co === 'NLB' ? i.estimatedArrivalTime : i.eta);
+                        return `<span>${relTime}</span>`;
+                    }).join(', ');
+                    
+                    if (s.co === 'CTB') etaEl.style.color = 'var(--ctb-blue)';
+                    else if (s.co === 'NLB') etaEl.style.color = 'var(--nlb-green)';
+                    else etaEl.style.color = 'var(--kmb-red)';
+                    
+                } catch(e) {
+                    etaEl.textContent = t('error');
+                    etaEl.style.color = '#ff4444';
+                }
+            });
+        }
+
+        async function handleStopRouteFavorite(e, co, stopId, route, serviceType, stopName_tc, stopName_en, routeId, bound) {
+            e.stopPropagation();
+            const key = `${co}-${route}-${stopId}-${serviceType}`;
+            const star = document.getElementById(`stop-star-${co}-${stopId}-${route}-${serviceType}`);
+            
+            if (_favoriteStopsCache.has(key)) {
+                _favoriteStopsCache.delete(key);
+                if (star) {
+                    star.classList.remove('active');
+                    star.style.color = '#ccc';
+                    star.querySelector('i').className = 'far fa-star';
+                }
+                const f = (await BusDB.getAll('favorites')).find(x => x.co === co && x.stopId === stopId && x.route === route && (x.serviceType || 1) === serviceType);
+                if (f) await BusDB.delete('favorites', f.favId);
+            } else {
+                const r = allRoutes.find(x => x.co === co && x.route === route && (x.service_type || 1) === serviceType) || {
+                    co, route, service_type: serviceType, routeId, bound, dest_tc: '', dest_en: ''
+                };
+                const s = { stop: stopId, name_tc: stopName_tc, name_en: stopName_en };
+                
+                _currentFavContext = { r, s };
+                _currentMoveContext = null;
+                
+                showGroupSelector(r, s);
+                
+                const checker = setInterval(() => {
+                    if (_favoriteStopsCache.has(key)) {
+                        if (star) {
+                            star.classList.add('active');
+                            star.style.color = '#ffc107';
+                            star.querySelector('i').className = 'fas fa-star';
+                        }
+                        clearInterval(checker);
+                    }
+                }, 500);
+                setTimeout(() => clearInterval(checker), 10000);
+            }
+        }
+
+        function renderRouteResults(routes) {
+            const c = document.getElementById('route-results'); c.innerHTML = '';
+            routes.forEach(r => {
+                const card = document.createElement('div'); card.className = `card co-${r.co}`;
+                card.onclick = () => r.co === 'KMB' ? showStops(r) : selectRoute(r);
+                const info = document.createElement('div'); info.className = 'route-info';
+                let rt = r.route; if (r.co === 'KMB' && r.service_type > 1) rt += ` <small style='font-size:10px;border:1px solid;padding:1px 3px;border-radius:3px;vertical-align:middle;margin-left:2px'>T${r.service_type}</small>`;
+                info.innerHTML = `<span class='route-no'>${rt}</span><span class='dest-name'>${r.co === 'CTB' && r.orig_tc ? `${localized(r, 'orig')} ↔ ${localized(r, 'dest')}` : `${t('to')} ${localized(r, 'dest')}`}</span><small style='margin-left:auto'>${r.co}</small>`;
+                card.appendChild(info); c.appendChild(card);
+            });
+        }
+
+        async function selectRoute(r) {
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingDirections')}</p>`;
+            try {
+                const container = document.createElement('div');
+                if (r.co === 'KMB') {
+                    allRoutes.filter(v => v.co === 'KMB' && v.route === r.route).forEach(v => {
+                        const card = document.createElement('div'); card.className = `card co-KMB ${v.service_type != 1 ? 'special-variant' : ''}`;
+                        card.innerHTML = `${t('to')} ${localized(v, 'dest')}${v.service_type != 1 ? ` <span class='badge' style='background:#eee;color:#d32f2f;padding:2px 6px;border-radius:4px;font-size:10px;margin-left:5px;border:1px solid #d32f2f'>${t('specialVariant')} ${v.service_type}</span>` : ''} <small style='display:block;color:#777;margin-top:4px'>(${v.bound === 'O' ? t('outbound') : t('inbound')})</small>`;
+                        card.onclick = () => showStops(v); container.appendChild(card);
+                    });
+                } else if (r.co === 'CTB') {
+                    const d1 = document.createElement('div'); d1.className = 'card co-CTB'; d1.innerHTML = `${t('to')} ${localized(r, 'dest')} <small>(${t('outbound')})</small>`; d1.onclick = () => showStops({...r, direction: 'outbound'}); container.appendChild(d1);
+                    if ((await BusAPI.fetchCTB(`/route-stop/CTB/${r.route}/inbound`))?.length > 0) {
+                        const d2 = document.createElement('div'); d2.className = 'card co-CTB'; d2.innerHTML = `${t('to')} ${localized(r, 'orig')} <small>(${t('inbound')})</small>`; d2.onclick = () => showStops({...r, direction: 'inbound', dest_tc: r.orig_tc, orig_tc: r.dest_tc, dest_en: r.orig_en, orig_en: r.dest_en}); container.appendChild(d2);
+                    }
+                } else if (r.co === 'NLB') { allRoutes.filter(v => v.co === 'NLB' && v.route === r.route).forEach(v => { const card = document.createElement('div'); card.className = 'card co-NLB'; card.innerHTML = localized(v, 'dest'); card.onclick = () => showStops(v); container.appendChild(card); }); }
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div>`; sResults.appendChild(container);
+            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedDirections')}</p>`; }
+        }
+
+        async function swapDirection(curr) {
+            let opps = [];
+            if (curr.co === 'KMB') opps = allRoutes.filter(v => v.co === 'KMB' && v.route === curr.route && v.bound === (curr.bound === 'O' ? 'I' : 'O') && (v.service_type || 1) == (curr.service_type || 1));
+            else if (curr.co === 'CTB') { const td = curr.direction === 'outbound' ? 'inbound' : 'outbound', s = await BusAPI.fetchCTB(`/route-stop/CTB/${curr.route}/${td}`); if (s?.length > 0) opps = [{...curr, direction: td, dest_tc: curr.orig_tc, orig_tc: curr.dest_tc, dest_en: curr.orig_en, orig_en: curr.dest_en}]; }
+            else if (curr.co === 'NLB') opps = allRoutes.filter(v => v.co === 'NLB' && v.route === curr.route && v.routeId !== curr.routeId);
+            if (opps.length === 1) showStops(opps[0]); else if (opps.length > 1) selectRoute(curr); else alert('No return direction found.');
+        }
+
+        async function showStops(r) {
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingStops')}</p>`;
+            try {
+                const dir = r.co === 'KMB' ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound'), stops = await BusAPI.getStops(r.co, r.route, dir, r.service_type, r.routeId);
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div>`;
+                sResults.querySelector('#swap-dir-btn').onclick = () => swapDirection(r);
+                stops.forEach(s => {
+                    const card = document.createElement('div'); card.className = `card station-card co-${r.co}`; card.dataset.stopId = s.stop;
+                    const main = document.createElement('div'); main.className = 'station-main'; main.onclick = () => toggleETADrawer(card, r, s);
+                    const star = document.createElement('div'); star.className = `fav-star ${_isFavorited(r, s) ? 'active' : ''}`; star.innerHTML = `<i class='${_isFavorited(r, s) ? 'fas' : 'far'} fa-star'></i>`;
+                    star.onclick = (e) => { e.stopPropagation(); handleFavoriteClick(star, r, s); };
+                    
+                    let distHtml = '';
+                    if (gpsEnabled && userCoords && s.lat !== undefined && s.long !== undefined && s.lat !== null && s.long !== null) {
+                        const dist = getDistance(userCoords.lat, userCoords.long, parseFloat(s.lat), parseFloat(s.long));
+                        distHtml = `<span class="distance-badge" onclick="event.stopPropagation(); openMapDirections(\`${localized(s, 'name')}\`, ${s.lat}, ${s.long})" style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 8px; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;"><i class="fas fa-location-dot" style="font-size: 9px;"></i> ${formatDistance(dist)}</span>`;
+                    }
+                    
+                    main.innerHTML = `<div class='station-info'><div class='stop-name'>${localized(s, 'name')}${distHtml}</div></div>`;
+                    main.appendChild(star); 
+                    card.appendChild(main);
+                    
+                    const drawer = document.createElement('div');
+                    drawer.className = 'eta-drawer';
+                    drawer.innerHTML = `<div class='eta-content'>${t('loadingStops')}</div><div class='eta-status'></div>`;
+                    card.appendChild(drawer);
+                    
+                    sResults.appendChild(card);
+                });
+                if (r.targetStopId) setTimeout(() => { const tc = sResults.querySelector(`.station-card[data-stop-id='${r.targetStopId}']`); if (tc) { tc.scrollIntoView({ behavior: 'smooth', block: 'center' }); tc.style.backgroundColor = '#fff3cd'; setTimeout(() => tc.style.backgroundColor = '', 2000); toggleETADrawer(tc, r, stops.find(i => i.stop === r.targetStopId)); } }, 50);
+            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedStops')}</p>`; }
+        }
+
+        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
+
+        async function goToRouteStopsFromFav(f) {
+            document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden'); document.getElementById('stop-selection-results').classList.remove('hidden');
+            const r = { co: f.co, route: f.route, service_type: f.serviceType || 1, routeId: f.routeId, bound: f.bound || 'O', direction: f.direction || (f.bound === 'O' ? 'outbound' : 'inbound'), orig_tc: f.orig_tc, dest_tc: f.dest_tc, orig_en: f.orig_en, dest_en: f.dest_en, path_desc: f.path_desc, targetStopId: f.stopId };
+            if (!r.orig_tc && f.path_desc) { const p = f.path_desc.split(' ↔ '); r.orig_tc = p[0] || ''; r.dest_tc = p[1] || p[0] || ''; }
+            showStops(r);
+        }
+
+        let _currentFavContext = null, _currentMoveContext = null;
+
+        async function showGroupSelector(r, s, moveFav = null) {
+            _currentFavContext = { r, s }; _currentMoveContext = moveFav;
+            const groups = await BusDB.getAll('favorite_groups');
+            const body = `<div id='group-list'>${groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(g => `<div class='group-item' onclick='selectGroup(${g.id})'><i class='fas fa-folder'></i> <span>${localized(g, 'name')}</span></div>`).join('')}</div>`;
+            const footer = `<div style='width:100%'><input type='text' id='new-group-input' placeholder='${t('newGroupName')}' style='width:100%;margin-bottom:8px'><button class='btn btn-save' style='width:100%' onclick='createNewGroupAndSave()'><i class='fas fa-plus'></i> ${t('addGroup')}</button></div>`;
+            openGenericModal(t('selectGroup'), body, footer);
+            setTimeout(() => document.getElementById('new-group-input').addEventListener('keyup', e => { if (e.key === 'Enter') createNewGroupAndSave(); }), 100);
+        }
+        window.selectGroup = async (id) => { if (_currentMoveContext) { _currentMoveContext.groupId = id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = id; } else await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, id); closeGenericModal(); renderFavorites(); };
+
+        async function createNewGroupAndSave() {
+            const name = document.getElementById('new-group-input').value.trim(); if (!name) return alert(t('invalidName'));
+            const groups = await BusDB.getAll('favorite_groups'), next = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
+            await BusDB.put('favorite_groups', { name_tc: name, name_en: name, sortOrder: next });
+            const all = await BusDB.getAll('favorite_groups'), saved = all.reduce((p, c) => (p.id > c.id) ? p : c);
+            if (_currentMoveContext) { _currentMoveContext.groupId = saved.id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = saved.id; }
+            else if (_currentFavContext) await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, saved.id);
+            closeGenericModal(); renderFavorites();
+        }
+
+        async function saveFavorite(r, s, skip = false, gid = 1) {
+            const dest = localized(r, 'dest'), orig = localized(r, 'orig'), path = r.path_desc || (orig ? `${orig} ↔ ${dest}` : dest);
+            const fav = { co: r.co, stopId: s.stop, route: r.route, stopName_tc: s.name_tc, stopName_en: s.name_en, routeId: r.routeId, serviceType: r.service_type || 1, bound: r.bound, direction: r.direction, orig_tc: r.orig_tc, dest_tc: r.dest_tc, orig_en: r.orig_en, dest_en: r.dest_en, path_desc: path, sortOrder: Date.now(), groupId: gid, lat: s.lat, long: s.long };
+            await BusDB.put('favorites', fav); _favoriteStopsCache.add(`${fav.co}-${fav.route}-${fav.stopId}-${fav.serviceType}`);
+            activeGroupId = gid; if (skip) { const star = document.querySelector(`.station-card[data-stop-id='${s.stop}'] .fav-star`); if (star) { star.classList.add('active'); star.innerHTML = "<i class='fas fa-star'></i>"; } } else showHome();
+        }
+
+        async function handlePointerDown(e, card, f) {
+            if (e.target.closest('.remove-btn, .fav-star, .edit-group-btn')) return;
+            if (favSortMode === 'distance') return; // Disable drag if sorting by distance
+            startY = e.clientY; wasDragged = false;
+            dragTimeout = setTimeout(() => {
+                isDragging = true; activeDragCard = card; wasDragged = true; 
+                document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                document.body.style.overflow = 'hidden'; // Lock scrolling
+                card.style.touchAction = 'none';
+                const container = document.getElementById('favorites-list'), rect = card.getBoundingClientRect(), crect = container.getBoundingClientRect();
+                dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'drag-placeholder'; dragPlaceholder.style.height = `${rect.height}px`;
+                card.classList.add('dragging'); card.style.width = `${rect.width}px`; initialTop = rect.top - crect.top; card.style.top = `${initialTop}px`; card.style.left = `${rect.left - crect.left}px`;
+                container.insertBefore(dragPlaceholder, card);
+            }, 300);
+            activePointerUpHandler = ev => handlePointerUp(ev, card);
+            document.addEventListener('pointermove', handlePointerMove, { passive: false }); document.addEventListener('pointerup', activePointerUpHandler); document.addEventListener('pointercancel', activePointerUpHandler);
+        }
+
+        function handlePointerMove(e) {
+            if (!isDragging) { if (dragTimeout && Math.abs(e.clientY - startY) > 15) { clearTimeout(dragTimeout); dragTimeout = null; } return; }
+            e.preventDefault(); const dy = e.clientY - startY, c = document.getElementById('favorites-list');
+            activeDragCard.style.top = `${initialTop + dy}px`;
+            const after = getDragAfterElement(c, e.clientY); if (after == null) c.appendChild(dragPlaceholder); else c.insertBefore(dragPlaceholder, after);
+        }
+
+        function handlePointerUp(e, card) {
+            document.removeEventListener('pointermove', handlePointerMove); document.removeEventListener('pointerup', activePointerUpHandler); document.removeEventListener('pointercancel', activePointerUpHandler);
+            if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
+            if (!isDragging) return; isDragging = false; 
+            card.style.touchAction = ''; 
+            document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            document.body.style.overflow = ''; // Restore scrolling
+            const c = document.getElementById('favorites-list'); card.classList.remove('dragging'); card.style.position = card.style.top = card.style.left = card.style.width = '';
+            if (dragPlaceholder) {
+                c.insertBefore(card, dragPlaceholder); 
+                saveReorderedFavorites(); 
+                if (dragPlaceholder.parentNode === c) c.removeChild(dragPlaceholder);
+            }
+            activeDragCard = dragPlaceholder = null;
+        }
+
+        function handleTabPointerDown(e, tab, g) {
+            startX = e.clientX; wasDragged = false;
+            dragTimeout = setTimeout(() => {
+                isDragging = true; activeDragTab = tab; wasDragged = true; 
+                document.body.style.userSelect = document.body.style.webkitUserSelect = 'none';
+                document.body.style.overflow = 'hidden'; // Lock scrolling
+                tab.style.touchAction = 'none'; // Disable scrolling once drag starts
+                const c = document.getElementById('favorites-tabs'), r = tab.getBoundingClientRect(), cr = c.getBoundingClientRect();
+                tabDragPlaceholder = document.createElement('div'); tabDragPlaceholder.className = 'fav-tab-placeholder'; tabDragPlaceholder.style.width = `${r.width}px`; tabDragPlaceholder.style.height = `${r.height}px`;
+                tab.classList.add('dragging'); tab.style.width = `${r.width}px`; initialLeft = r.left - cr.left; tab.style.left = `${initialLeft}px`; tab.style.top = `${r.top - cr.top}px`;
+                c.insertBefore(tabDragPlaceholder, tab);
+            }, 300);
+            const up = ev => handleTabPointerUp(ev, tab); tab._moveHandler = handleTabPointerMove;
+            document.addEventListener('pointermove', tab._moveHandler, { passive: false }); document.addEventListener('pointerup', up, { once: true }); document.addEventListener('pointercancel', up, { once: true });
+        }
+
+        function handleTabPointerMove(e) {
+            if (!isDragging) { if (dragTimeout && Math.abs(e.clientX - startX) > 15) { clearTimeout(dragTimeout); dragTimeout = null; } return; }
+            e.preventDefault(); const dx = e.clientX - startX, c = document.getElementById('favorites-tabs');
+            activeDragTab.style.left = `${initialLeft + dx}px`;
+            const after = getDragAfterElementHorizontal(c, e.clientX); if (after == null) c.appendChild(tabDragPlaceholder); else c.insertBefore(tabDragPlaceholder, after);
+        }
+
+        function handleTabPointerUp(e, tab) {
+            document.removeEventListener('pointermove', tab._moveHandler); if (dragTimeout) { clearTimeout(dragTimeout); dragTimeout = null; }
+            if (!isDragging) return; isDragging = false; 
+            tab.style.touchAction = ''; 
+            document.body.style.userSelect = document.body.style.webkitUserSelect = '';
+            document.body.style.overflow = ''; // Restore scrolling
+            const c = document.getElementById('favorites-tabs'); tab.classList.remove('dragging'); tab.style.position = tab.style.left = tab.style.top = tab.style.width = '';
+            if (tabDragPlaceholder) {
+                c.insertBefore(tab, tabDragPlaceholder);
+                if (tabDragPlaceholder.parentNode === c) c.removeChild(tabDragPlaceholder);
+            }
+            activeDragTab = tabDragPlaceholder = null; saveReorderedGroups();
+        }
+
+        async function saveReorderedGroups() {
+            const els = [...document.getElementById('favorites-tabs').querySelectorAll('.fav-tab')], gs = await BusDB.getAll('favorite_groups'), toUp = [];
+            els.forEach((el, i) => { const g = gs.find(x => x.id === parseInt(el.dataset.groupid, 10)); if (g) { g.sortOrder = i + 1; toUp.push(g); } });
+            if (toUp.length > 0) await BusDB.putAll('favorite_groups', toUp);
+        }
+
+        async function saveReorderedFavorites() {
+            const els = [...document.getElementById('favorites-list').children], fs = await BusDB.getAll('favorites'), toUp = [];
+            els.forEach((el, i) => { if (el.classList.contains('card') && el.dataset.favid) { const f = fs.find(x => x.favId === parseInt(el.dataset.favid, 10)); if (f) { f.sortOrder = i; f.groupId = activeGroupId; toUp.push(f); } } });
+            if (toUp.length > 0) await BusDB.putAll('favorites', toUp);
+        }
+
+        async function renderFavorites(skipApiRefresh = false) {
+            if (_etaObserver) _etaObserver.disconnect(); _visibleFavIds.clear();
+            const fs = await BusDB.getAll('favorites'), gs = await BusDB.getAll('favorite_groups'); gs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            if (gs.length > 0 && (activeGroupId === null || !gs.find(g => g.id === activeGroupId))) activeGroupId = gs[0].id;
+            const tc = document.getElementById('favorites-tabs'); tc.innerHTML = '';
+            gs.forEach(g => {
+                const isActive = activeGroupId === g.id, tab = document.createElement('div'); tab.className = `fav-tab ${isActive ? 'active' : ''}`; tab.dataset.groupid = g.id; tab.oncontextmenu = () => false;
+                tab.innerHTML = `<span>${localized(g, 'name')}</span>${isActive ? `<i class='fas fa-cog edit-group-btn' style='opacity:0.7;cursor:pointer' onclick='handleGroupEditClick(event, ${g.id})'></i>` : ''}`;
+                tab.addEventListener('pointerdown', e => handleTabPointerDown(e, tab, g));
+                tab.onclick = () => { if (!wasDragged) { activeGroupId = g.id; renderFavorites(); } }; tc.appendChild(tab);
+            });
+            const lc = document.getElementById('favorites-list'); lc.innerHTML = '';
+            const gfs = fs.filter(f => f.groupId === activeGroupId);
+            
+            // Asynchronously backfill coordinates for favorites in the current group that are missing them
+            await Promise.all(gfs.map(f => ensureFavoriteCoordinates(f)));
+            
+            // Calculate distances if user's GPS coordinates are available
+            if (userCoords) {
+                gfs.forEach(f => {
+                    if (f.lat !== undefined && f.long !== undefined && f.lat !== null && f.long !== null) {
+                        f._distance = getDistance(userCoords.lat, userCoords.long, parseFloat(f.lat), parseFloat(f.long));
+                    } else {
+                        f._distance = Infinity;
+                    }
+                });
+            } else {
+                gfs.forEach(f => {
+                    f._distance = undefined;
+                });
+            }
+            
+            // Sort by distance if distance sorting mode is selected
+            if (favSortMode === 'distance' && userCoords) {
+                gfs.sort((a, b) => a._distance - b._distance);
+            } else {
+                gfs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            }
+
+            if (gfs.length === 0) { const m = document.createElement('div'); m.style.cssText = 'text-align:center;padding:20px;color:#888'; m.textContent = t('emptyGroup'); lc.appendChild(m); }
+            else {
+                gfs.forEach(f => {
+                    const card = createFavoriteCard(f);
+                    
+                    if (skipApiRefresh) {
+                        const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
+                        if (cached && cached.length > 0) {
+                            // We have cached data! Set the flag to skip the initial IntersectionObserver network trigger
+                            card.dataset.skipObserver = "true";
+                            const etaList = card.querySelector(`.eta-list`);
+                            if (etaList) {
+                                etaList.innerHTML = cached.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', ');
+                            }
+                        }
+                    }
+                    
+                    lc.appendChild(card);
+                    if (_etaObserver) _etaObserver.observe(card);
+                });
+            }
+            
+            if (!skipApiRefresh) {
+                refreshAllETAs();
+            }
+        }
+
+        async function handleGroupEditClick(e, gid) {
+            e.stopPropagation(); _editingGroupId = gid; const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === gid); if (!g) return;
+            const isDef = (gid === 1 || gid === 2), body = `<div style='display:flex;flex-direction:column;gap:10px'><button class='btn btn-save' onclick='openRenameModal()' style='width:100%;display:flex;justify-content:center;gap:8px;background:#eee;color:#333'><i class='fas fa-edit'></i> ${t('renameGroup')}</button>${isDef ? '' : `<button class='btn btn-save' onclick='openDeleteConfirmModal()' style='width:100%;display:flex;justify-content:center;gap:8px;background:#ffeeee;color:var(--kmb-red)'><i class='fas fa-trash'></i> ${t('deleteGroup')}</button>`}</div>`;
+            openGenericModal(localized(g, 'name'), body);
+        }
+
+        async function openRenameModal() {
+            const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === _editingGroupId); if (!g) return;
+            const body = `<input type='text' id='rename-group-input' value='${localized(g, 'name')}' style='width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box'>`;
+            const footer = `<button class='btn btn-cancel' onclick='closeGenericModal()'>${t('cancel')}</button><button class='btn btn-save' onclick='submitRenameGroup()'>${t('save')}</button>`;
+            openGenericModal(t('renameGroup'), body, footer);
+            setTimeout(() => { const i = document.getElementById('rename-group-input'); i.focus(); i.addEventListener('keyup', e => { if (e.key === 'Enter') submitRenameGroup(); }); }, 100);
+        }
+
+        async function submitRenameGroup() {
+            const name = document.getElementById('rename-group-input').value.trim(); if (!name) return alert(t('invalidName'));
+            const g = (await BusDB.getAll('favorite_groups')).find(x => x.id === _editingGroupId); if (g) { g.name_tc = g.name_en = name; await BusDB.put('favorite_groups', g); closeGenericModal(); renderFavorites(); }
+        }
+
+        function openDeleteConfirmModal() { openGenericModal(`${t('deleteGroup')}?`, `<p style='margin:0;font-size:14px;color:#555'>${t('deleteGroupConfirm')}</p>`, `<button class='btn btn-cancel' onclick='closeGenericModal()'>${t('cancel')}</button><button class='btn btn-save' onclick='submitDeleteGroup()' style='background:var(--kmb-red)'>${t('deleteGroup')}</button>`, true); }
+
+        async function submitDeleteGroup() { await deleteGroup(_editingGroupId); closeGenericModal(); if (activeGroupId === _editingGroupId) activeGroupId = 1; renderFavorites(); }
+
+        async function deleteGroup(gid) { await BusDB.delete('favorite_groups', gid); const fs = await BusDB.getAll('favorites'); for (const f of fs.filter(x => x.groupId === gid)) await BusDB.delete('favorites', f.favId); }
+
+        async function removeFavorite(favId) {
+            await BusDB.delete('favorites', favId);
+            renderFavorites();
+        }
+
+        function openMapDirections(stopName, stopLat, stopLong) {
+            let url = '';
+            let bodyText = '';
+            if (userCoords) {
+                url = `https://www.google.com/maps/dir/?api=1&origin=${userCoords.lat},${userCoords.long}&destination=${stopLat},${stopLong}&travelmode=walking`;
+                bodyText = `<p style='margin:0;font-size:14px;color:#555'>${t('openMapDirectionsBody').replace('{stop}', stopName)}</p>`;
+            } else {
+                url = `https://www.google.com/maps/search/?api=1&query=${stopLat},${stopLong}`;
+                bodyText = `<p style='margin:0;font-size:14px;color:#555'>${t('openMapSearchBody').replace('{stop}', stopName)}</p>`;
+            }
+            
+            const footer = `<button class='btn btn-cancel' onclick='closeGenericModal()'>${t('cancel')}</button><a href="${url}" target="_blank" class='btn btn-save' onclick='closeGenericModal()' style='background:var(--kmb-red);text-decoration:none;display:inline-flex;justify-content:center;align-items:center;'>${t('open')}</a>`;
+            
+            openGenericModal(t('openMapTitle'), bodyText, footer);
+        }
+
+        function createFavoriteCard(f) {
+            const card = document.createElement('div'); card.className = `card co-${f.co}`; card.dataset.favid = f.favId; card.oncontextmenu = () => false; card.addEventListener('pointerdown', e => handlePointerDown(e, card, f));
+            card.onclick = e => { if (!wasDragged && !e.target.closest('.remove-btn, .fav-star')) goToRouteStopsFromFav(f); };
+            
+            const header = document.createElement('div'); header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'flex-start';
+            const info = document.createElement('div');
+            const distHtml = (f._distance !== undefined && f._distance !== Infinity) ? `<span class="distance-badge" onclick="event.stopPropagation(); openMapDirections(\`${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}\`, ${f.lat}, ${f.long})" style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 8px; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;"><i class="fas fa-location-dot" style="font-size: 9px;"></i> ${formatDistance(f._distance)}</span>` : '';
+            info.innerHTML = `<div class='route-info'><span class='route-no'>${f.route}</span> <span class='dest-name'>${f.co}</span></div><div class='path-info' style='font-size:12px;color:#777;margin-bottom:4px'>${f.path_desc || ''}</div><div class='stop-name'><i class='fas fa-map-marker-alt'></i> ${f[`stopName_${userLang}`] || f.stopName_tc || f.stopName}${distHtml}</div>`;
+            
+            const actions = document.createElement('div'); actions.style.display = 'flex';
+            const moveBtn = document.createElement('button'); moveBtn.className = 'remove-btn'; moveBtn.style.marginRight = '8px'; moveBtn.innerHTML = "<i class='fas fa-folder-open'></i>"; moveBtn.title = t('move');
+            moveBtn.onclick = (e) => { e.stopPropagation(); showGroupSelector(null, null, f); };
+            
+            const removeBtn = document.createElement('button'); removeBtn.className = 'remove-btn'; removeBtn.innerHTML = "<i class='fas fa-trash-can'></i>";
+            removeBtn.onclick = (e) => { e.stopPropagation(); if(confirm(t("removeFavorite"))) removeFavorite(f.favId); };
+            
+            actions.appendChild(moveBtn); actions.appendChild(removeBtn);
+            header.appendChild(info); header.appendChild(actions);
+            
+            const etaRow = document.createElement('div'); etaRow.className = 'eta-row';
+            etaRow.innerHTML = `<span><i class='fas fa-clock'></i> ${t('next')}</span><div class='eta-list' id='eta-${f.favId}'>${t('loadingStops')}</div>`;
+            
+            card.appendChild(header); card.appendChild(etaRow);
+            return card;
+        }
+
+        async function refreshAllETAs() {
+            const b = document.getElementById('refresh-btn'); if (b) b.classList.add('fa-spin');
+            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); }
+            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
+        }
+
+        function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
+
+        async function updateETA(f) {
+            try {
+                const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
+                const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
+                const r = (etas) => { if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); };
+                if (cached) r(cached); const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
+                if (etas !== null) { setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); r(etas); }
+            } catch (e) {}
+        }
+
+        function toggleETADrawer(card, r, s) {
+            const d = card.querySelector('.eta-drawer'), isOpen = d.classList.contains('open');
+            if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
+            document.querySelectorAll('.eta-drawer.open').forEach(x => { if (x !== d) x.classList.remove('open'); });
+            d.classList.toggle('open', !isOpen); if (d.classList.contains('open')) { updateDrawerETA(d, r, s); _drawerInterval = setInterval(() => updateDrawerETA(d, r, s), 30000); }
+        }
+
+        const _drawerFetching = new Set();
+        async function updateDrawerETA(d, r, s, manual = false) {
+            const content = d.querySelector('.eta-content'), status = d.querySelector('.eta-status'), st = r.service_type || 1, key = `${r.co}-${s.stop}-${r.route}-${st}`;
+            if (_drawerFetching.has(key)) return; if (manual && (Date.now() - (_stationRefreshCooldowns.get(key) || 0) < 5000)) return;
+            _drawerFetching.add(key); if (manual) { const i = status.querySelector('.fa-sync-alt'); if (i) i.classList.add('fa-spin'); }
+            const cached = getFlashCache(r.co, s.stop, r.route, st);
+            const render = (etas) => {
+                if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
+                content.style.opacity = '0.5'; setTimeout(() => {
+                    content.innerHTML = etas.slice(0, 3).map(i => `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span style='font-weight:bold'>${getRelativeTime(r.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`).join('');
+                    content.style.opacity = '1';
+                }, 50);
+                const i = document.createElement('i'); i.className = 'fas fa-sync-alt'; i.style.cssText = 'cursor:pointer;margin-left:8px;transition:opacity 0.3s';
+                i.onclick = (e) => { e.stopPropagation(); updateDrawerETA(d, r, s, true); };
+                const lr = Date.now() - (_stationRefreshCooldowns.get(key) || 0); if (lr < 5000) { i.style.opacity = '0.3'; i.style.cursor = 'not-allowed'; setTimeout(() => { if (status.contains(i)) { i.style.opacity = '1'; i.style.cursor = 'pointer'; } }, 5000 - lr); }
+                status.innerHTML = ''; status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`; status.appendChild(i);
+            };
+            if (cached) render(cached); else content.textContent = t('loadingStops');
+            const etas = await BusAPI.getETA(r.co, s.stop, r.route, st, r.routeId, r.bound, r.direction);
+            if (etas !== null) { setFlashCache(r.co, s.stop, r.route, st, etas); render(etas); }
+            _drawerFetching.delete(key); if (manual) { const now = Date.now(); _stationRefreshCooldowns.set(key, now); setTimeout(() => { const i = status.querySelector('.fa-sync-alt'); if (i) { i.classList.remove('fa-spin'); i.style.opacity = '0.3'; i.style.cursor = 'not-allowed'; setTimeout(() => { if (status.contains(i) && _stationRefreshCooldowns.get(key) === now) { i.style.opacity = '1'; i.style.cursor = 'pointer'; } }, 5000); } }, 500); }
+        }
+
+        async function handleFavoriteClick(star, r, s) {
+            const st = r.service_type || 1, key = `${r.co}-${r.route}-${s.stop}-${st}`;
+            if (_favoriteStopsCache.has(key)) { _favoriteStopsCache.delete(key); star.classList.remove('active'); star.innerHTML = "<i class='far fa-star'></i>"; const f = (await BusDB.getAll('favorites')).find(x => x.co === r.co && x.stopId === s.stop && x.route === r.route && (x.serviceType || 1) === st); if (f) await BusDB.delete('favorites', f.favId); }
+            else showGroupSelector(r, s);
+        }
+
+        async function migrateFavorites() { const j = localStorage.getItem('bus_favs'); if (j) { try { const f = JSON.parse(j); if (f.length > 0) await BusDB.putAll('favorites', f.map(x => ({...x, path_desc: x.path_desc || '', groupId: x.groupId || 1}))); localStorage.removeItem('bus_favs'); } catch (e) {} } }
+        setInterval(() => refreshAllETAs(), 60000);
+        function copyServerCmd() {
+            const cmd = document.getElementById('local-server-cmd').textContent;
+            navigator.clipboard.writeText(cmd).then(() => {
+                alert(t('copied'));
+            }).catch(err => {
+                console.error('Failed to copy command:', err);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.location.protocol === 'file:') {
+                const banner = document.getElementById('local-server-warning');
+                if (banner) banner.classList.remove('hidden');
+            }
+            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); }
+        });
+        let tapCount = 0, lastTap = 0; document.querySelector('header h1').addEventListener('click', () => { const now = Date.now(); if (now - lastTap > 500) tapCount = 1; else tapCount++; lastTap = now; if (tapCount === 10) { tapCount = 0; DebugLogger.toggle(true); } });
+    </script>
+    <div id="debug-console" class="hidden"><div id="debug-header"><span>Debug Console</span><div id="debug-controls"><button onclick="DebugLogger.clear()">Clear</button><button onclick="DebugLogger.toggle(false)">Close</button></div></div><div id="debug-logs"></div></div>
+    <div id="generic-modal" class="modal-overlay hidden" onclick="closeGenericModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="g-modal-header"><span id="g-modal-title"></span><i class="fas fa-times" onclick="closeGenericModal()" style="cursor:pointer"></i></div><div class="modal-content" id="g-modal-body"></div><div class="modal-footer" id="g-modal-footer"></div></div></div>
+</body>
+</html>
