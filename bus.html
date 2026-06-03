@@ -629,22 +629,20 @@
             async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
             async fetchKMB(e) {
                 const url = `${this.KMB_BASE}${e}`;
-                if (window.location.protocol === 'file:') {
-                    const proxies = [
-                        u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
-                        u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-                        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
-                    ];
-                    for (let i = 0; i < proxies.length; i++) {
-                        const proxyUrl = proxies[i](url);
-                        const data = await this._fetch(proxyUrl);
-                        if (data && Array.isArray(data)) {
-                            return data;
-                        }
-                        console.warn(`Proxy #${i + 1} failed or returned unexpected format for ${e}. Trying next backup...`);
+                const proxies = [
+                    u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+                    u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+                    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+                ];
+                for (let i = 0; i < proxies.length; i++) {
+                    const proxyUrl = proxies[i](url);
+                    const data = await this._fetch(proxyUrl);
+                    if (data && Array.isArray(data)) {
+                        return data;
                     }
-                    console.warn(`All proxies failed for ${e}. Retrying via direct API call...`);
+                    console.warn(`Proxy #${i + 1} failed or returned unexpected format for ${e}. Trying next backup...`);
                 }
+                console.warn(`All proxies failed for ${e}. Retrying via direct API call...`);
                 return this._fetch(url);
             },
             fetchCTB(e) { return this._fetch(`${this.CTB_BASE}${e}`); }, fetchNLB(e) { return this._fetch(`${this.NLB_BASE}/${e}`); },

@@ -188,7 +188,7 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         assert.strictEqual(warnings.length, 4);
     });
 
-    await t.test('Scenario 6: Running under web protocol (http:) does not attempt proxies', async () => {
+    await t.test('Scenario 6: Running under web protocol (http:) also attempts proxies first', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '5C' }];
         const warnings = [];
@@ -206,7 +206,7 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         
         assert.deepStrictEqual(res, mockData);
         assert.strictEqual(fetchCalls.length, 1);
-        assert.strictEqual(fetchCalls[0], 'https://data.etabus.gov.hk/v1/transport/kmb/route/');
+        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
         assert.strictEqual(warnings.length, 0);
     });
 });
