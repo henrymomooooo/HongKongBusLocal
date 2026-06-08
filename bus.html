@@ -1678,7 +1678,7 @@
                             for (let k = 0; k < stopIndicesInPolyline.length - 1; k++) {
                                 const startIdx = stopIndicesInPolyline[k].polylineIdx;
                                 const endIdx = stopIndicesInPolyline[k+1].polylineIdx;
-                                if (closestPolyIdx >= startIdx && closestPolyIdx <= endIdx) {
+                                if (closestPolyIdx >= startIdx && (closestPolyIdx < endIdx || (k === stopIndicesInPolyline.length - 2 && closestPolyIdx === endIdx))) {
                                     matchedIntervalIdx = stopIndicesInPolyline[k].stopIdx;
                                     break;
                                 }

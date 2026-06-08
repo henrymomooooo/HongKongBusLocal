@@ -1,0 +1,27 @@
+{
+  "name": "hongkongbuslocal",
+  "version": "1.0.0",
+  "description": "A self-contained, high-performance local dashboard for Hong Kong bus arrivals. Directly connects to official Open Data APIs to provide real-time ETAs for KMB, Citybus, and NLB.",
+  "main": "test_proxy.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/henrymomooooo/HongKongBusLocal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/henrymomooooo/HongKongBusLocal/issues"
+  },
+  "homepage": "https://github.com/henrymomooooo/HongKongBusLocal#readme",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}
