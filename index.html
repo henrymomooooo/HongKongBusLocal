@@ -364,9 +364,8 @@
                 }
 
                 // 2. Determine initial strategy
-                const isLocalFile = window.location.protocol === 'file:';
                 const strategies = [];
-                if (!isLocalFile && this._workingMethod !== 'direct') strategies.push({ name: 'direct', url: url });
+                if (this._workingMethod !== 'direct') strategies.push({ name: 'direct', url: url });
                 this._PROXIES.forEach((p, i) => {
                     if (this._workingMethod !== `proxy${i}`) strategies.push({ name: `proxy${i}`, url: p(url) });
                 });
