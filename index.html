@@ -328,6 +328,16 @@
         const BusAPI = {
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb', CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus', NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
             _ctbStopCache: new Map(), _kmbStopCache: new Map(),
+            _requestQueue: [],
+            _activeRequests: 0,
+            _MAX_CONCURRENT: 3,
+            _STAGGER_MS: 50,
+            _workingMethod: null, // Stores 'direct' or 'proxy0', 'proxy1', etc.
+            _PROXIES: [
+                u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+                u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+                u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+            ],
             async _fetch(url, method = 'GET') {
                 DebugLogger.log('REQ', method, url, '...');
                 try {
