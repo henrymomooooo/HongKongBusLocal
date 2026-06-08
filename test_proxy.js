@@ -53,13 +53,16 @@ function createTestContext(protocol, fetchMock, warningsArray = []) {
 
 test('Proxy Test Suite - HK Bus App', async (t) => {
 
-    await t.test('Scenario 1: First proxy succeeds', async () => {
+    await t.test('Scenario 1: Direct call fails, first proxy succeeds', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '1A' }];
         const warnings = [];
         
         const fetchMock = async (url) => {
             fetchCalls.push(url);
+            if (url.startsWith('https://data.etabus.gov.hk')) {
+                throw new TypeError('Failed to fetch');
+            }
             return {
                 ok: true,
                 json: async () => ({ data: mockData })
@@ -70,18 +73,23 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         const res = await BusAPI.fetchKMB('/route/');
         
         assert.deepStrictEqual(res, mockData);
-        assert.strictEqual(fetchCalls.length, 1);
-        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
-        assert.strictEqual(warnings.length, 0);
+        assert.strictEqual(fetchCalls.length, 2);
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
+        assert.ok(fetchCalls[1].includes('api.codetabs.com'));
+        assert.strictEqual(warnings.length, 1);
+        assert.ok(warnings[0].includes('Direct API call failed'));
     });
 
-    await t.test('Scenario 2: First proxy fails (returns invalid data), second proxy succeeds', async () => {
+    await t.test('Scenario 2: Direct call fails, first proxy fails (returns invalid data), second proxy succeeds', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '2A' }];
         const warnings = [];
         
         const fetchMock = async (url) => {
             fetchCalls.push(url);
+            if (url.startsWith('https://data.etabus.gov.hk')) {
+                throw new TypeError('Failed to fetch');
+            }
             if (url.includes('api.codetabs.com')) {
                 // Returns object instead of array (unexpected format)
                 return {
@@ -99,20 +107,25 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         const res = await BusAPI.fetchKMB('/route/');
         
         assert.deepStrictEqual(res, mockData);
-        assert.strictEqual(fetchCalls.length, 2);
-        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
-        assert.ok(fetchCalls[1].includes('corsproxy.io'));
-        assert.strictEqual(warnings.length, 1);
-        assert.ok(warnings[0].includes('Proxy #1 failed'));
+        assert.strictEqual(fetchCalls.length, 3);
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
+        assert.ok(fetchCalls[1].includes('api.codetabs.com'));
+        assert.ok(fetchCalls[2].includes('corsproxy.io'));
+        assert.strictEqual(warnings.length, 2);
+        assert.ok(warnings[0].includes('Direct API call failed'));
+        assert.ok(warnings[1].includes('Proxy #1 failed'));
     });
 
-    await t.test('Scenario 3: First and second proxies fail, third proxy succeeds', async () => {
+    await t.test('Scenario 3: Direct call fails, first and second proxies fail, third proxy succeeds', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '3M' }];
         const warnings = [];
         
         const fetchMock = async (url) => {
             fetchCalls.push(url);
+            if (url.startsWith('https://data.etabus.gov.hk')) {
+                throw new TypeError('Failed to fetch');
+            }
             if (url.includes('api.codetabs.com') || url.includes('corsproxy.io')) {
                 // Fails network call
                 return {
@@ -130,25 +143,51 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         const res = await BusAPI.fetchKMB('/route/');
         
         assert.deepStrictEqual(res, mockData);
-        assert.strictEqual(fetchCalls.length, 3);
-        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
-        assert.ok(fetchCalls[1].includes('corsproxy.io'));
-        assert.ok(fetchCalls[2].includes('allorigins.win'));
-        assert.strictEqual(warnings.length, 2);
-        assert.ok(warnings[0].includes('Proxy #1 failed'));
-        assert.ok(warnings[1].includes('Proxy #2 failed'));
+        assert.strictEqual(fetchCalls.length, 4);
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
+        assert.ok(fetchCalls[1].includes('api.codetabs.com'));
+        assert.ok(fetchCalls[2].includes('corsproxy.io'));
+        assert.ok(fetchCalls[3].includes('allorigins.win'));
+        assert.strictEqual(warnings.length, 3);
+        assert.ok(warnings[0].includes('Direct API call failed'));
+        assert.ok(warnings[1].includes('Proxy #1 failed'));
+        assert.ok(warnings[2].includes('Proxy #2 failed'));
     });
 
-    await t.test('Scenario 4: All proxies fail (network errors), direct API call succeeds', async () => {
+    await t.test('Scenario 4: Direct call fails, and all proxies also fail (returns null)', async () => {
+        const fetchCalls = [];
+        const warnings = [];
+        
+        const fetchMock = async (url) => {
+            fetchCalls.push(url);
+            throw new Error('Connection refused');
+        };
+        
+        const BusAPI = createTestContext('file:', fetchMock, warnings);
+        const res = await BusAPI.fetchKMB('/route/');
+        
+        assert.strictEqual(res, null);
+        assert.strictEqual(fetchCalls.length, 4); // 1 direct + 3 proxies
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
+        assert.ok(fetchCalls[1].includes('api.codetabs.com'));
+        assert.ok(fetchCalls[2].includes('corsproxy.io'));
+        assert.ok(fetchCalls[3].includes('allorigins.win'));
+        
+        assert.strictEqual(warnings.length, 5); // 1 direct warning + 3 proxy warnings + 1 final fail warning
+        assert.ok(warnings[0].includes('Direct API call failed'));
+        assert.ok(warnings[1].includes('Proxy #1 failed'));
+        assert.ok(warnings[2].includes('Proxy #2 failed'));
+        assert.ok(warnings[3].includes('Proxy #3 failed'));
+        assert.ok(warnings[4].includes('All proxies and direct API call failed'));
+    });
+
+    await t.test('Scenario 5: Direct call succeeds immediately, no proxies are called', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '962X' }];
         const warnings = [];
         
         const fetchMock = async (url) => {
             fetchCalls.push(url);
-            if (url.includes('api.codetabs.com') || url.includes('corsproxy.io') || url.includes('allorigins.win')) {
-                throw new Error('Connection refused');
-            }
             return {
                 ok: true,
                 json: async () => ({ data: mockData })
@@ -159,37 +198,12 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         const res = await BusAPI.fetchKMB('/route/');
         
         assert.deepStrictEqual(res, mockData);
-        assert.strictEqual(fetchCalls.length, 4); // 3 proxies + 1 direct
-        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
-        assert.ok(fetchCalls[1].includes('corsproxy.io'));
-        assert.ok(fetchCalls[2].includes('allorigins.win'));
-        assert.strictEqual(fetchCalls[3], 'https://data.etabus.gov.hk/v1/transport/kmb/route/');
-        
-        assert.strictEqual(warnings.length, 4); // 3 warnings for proxy failures + 1 for all failed
-        assert.ok(warnings[0].includes('Proxy #1 failed'));
-        assert.ok(warnings[1].includes('Proxy #2 failed'));
-        assert.ok(warnings[2].includes('Proxy #3 failed'));
-        assert.ok(warnings[3].includes('All proxies failed'));
+        assert.strictEqual(fetchCalls.length, 1);
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
+        assert.strictEqual(warnings.length, 0);
     });
 
-    await t.test('Scenario 5: Absolute failure of all proxies and the direct call', async () => {
-        const fetchCalls = [];
-        const warnings = [];
-        
-        const fetchMock = async (url) => {
-            fetchCalls.push(url);
-            throw new Error('No internet connection');
-        };
-        
-        const BusAPI = createTestContext('file:', fetchMock, warnings);
-        const res = await BusAPI.fetchKMB('/route/');
-        
-        assert.strictEqual(res, null);
-        assert.strictEqual(fetchCalls.length, 4);
-        assert.strictEqual(warnings.length, 4);
-    });
-
-    await t.test('Scenario 6: Running under web protocol (http:) also attempts proxies first', async () => {
+    await t.test('Scenario 6: Running under web protocol (http:) succeeds on direct call first', async () => {
         const fetchCalls = [];
         const mockData = [{ route: '5C' }];
         const warnings = [];
@@ -207,7 +221,7 @@ test('Proxy Test Suite - HK Bus App', async (t) => {
         
         assert.deepStrictEqual(res, mockData);
         assert.strictEqual(fetchCalls.length, 1);
-        assert.ok(fetchCalls[0].includes('api.codetabs.com'));
+        assert.ok(fetchCalls[0].includes('data.etabus.gov.hk'));
         assert.strictEqual(warnings.length, 0);
     });
 });

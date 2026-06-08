@@ -652,6 +652,14 @@
             async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
             async fetchKMB(e) {
                 const url = `${this.KMB_BASE}${e}`;
+                
+                // Try calling the direct API first to avoid proxy latency.
+                const directData = await this._fetch(url);
+                if (directData && Array.isArray(directData)) {
+                    return directData;
+                }
+                console.warn(`Direct API call failed or returned unexpected format for ${e}. Trying backup proxies...`);
+                
                 const proxies = [
                     u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
                     u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
@@ -665,8 +673,8 @@
                     }
                     console.warn(`Proxy #${i + 1} failed or returned unexpected format for ${e}. Trying next backup...`);
                 }
-                console.warn(`All proxies failed for ${e}. Retrying via direct API call...`);
-                return this._fetch(url);
+                console.warn(`All proxies and direct API call failed for ${e}.`);
+                return null;
             },
             fetchCTB(e) { return this._fetch(`${this.CTB_BASE}${e}`); }, fetchNLB(e) { return this._fetch(`${this.NLB_BASE}/${e}`); },
             async getCTBStopInfo(id) { if (!id) return null; if (this._ctbStopCache.has(id)) return this._ctbStopCache.get(id); const d = await this.fetchCTB(`/stop/${id}`); if (d) this._ctbStopCache.set(id, d); return d; },
