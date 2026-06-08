@@ -43,7 +43,8 @@ function createTestContext(protocol, fetchMock, warningsArray = []) {
         encodeURIComponent: global.encodeURIComponent,
         Map: global.Map,
         Array: global.Array,
-        Promise: global.Promise
+        Promise: global.Promise,
+        setTimeout: global.setTimeout
     };
     vm.createContext(context);
     vm.runInContext(busApiCode, context);

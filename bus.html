@@ -621,13 +621,33 @@
         const BusAPI = {
             KMB_BASE: 'https://data.etabus.gov.hk/v1/transport/kmb', CTB_BASE: 'https://rt.data.gov.hk/v2/transport/citybus', NLB_BASE: 'https://rt.data.gov.hk/v2/transport/nlb',
             _ctbStopCache: new Map(), _kmbStopCache: new Map(),
+            _requestQueue: [],
+            _activeRequests: 0,
+            _MAX_CONCURRENT: 3,
+            _STAGGER_MS: 50,
             async _fetch(url, method = 'GET') {
+                return new Promise((resolve, reject) => {
+                    this._requestQueue.push({ url, method, resolve, reject });
+                    this._processQueue();
+                });
+            },
+            async _processQueue() {
+                if (this._activeRequests >= this._MAX_CONCURRENT || this._requestQueue.length === 0) {
+                    return;
+                }
+                this._activeRequests++;
+                const { url, method, resolve } = this._requestQueue.shift();
+                await new Promise(r => setTimeout(r, this._STAGGER_MS));
                 DebugLogger.log('REQ', method, url, '...');
                 try {
                     const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const json = await res.json(), data = json.data || json;
-                    DebugLogger.log('RES', method, url, data, res.status); return data;
-                } catch (e) { DebugLogger.log('ERR', method, url, e.message); return null; }
+                    DebugLogger.log('RES', method, url, data, res.status); resolve(data);
+                } catch (e) { DebugLogger.log('ERR', method, url, e.message); resolve(null); }
+                finally {
+                    this._activeRequests--;
+                    this._processQueue();
+                }
             },
             async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
             async fetchKMB(e) {
