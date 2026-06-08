@@ -338,6 +338,39 @@
                 u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
                 u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
             ],
+            async _executeRequest(url, method) {
+                const tryUrl = (u, source) => {
+                    DebugLogger.log('REQ', method, u, `[Source: ${source}]`);
+                    return fetch(u).then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.json().then(json => json.data || json);
+                    });
+                };
+
+                // 1. If we already found a working method, use it immediately
+                if (this._workingMethod) {
+                    const u = this._workingMethod === 'direct' ? url : this._PROXIES[parseInt(this._workingMethod.replace('proxy',''))](url);
+                    return tryUrl(u, this._workingMethod);
+                }
+
+                // 2. Determine initial strategy
+                const isLocalFile = window.location.protocol === 'file:';
+                const strategies = [];
+                if (!isLocalFile) strategies.push({ name: 'direct', url: url });
+                this._PROXIES.forEach((p, i) => strategies.push({ name: `proxy${i}`, url: p(url) }));
+
+                // 3. Execute rotation
+                for (const s of strategies) {
+                    try {
+                        const data = await tryUrl(s.url, s.name);
+                        this._workingMethod = s.name; // Stick to this method for future calls
+                        return data;
+                    } catch (e) {
+                        DebugLogger.log('ERR', method, s.url, `Failed ${s.name}: ${e.message}`);
+                    }
+                }
+                return null;
+            },
             async _fetch(url, method = 'GET') {
                 DebugLogger.log('REQ', method, url, '...');
                 try {
