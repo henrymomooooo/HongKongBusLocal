@@ -376,6 +376,23 @@
                 }
                 return null;
             },
+            async _processQueue() {
+                if (this._activeRequests >= this._MAX_CONCURRENT || this._requestQueue.length === 0) return;
+
+                this._activeRequests++;
+                const { url, method, resolve } = this._requestQueue.shift();
+
+                // 50ms stagger
+                await new Promise(r => setTimeout(r, this._STAGGER_MS));
+
+                try {
+                    const data = await this._executeRequest(url, method);
+                    resolve(data);
+                } finally {
+                    this._activeRequests--;
+                    this._processQueue(); // Check for next in line
+                }
+            },
             async _fetch(url, method = 'GET') {
                 DebugLogger.log('REQ', method, url, '...');
                 try {
