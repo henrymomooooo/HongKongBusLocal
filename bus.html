@@ -1588,6 +1588,12 @@
         async function renderFavorites(skipApiRefresh = false) {
             if (_etaObserver) _etaObserver.disconnect(); _visibleFavIds.clear();
             const fs = await BusDB.getAll('favorites'), gs = await BusDB.getAll('favorite_groups'); gs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            
+            // Rebuild favorite stops cache to ensure star indicators are lit up correctly in other lists
+            _favoriteStopsCache.clear();
+            fs.forEach(f => {
+                _favoriteStopsCache.add(`${f.co}-${f.route}-${f.stopId}-${f.serviceType || 1}`);
+            });
             if (gs.length > 0 && (activeGroupId === null || !gs.find(g => g.id === activeGroupId))) activeGroupId = gs[0].id;
             const tc = document.getElementById('favorites-tabs'); tc.innerHTML = '';
             gs.forEach(g => {
