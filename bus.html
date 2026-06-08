@@ -890,6 +890,7 @@
             
             if (!force && cached.length > 0 && (now - lastUpdated < THIRTY_DAYS)) {
                 indexCTBRouteStopsInBackground();
+                indexKMBRouteStopsInBackground();
                 return;
             }
             
@@ -904,22 +905,6 @@
                 if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching KMB stops...</span>`;
                 const kmbStopsRes = await BusAPI.fetchKMB('/stop', true);
                 if (!kmbStopsRes) throw new Error("Failed to fetch KMB stops");
-                
-                if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching KMB route mappings...</span>`;
-                const kmbRouteStopsRes = await BusAPI.fetchKMB('/route-stop', true);
-                if (!kmbRouteStopsRes) throw new Error("Failed to fetch KMB route stops");
-                
-                const kmbStopToRoutes = new Map();
-                kmbRouteStopsRes.forEach(item => {
-                    if (!kmbStopToRoutes.has(item.stop)) {
-                        kmbStopToRoutes.set(item.stop, []);
-                    }
-                    kmbStopToRoutes.get(item.stop).push({
-                        route: item.route,
-                        bound: item.bound,
-                        serviceType: parseInt(item.service_type, 10) || 1
-                    });
-                });
                 
                 if (statusEl) statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Fetching Citybus stops...</span>`;
                 const ctbStopsRes = await BusAPI.fetchCTB('/stop/CTB');
@@ -977,7 +962,7 @@
                         name_en: s.name_en,
                         lat: parseFloat(s.lat),
                         long: parseFloat(s.long),
-                        routes: kmbStopToRoutes.get(s.stop) || []
+                        routes: []
                     });
                 });
                 
@@ -1029,6 +1014,7 @@
                 }
                 
                 indexCTBRouteStopsInBackground();
+                indexKMBRouteStopsInBackground();
                 
             } catch (e) {
                 console.error("Stop synchronization failed:", e);
@@ -1126,6 +1112,97 @@
             } catch(e) {
                 console.error("CTB background indexing loop failed:", e);
                 _ctbIndexingActive = false;
+            }
+        }
+
+        let _kmbIndexingActive = false;
+        async function indexKMBRouteStopsInBackground() {
+            if (_kmbIndexingActive) return;
+            _kmbIndexingActive = true;
+            try {
+                const routes = await BusDB.getAll('routes');
+                const kmbRoutes = routes.filter(r => r.co === 'KMB');
+                const cachedStops = await BusDB.getAll('route_stops');
+                const cachedIds = new Set(cachedStops.map(s => s.id));
+                
+                const toIndex = [];
+                for (const r of kmbRoutes) {
+                    const bound = r.bound;
+                    const st = r.service_type || 1;
+                    const cacheId = `KMB_${r.route}_${bound === 'I' ? 'inbound' : 'outbound'}_${st}_`;
+                    if (!cachedIds.has(cacheId)) {
+                        toIndex.push({ r, dir: bound === 'I' ? 'inbound' : 'outbound', serviceType: st, cacheId });
+                    }
+                }
+                
+                if (toIndex.length === 0) {
+                    _kmbIndexingActive = false;
+                    return;
+                }
+                
+                const stops = await BusDB.getAll('stops');
+                const kmbStopsMap = new Map();
+                stops.filter(s => s.co === 'KMB').forEach(s => kmbStopsMap.set(s.stopId, s));
+                
+                let index = 0;
+                const batchSize = 2;
+                const interval = setInterval(async () => {
+                    if (index >= toIndex.length) {
+                        clearInterval(interval);
+                        _kmbIndexingActive = false;
+                        return;
+                    }
+                    const batch = toIndex.slice(index, index + batchSize);
+                    index += batchSize;
+                    
+                    await Promise.all(batch.map(async task => {
+                        try {
+                            const kdir = task.dir === 'inbound' ? 'inbound' : 'outbound';
+                            const routeStops = await BusAPI.fetchKMB(`/route-stop/${task.r.route}/${kdir}/${task.serviceType}`);
+                            if (routeStops && routeStops.length > 0) {
+                                const matchedStops = routeStops.map(item => {
+                                    const details = kmbStopsMap.get(item.stop);
+                                    return details ? {
+                                        stop: item.stop,
+                                        name_tc: details.name_tc,
+                                        name_en: details.name_en,
+                                        lat: details.lat,
+                                        long: details.long
+                                    } : null;
+                                }).filter(x => x);
+                                
+                                if (matchedStops.length > 0) {
+                                    await BusDB.put('route_stops', {
+                                        id: task.cacheId,
+                                        stops: matchedStops,
+                                        last_updated: Date.now()
+                                    });
+                                    
+                                    for (const s of matchedStops) {
+                                        const stopRecord = kmbStopsMap.get(s.stop);
+                                        if (stopRecord) {
+                                            if (!stopRecord.routes) stopRecord.routes = [];
+                                            const alreadyMapped = stopRecord.routes.some(x => x.route === task.r.route && x.bound === task.r.bound && x.serviceType === task.serviceType);
+                                            if (!alreadyMapped) {
+                                                stopRecord.routes.push({
+                                                    route: task.r.route,
+                                                    bound: task.r.bound,
+                                                    serviceType: task.serviceType
+                                                });
+                                                await BusDB.put('stops', stopRecord);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Background KMB indexing error for route:", task.r.route, e);
+                        }
+                    }));
+                }, 4000);
+            } catch(e) {
+                console.error("KMB background indexing loop failed:", e);
+                _kmbIndexingActive = false;
             }
         }
 
