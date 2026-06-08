@@ -674,21 +674,33 @@
             return card;
         }
 
-        async function refreshAllETAs() {
+        async function refreshAllETAs(force = true) {
             const b = document.getElementById('refresh-btn'); if (b) b.classList.add('fa-spin');
-            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); }
+            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f, force))); }
             catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
         }
 
         function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
 
-        async function updateETA(f) {
+        async function updateETA(f, force = false) {
             try {
                 const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
                 const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
-                const r = (etas) => { if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); };
-                if (cached) r(cached); const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
-                if (etas !== null) { setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); r(etas); }
+                const render = (etas) => { 
+                    if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } 
+                    c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); 
+                };
+                
+                if (!force && cached) {
+                    render(cached);
+                    return; // EXIT EARLY: Skip network call if we have valid cache and not forcing
+                }
+                
+                const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
+                if (etas !== null) { 
+                    setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); 
+                    render(etas); 
+                }
             } catch (e) {}
         }
 
