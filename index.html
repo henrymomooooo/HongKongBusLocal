@@ -313,7 +313,10 @@
                 } else { el.classList.add('hidden'); document.body.classList.remove('debug-active'); }
             },
             log(type, method, url, payload, status = '') {
-                this.logs.push({ timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'), type, method, url, payload, status });
+                this.logs.push({ 
+                    timestamp: new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0'), 
+                    type, method, url, payload, status 
+                });
                 if (this.logs.length > this.maxLogs) this.logs.shift();
                 if (this.active) this.render();
             },
@@ -394,12 +397,10 @@
                 }
             },
             async _fetch(url, method = 'GET') {
-                DebugLogger.log('REQ', method, url, '...');
-                try {
-                    const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json(), data = json.data || json;
-                    DebugLogger.log('RES', method, url, data, res.status); return data;
-                } catch (e) { DebugLogger.log('ERR', method, url, e.message); return null; }
+                return new Promise((resolve) => {
+                    this._requestQueue.push({ url, method, resolve });
+                    this._processQueue();
+                });
             },
             async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
             fetchKMB(e) { return this._fetch(`${this.KMB_BASE}${e}`); }, fetchCTB(e) { return this._fetch(`${this.CTB_BASE}${e}`); }, fetchNLB(e) { return this._fetch(`${this.NLB_BASE}/${e}`); },
