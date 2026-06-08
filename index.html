@@ -347,10 +347,15 @@
                     });
                 };
 
-                // 1. If we already found a working method, use it immediately
+                // 1. If we already found a working method, try it first
                 if (this._workingMethod) {
-                    const u = this._workingMethod === 'direct' ? url : this._PROXIES[parseInt(this._workingMethod.replace('proxy',''))](url);
-                    return tryUrl(u, this._workingMethod);
+                    try {
+                        const u = this._workingMethod === 'direct' ? url : this._PROXIES[parseInt(this._workingMethod.replace('proxy',''))](url);
+                        return await tryUrl(u, this._workingMethod);
+                    } catch (e) {
+                        DebugLogger.log('ERR', method, url, `Sticky method ${this._workingMethod} failed: ${e.message}. Rotating...`);
+                        this._workingMethod = null; // Clear it to trigger re-rotation
+                    }
                 }
 
                 // 2. Determine initial strategy
