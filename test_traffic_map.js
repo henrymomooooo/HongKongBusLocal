@@ -4,14 +4,14 @@ const vm = require('vm');
 const test = require('node:test');
 const assert = require('node:assert');
 
-// 1. Read bus.html and extract the JavaScript functions
-const htmlPath = path.join(__dirname, 'bus.html');
+// 1. Read bus_all.html and extract the JavaScript functions
+const htmlPath = path.join(__dirname, 'bus_all.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
 const scriptStart = html.indexOf('<script>');
 const scriptEnd = html.indexOf('</script>', scriptStart);
 if (scriptStart === -1 || scriptEnd === -1) {
-    throw new Error('Script block not found in bus.html');
+    throw new Error('Script block not found in bus_all.html');
 }
 
 const scriptCode = html.substring(scriptStart + 8, scriptEnd);

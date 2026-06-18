@@ -188,8 +188,8 @@ const assert = require('assert');
         });
     });
 
-    // Navigate to the local bus.html file
-    const fileUrl = 'file://' + path.resolve(__dirname, 'bus.html');
+    // Navigate to the local bus_all.html file
+    const fileUrl = 'file://' + path.resolve(__dirname, 'bus_all.html');
     console.log(`Navigating to page: ${fileUrl}`);
     await page.goto(fileUrl);
     
