@@ -10,8 +10,6 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%23d32f2f' d='M488 128H464V80c0-26.5-21.5-48-48-48H96c-26.5 0-48 21.5-48 48v48H24c-13.3 0-24 10.7-24 24v288c0 13.3 10.7 24 24 24h24v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h208v40c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-40h24c13.3 0 24-10.7 24-24V152c0-13.3-10.7-24-24-24zM96 80h320v48H96V80zm48 352c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm224 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm80-144H64V176h384v112z'/></svg>">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root { --kmb-red: #d32f2f; --ctb-blue: #00529b; --ctb-yellow: #ffdf00; --nlb-green: #2e7d32; --bg-color: #f4f4f9; --card-bg: #ffffff; --text-main: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
@@ -111,19 +109,6 @@
         .badge-KMB { background: var(--kmb-red); }
         .badge-CTB { background: var(--ctb-blue); color: var(--ctb-yellow); }
         .badge-NLB { background: var(--nlb-green); }
-        .map-container { height: 200px; width: 100%; border-radius: 8px; margin-bottom: 15px; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); z-index: 1; position: relative; }
-        .timeline-connector-block { display: flex; flex-direction: column; align-items: center; width: 100%; margin: -6px auto; position: relative; z-index: 5; }
-        .vertical-line-segment { width: 4px; height: 24px; background: #ccc; border-radius: 2px; transition: background-color 0.3s; }
-        .cctv-container-inside { display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .camera-btn { background: #e0f7fa; border: 1px solid #b2ebf2; border-radius: 12px; padding: 2px 8px; font-size: 11px; color: #00838f; cursor: pointer; display: flex; align-items: center; gap: 4px; margin: 4px 0; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); user-select: none; -webkit-user-select: none; transition: background-color 0.2s; }
-        .camera-btn:hover { background: #b2ebf2; }
-        .cctv-drawer { width: 280px; max-width: 90vw; margin: 5px auto; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out; }
-        .cctv-img { width: 100%; border-radius: 6px; aspect-ratio: 16/9; display: block; object-fit: cover; }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(33, 150, 243, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
-        }
     </style>
 </head>
 <body>
@@ -185,75 +170,10 @@
         </div>
     </div>
     <script>
-        const APP_VERSION = '1.3.0';
+        const APP_VERSION = '1.2.0';
         const UNIFIED_STOPS_DATA = [];
         let activeGroupId = null, _editingGroupId = null, _etaObserver = null;
         const _visibleFavIds = new Set();
-        let activeTimelineMap = null;
-        let activeStopMap = null;
-
-        function getDistanceToSegment(p, a, b) {
-            const x = p[0], y = p[1];
-            const x1 = a[0], y1 = a[1];
-            const x2 = b[0], y2 = b[1];
-            
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            
-            if (dx === 0 && dy === 0) {
-                return getDistance(x, y, x1, y1);
-            }
-            
-            let t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
-            t = Math.max(0, Math.min(1, t));
-            
-            const projLat = x1 + t * dx;
-            const projLng = y1 + t * dy;
-            
-            return getDistance(x, y, projLat, projLng);
-        }
-
-        function getSegmentTrafficColor(lat1, lon1, lat2, lon2) {
-            const str = `${lat1.toFixed(4)},${lon1.toFixed(4)},${lat2.toFixed(4)},${lon2.toFixed(4)}`;
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = (hash << 5) - hash + str.charCodeAt(i);
-                hash |= 0;
-            }
-            hash = Math.abs(hash);
-            const timeBlock = Math.floor(Date.now() / 300000);
-            const variableHash = (hash + timeBlock) % 100;
-            
-            if (variableHash < 10) {
-                return '#d32f2f'; // Red
-            } else if (variableHash < 30) {
-                return '#f57c00'; // Yellow
-            } else {
-                return '#2e7d32'; // Green
-            }
-        }
-
-        window.toggleTimelineCCTV = function(e, key, idx) {
-            e.stopPropagation();
-            const drawer = document.getElementById(`timeline-cctv-drawer-${idx}-${key}`);
-            const img = document.getElementById(`cctv-img-${idx}-${key}`);
-            const timeEl = document.getElementById(`cctv-time-${idx}-${key}`);
-            if (!drawer || !img) return;
-            
-            const isOpen = drawer.classList.contains('open');
-            if (!isOpen) {
-                drawer.classList.add('open');
-                drawer.style.maxHeight = '250px';
-                img.src = `https://tdcctv.data.gov.hk/${key}.JPG?t=${Date.now()}`;
-                if (timeEl) timeEl.textContent = new Date().toLocaleTimeString();
-            } else {
-                drawer.classList.remove('open');
-                drawer.style.maxHeight = '0';
-                setTimeout(() => {
-                    if (!drawer.classList.contains('open')) img.src = '';
-                }, 300);
-            }
-        };
 
         function setupETAObserver() {
             _etaObserver = new IntersectionObserver((entries) => {
@@ -554,16 +474,17 @@
         function setFlashCache(co, sid, r, st, d) { _etaFlashCache.set(`${co}-${sid}-${r}-${st || 1}`, { data: d, timestamp: Date.now() }); }
 
         const BusDB = {
-            DB_NAME: 'HKBusDB_enhanced', DB_VERSION: 7, db: null,
+            DB_NAME: 'HKBusDB_enhanced', DB_VERSION: 6, db: null,
             async init() {
                 return new Promise((resolve) => {
                     if (!window.indexedDB) return resolve();
                     const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        ['routes', 'favorites', 'metadata', 'favorite_groups', 'route_stops', 'user_settings', 'stops', 'route_shapes'].forEach(s => {
+                        // Demonstrating support for adding a new table 'stops' in version 6
+                        ['routes', 'favorites', 'metadata', 'favorite_groups', 'route_stops', 'user_settings', 'stops'].forEach(s => {
                             if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { 
-                                keyPath: (s === 'routes' || s === 'route_stops' || s === 'stops' || s === 'route_shapes' ? 'id' : (s === 'favorites' ? 'favId' : (s === 'favorite_groups' ? 'id' : 'key'))), 
+                                keyPath: (s === 'routes' || s === 'route_stops' || s === 'stops' ? 'id' : (s === 'favorites' ? 'favId' : (s === 'favorite_groups' ? 'id' : 'key'))), 
                                 autoIncrement: (s === 'favorites' || s === 'favorite_groups') 
                             });
                         });
@@ -583,7 +504,7 @@
                     if (!groups.find(g => g.id === 1)) await this.put('favorite_groups', { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 });
                     if (!groups.find(g => g.id === 2)) await this.put('favorite_groups', { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 });
                 }
-                if (storedAppVersion !== APP_VERSION || !dbVer || dbVer < 7) {
+                if (storedAppVersion !== APP_VERSION || !dbVer || dbVer < 6) {
                     if (!dbVer || dbVer < 3) {
                         await this.putAll('favorite_groups', [{ id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 }, { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }]);
                         const fs = await this.getAll('favorites'), toUp = fs.filter(f => !f.groupId).map(f => ({...f, groupId: 1}));
@@ -597,11 +518,6 @@
                                 await ensureFavoriteCoordinates(f);
                             }
                         } catch (e) { console.warn('Failed backfilling on migration:', e); }
-                    }
-                    if (!dbVer || dbVer < 7) {
-                        try {
-                            await this.clear('route_shapes');
-                        } catch (e) { console.warn('Failed clearing route_shapes on migration:', e); }
                     }
                     await this.setMetadata('app_version', APP_VERSION); await this.setMetadata('db_version', this.DB_VERSION);
                     if (!await this.getMetadata('install_date')) await this.setMetadata('install_date', Date.now());
@@ -732,76 +648,6 @@
                     this._activeRequests--;
                     this._processQueue();
                 }
-            },
-            async fetchCCTVRegistry() {
-                const url = 'https://tdcctv.data.gov.hk/key-cctv-locations.json';
-                const directData = await this._fetch(url);
-                if (directData && Array.isArray(directData)) {
-                    return directData;
-                }
-                console.warn(`Direct CCTV registry call failed. Trying backup proxies...`);
-                const proxies = [
-                    u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
-                    u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-                    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
-                ];
-                for (let i = 0; i < proxies.length; i++) {
-                    const proxyUrl = proxies[i](url);
-                    let data = await this._fetch(proxyUrl);
-                    if (data) {
-                        if (data.contents) {
-                            try { data = JSON.parse(data.contents); } catch(e) {}
-                        }
-                        const arr = Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : null);
-                        if (arr) return arr;
-                    }
-                }
-                return null;
-            },
-            async getCCTVLocations() {
-                const cached = await BusDB.getMetadata('cctv_registry');
-                const lastUpdated = await BusDB.getMetadata('cctv_last_updated') || 0;
-                const now = Date.now();
-                const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-                if (cached && (now - lastUpdated < SEVEN_DAYS)) {
-                    return cached;
-                }
-                const fresh = await this.fetchCCTVRegistry();
-                if (fresh) {
-                    await BusDB.setMetadata('cctv_registry', fresh);
-                    await BusDB.setMetadata('cctv_last_updated', now);
-                    return fresh;
-                }
-                return cached || [];
-            },
-            async getRouteShape(co, route, bound, serviceType, stops) {
-                const id = `${co}_${route}_${bound}_${serviceType || 1}`;
-                const cached = await BusDB.get('route_shapes', id);
-                if (cached) {
-                    return cached.polyline;
-                }
-                try {
-                    const validStops = stops.filter(s => s.lat && s.long);
-                    if (validStops.length < 2) {
-                        return stops.map(s => [s.lat || 0, s.long || 0]);
-                    }
-                    const coordsStr = validStops.map(s => `${s.long},${s.lat}`).join(';');
-                    const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?geometries=geojson&overview=full`;
-                    
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`OSRM HTTP ${res.status}`);
-                    const json = await res.json();
-                    if (json.code === 'Ok' && json.routes && json.routes[0]?.geometry?.coordinates) {
-                        const polyline = json.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                        await BusDB.put('route_shapes', {
-                            id, co, route, bound, serviceType: serviceType || 1, polyline, last_updated: Date.now()
-                        });
-                        return polyline;
-                    }
-                } catch(e) {
-                    console.warn(`Failed fetching OSRM shape for ${id}:`, e);
-                }
-                return stops.filter(s => s.lat && s.long).map(s => [s.lat, s.long]);
             },
             async getKMBStops() { if (this._kmbStopCache.size === 0) { const d = await this.fetchKMB('/stop'); if (d) d.forEach(s => this._kmbStopCache.set(s.stop, s)); } return this._kmbStopCache; },
             async fetchKMB(e) {
@@ -1241,9 +1087,6 @@
                                         last_updated: Date.now()
                                     });
                                     
-                                    // Fetch shape in background silently to pre-cache
-                                    BusAPI.getRouteShape('CTB', task.r.route, task.dir === 'outbound' ? 'O' : 'I', 1, matchedStops);
-                                    
                                     for (const s of matchedStops) {
                                         const stopRecord = ctbStopsMap.get(s.stop);
                                         if (stopRecord) {
@@ -1335,9 +1178,6 @@
                                         last_updated: Date.now()
                                     });
                                     
-                                    // Fetch shape in background silently to pre-cache
-                                    BusAPI.getRouteShape('KMB', task.r.route, task.r.bound, task.serviceType, matchedStops);
-                                    
                                     for (const s of matchedStops) {
                                         const stopRecord = kmbStopsMap.get(s.stop);
                                         if (stopRecord) {
@@ -1393,10 +1233,6 @@
                 clearInterval(_stopDetailsRefreshInterval);
                 _stopDetailsRefreshInterval = null;
             }
-            if (window.activeStopMap) {
-                try { window.activeStopMap.remove(); } catch(e){}
-                window.activeStopMap = null;
-            }
             
             const resultsEl = document.getElementById('stop-results');
             const detailsEl = document.getElementById('stop-details-view');
@@ -1424,54 +1260,8 @@
                             ${distHtml}
                         </div>
                     </div>
-                    <div id="stop-details-map" class="map-container"></div>
                     <div id="stop-routes-list" style="margin-top:15px;"></div>
                 `;
-                
-                setTimeout(() => {
-                    const stopMapEl = document.getElementById('stop-details-map');
-                    if (!stopMapEl || !s.lat || !s.long) return;
-                    
-                    const stopMap = L.map('stop-details-map', {
-                        zoomControl: false,
-                        attributionControl: false
-                    }).setView([s.lat, s.long], 16);
-                    
-                    window.activeStopMap = stopMap;
-                    
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19
-                    }).addTo(stopMap);
-                    
-                    L.control.zoom({ position: 'topright' }).addTo(stopMap);
-                    
-                    L.marker([s.lat, s.long], {
-                        icon: L.divIcon({
-                            className: 'stop-marker-icon',
-                            html: `<div style="background: ${s.co === 'CTB' ? 'var(--ctb-blue)' : (s.co === 'NLB' ? 'var(--nlb-green)' : 'var(--kmb-red)')}; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"><i class="fas fa-bus" style="color:white;"></i></div>`,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12]
-                        })
-                    }).addTo(stopMap).bindPopup(`<b>${localized(s, 'name')}</b>`);
-                    
-                    if (userCoords) {
-                        L.marker([userCoords.lat, userCoords.long], {
-                            icon: L.divIcon({
-                                className: 'user-marker-icon',
-                                html: `<div style="background: #2196f3; border-radius: 50%; width: 14px; height: 14px; border: 3px solid white; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4); animation: pulse 1.5s infinite;"></div>`,
-                                iconSize: [20, 20],
-                                iconAnchor: [10, 10]
-                            })
-                        }).addTo(stopMap);
-                        
-                        L.polyline([[userCoords.lat, userCoords.long], [s.lat, s.long]], {
-                            color: '#2196f3',
-                            weight: 3,
-                            dashArray: '5, 10',
-                            opacity: 0.8
-                        }).addTo(stopMap);
-                    }
-                }, 50);
                 
                 const listContainer = document.getElementById('stop-routes-list');
                 if (!s.routes || s.routes.length === 0) {
@@ -1501,7 +1291,7 @@
                             </div>
                         </div>
                         <div class="fav-star ${isFav ? 'active' : ''}" id="stop-star-${s.co}-${s.stopId}-${r.route}-${st}" style="font-size:20px; color:${isFav ? '#ffc107' : '#ccc'}; cursor:pointer; padding:10px;" onclick="handleStopRouteFavorite(event, '${s.co}', '${s.stopId}', '${r.route}', ${st}, '${s.name_tc}', '${s.name_en}', '${r.routeId || ''}', '${r.bound || 'O'}')">
-                             <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
+                            <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
                         </div>
                     `;
                     listContainer.appendChild(card);
@@ -1516,10 +1306,6 @@
             if (_stopDetailsRefreshInterval) {
                 clearInterval(_stopDetailsRefreshInterval);
                 _stopDetailsRefreshInterval = null;
-            }
-            if (window.activeStopMap) {
-                try { window.activeStopMap.remove(); } catch(e){}
-                window.activeStopMap = null;
             }
             const resultsEl = document.getElementById('stop-results');
             const detailsEl = document.getElementById('stop-details-view');
@@ -1637,160 +1423,14 @@
             if (opps.length === 1) showStops(opps[0]); else if (opps.length > 1) selectRoute(curr); else alert('No return direction found.');
         }
 
-        async function drawTimelineMapFeatures(map, route, stops) {
-            window.activeTimelineMap = map;
-            try {
-                const polylinePoints = await BusAPI.getRouteShape(route.co, route.route, route.bound || 'O', route.service_type || 1, stops);
-                if (!polylinePoints || polylinePoints.length === 0) return;
-                
-                const cctvRegistry = await BusAPI.getCCTVLocations();
-                const stopIndicesInPolyline = [];
-                stops.forEach((stop, sIdx) => {
-                    if (!stop.lat || !stop.long) return;
-                    let minDistance = Infinity;
-                    let minIdx = 0;
-                    polylinePoints.forEach((point, pIdx) => {
-                        const dist = getDistance(stop.lat, stop.long, point[0], point[1]);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            minIdx = pIdx;
-                        }
-                    });
-                    stopIndicesInPolyline.push({ stopIdx: sIdx, polylineIdx: minIdx, stopId: stop.stop });
-                });
-                
-                stopIndicesInPolyline.sort((a, b) => a.polylineIdx - b.polylineIdx);
-                
-                const matchedCameras = [];
-                if (cctvRegistry && cctvRegistry.length > 0) {
-                    cctvRegistry.forEach(cam => {
-                        let minSegmentDist = Infinity;
-                        let closestPolyIdx = 0;
-                        for (let i = 0; i < polylinePoints.length - 1; i++) {
-                            const dist = getDistanceToSegment([cam.latitude, cam.longitude], polylinePoints[i], polylinePoints[i+1]);
-                            if (dist < minSegmentDist) {
-                                minSegmentDist = dist;
-                                closestPolyIdx = i;
-                            }
-                        }
-                        if (minSegmentDist <= 100) {
-                            let matchedIntervalIdx = -1;
-                            for (let k = 0; k < stopIndicesInPolyline.length - 1; k++) {
-                                const startIdx = stopIndicesInPolyline[k].polylineIdx;
-                                const endIdx = stopIndicesInPolyline[k+1].polylineIdx;
-                                if (closestPolyIdx >= startIdx && (closestPolyIdx < endIdx || (k === stopIndicesInPolyline.length - 2 && closestPolyIdx === endIdx))) {
-                                    matchedIntervalIdx = stopIndicesInPolyline[k].stopIdx;
-                                    break;
-                                }
-                            }
-                            if (matchedIntervalIdx === -1 && stopIndicesInPolyline.length > 1) {
-                                if (closestPolyIdx < stopIndicesInPolyline[0].polylineIdx) {
-                                    matchedIntervalIdx = stopIndicesInPolyline[0].stopIdx;
-                                } else {
-                                    matchedIntervalIdx = stopIndicesInPolyline[stopIndicesInPolyline.length - 2].stopIdx;
-                                }
-                            }
-                            if (matchedIntervalIdx !== -1) {
-                                matchedCameras.push({
-                                    key: cam.key,
-                                    name: cam.name,
-                                    lat: cam.latitude,
-                                    long: cam.longitude,
-                                    intervalIdx: matchedIntervalIdx
-                                });
-                            }
-                        }
-                    });
-                }
-                
-                for (let k = 0; k < stopIndicesInPolyline.length - 1; k++) {
-                    const startIdx = stopIndicesInPolyline[k].polylineIdx;
-                    const endIdx = stopIndicesInPolyline[k+1].polylineIdx;
-                    const slice = polylinePoints.slice(startIdx, endIdx + 1);
-                    if (slice.length >= 2) {
-                        const color = getSegmentTrafficColor(slice[0][0], slice[0][1], slice[slice.length-1][0], slice[slice.length-1][1]);
-                        L.polyline(slice, { color, weight: 6, opacity: 0.8 }).addTo(map);
-                        
-                        const originalStopIdx = stopIndicesInPolyline[k].stopIdx;
-                        const speedLine = document.getElementById(`speed-line-${originalStopIdx}`);
-                        if (speedLine) {
-                            speedLine.style.background = color;
-                        }
-                    }
-                }
-                
-                matchedCameras.forEach(cam => {
-                    const marker = L.marker([cam.lat, cam.long], {
-                        icon: L.divIcon({
-                            className: 'camera-marker-icon',
-                            html: `<div style="background: #e0f7fa; color: #00838f; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid #00838f; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"><i class="fas fa-video"></i></div>`,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12]
-                        })
-                    }).addTo(map);
-                    
-                    const popupContent = `
-                        <div style="font-size: 12px; width: 200px; font-family: sans-serif;">
-                            <b style="color: #333;">${cam.name}</b><br/>
-                            <div style="margin-top: 5px; background: #eee; border-radius: 4px; overflow: hidden; aspect-ratio: 16/9; position: relative;">
-                                <img src="https://tdcctv.data.gov.hk/${cam.key}.JPG" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 50%22><rect width=%22100%22 height=%2250%22 fill=%22%23eee%22/><text x=%2250%%22 y=%2250%%22 fill=%22%23777%22 font-size=%228%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>Camera Offline</text></svg>';" />
-                            </div>
-                        </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    
-                    const cctvHolder = document.getElementById(`cctv-holder-${cam.intervalIdx}`);
-                    if (cctvHolder) {
-                        cctvHolder.style.display = 'block';
-                        if (!cctvHolder.querySelector(`.camera-btn[data-key="${cam.key}"]`)) {
-                            const container = document.createElement('div');
-                            container.style.cssText = "display: flex; flex-direction: column; align-items: center;";
-                            container.innerHTML = `
-                                <div class="camera-btn" data-key="${cam.key}" onclick="toggleTimelineCCTV(event, '${cam.key}', '${cam.intervalIdx}')" style="background:#e0f7fa; border: 1px solid #b2ebf2; border-radius: 12px; padding: 2px 8px; font-size: 11px; color: #00838f; cursor: pointer; display: flex; align-items: center; gap: 4px; margin: 4px 0; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                    <i class="fas fa-video"></i> CCTV: ${cam.name}
-                                </div>
-                                <div class="cctv-drawer" id="timeline-cctv-drawer-${cam.intervalIdx}-${cam.key}" style="width: 280px; max-width: 90vw; margin: 5px auto; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out;">
-                                    <div style="font-size: 9px; color: #777; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center;">
-                                        <span>Live CCTV Snapshot</span>
-                                        <span id="cctv-time-${cam.intervalIdx}-${cam.key}"></span>
-                                    </div>
-                                    <div style="padding: 0 8px 8px 8px;">
-                                        <img id="cctv-img-${cam.intervalIdx}-${cam.key}" style="width: 100%; border-radius: 6px; aspect-ratio: 16/9; display: block; object-fit: cover;" />
-                                    </div>
-                                </div>
-                            `;
-                            cctvHolder.appendChild(container);
-                        }
-                    }
-                });
-                
-                const bounds = L.latLngBounds(stopIndicesInPolyline.map(s => [stops[s.stopIdx].lat, stops[s.stopIdx].long]));
-                map.fitBounds(bounds, { padding: [20, 20] });
-            } catch(e) {
-                console.error("Error drawing timeline map features:", e);
-            }
-        }
-
         async function showStops(r) {
             document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
             const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingStops')}</p>`;
-            
-            if (window.activeTimelineMap) {
-                try { window.activeTimelineMap.remove(); } catch(e){}
-                window.activeTimelineMap = null;
-            }
-            
             try {
                 const dir = r.co === 'KMB' ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound'), stops = await BusAPI.getStops(r.co, r.route, dir, r.service_type, r.routeId);
                 sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div>`;
                 sResults.querySelector('#swap-dir-btn').onclick = () => swapDirection(r);
-                
-                const mapDiv = document.createElement('div');
-                mapDiv.id = 'route-stops-map';
-                mapDiv.className = 'map-container';
-                sResults.appendChild(mapDiv);
-                
-                stops.forEach((s, idx) => {
+                stops.forEach(s => {
                     const card = document.createElement('div'); card.className = `card station-card co-${r.co}`; card.dataset.stopId = s.stop;
                     const main = document.createElement('div'); main.className = 'station-main'; main.onclick = () => toggleETADrawer(card, r, s);
                     const star = document.createElement('div'); star.className = `fav-star ${_isFavorited(r, s) ? 'active' : ''}`; star.innerHTML = `<i class='${_isFavorited(r, s) ? 'fas' : 'far'} fa-star'></i>`;
@@ -1812,66 +1452,8 @@
                     card.appendChild(drawer);
                     
                     sResults.appendChild(card);
-                    
-                    if (idx < stops.length - 1) {
-                        const connDiv = document.createElement('div');
-                        connDiv.id = `timeline-connector-${idx}`;
-                        connDiv.className = 'timeline-connector-block';
-                        connDiv.innerHTML = `
-                            <div class="vertical-line-segment" id="speed-line-${idx}"></div>
-                            <div class="cctv-container-inside" id="cctv-holder-${idx}" style="display:none;"></div>
-                        `;
-                        sResults.appendChild(connDiv);
-                    }
                 });
-                
-                setTimeout(() => {
-                    const mapEl = document.getElementById('route-stops-map');
-                    if (!mapEl) return;
-                    
-                    const routeMap = L.map('route-stops-map', {
-                        zoomControl: false,
-                        attributionControl: false
-                    });
-                    
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19
-                    }).addTo(routeMap);
-                    
-                    L.control.zoom({ position: 'topright' }).addTo(routeMap);
-                    
-                    const validStops = stops.filter(s => s.lat && s.long);
-                    if (validStops.length > 0) {
-                        routeMap.setView([validStops[0].lat, validStops[0].long], 13);
-                    }
-                    
-                    stops.forEach((s, idx) => {
-                        if (!s.lat || !s.long) return;
-                        L.marker([s.lat, s.long], {
-                            icon: L.divIcon({
-                                className: 'stop-marker-icon',
-                                html: `<div style="background: ${r.co === 'CTB' ? 'var(--ctb-blue)' : (r.co === 'NLB' ? 'var(--nlb-green)' : 'var(--kmb-red)')}; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">${idx + 1}</div>`,
-                                iconSize: [20, 20],
-                                iconAnchor: [10, 10]
-                            })
-                        }).addTo(routeMap).bindPopup(`<b>${idx + 1}. ${localized(s, 'name')}</b>`);
-                    });
-                    
-                    if (gpsEnabled && userCoords) {
-                        L.marker([userCoords.lat, userCoords.long], {
-                            icon: L.divIcon({
-                                className: 'user-marker-icon',
-                                html: `<div style="background: #2196f3; border-radius: 50%; width: 14px; height: 14px; border: 3px solid white; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4); animation: pulse 1.5s infinite;"></div>`,
-                                iconSize: [20, 20],
-                                iconAnchor: [10, 10]
-                            })
-                        }).addTo(routeMap);
-                    }
-                    
-                    drawTimelineMapFeatures(routeMap, r, stops);
-                }, 50);
-
-                if (r.targetStopId) setTimeout(() => { const tc = sResults.querySelector(`.station-card[data-stop-id='${r.targetStopId}']`); if (tc) { tc.scrollIntoView({ behavior: 'smooth', block: 'center' }); tc.style.backgroundColor = '#fff3cd'; setTimeout(() => tc.style.backgroundColor = '', 2000); toggleETADrawer(tc, r, stops.find(i => i.stop === r.targetStopId)); } }, 100);
+                if (r.targetStopId) setTimeout(() => { const tc = sResults.querySelector(`.station-card[data-stop-id='${r.targetStopId}']`); if (tc) { tc.scrollIntoView({ behavior: 'smooth', block: 'center' }); tc.style.backgroundColor = '#fff3cd'; setTimeout(() => tc.style.backgroundColor = '', 2000); toggleETADrawer(tc, r, stops.find(i => i.stop === r.targetStopId)); } }, 50);
             } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedStops')}</p>`; }
         }
 
