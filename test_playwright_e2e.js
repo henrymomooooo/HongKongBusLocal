@@ -26,7 +26,7 @@ const assert = require('assert');
     });
 
     // 1. Mock KMB Route List API
-    await page.route('https://data.etabus.gov.hk/v1/transport/kmb/route', async (route) => {
+    await page.route('https://data.etabus.gov.hk/v1/transport/kmb/route/', async (route) => {
         await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -292,9 +292,8 @@ const assert = require('assert');
         return bar && bar.style.width !== '0%';
     }, { timeout: 5000 });
 
-    // 11. Verify ticking badges update their text content over time
     console.log('Clicking the first stop card to open its ETA drawer...');
-    await page.locator('.station-card .station-main').first().click({ position: { x: 10, y: 10 } });
+    await page.locator('.station-card .station-main').first().evaluate(el => el.click());
 
     // Wait for the drawer to render and the ETA countdown badge to appear
     console.log('Waiting for ETA countdown badge...');
