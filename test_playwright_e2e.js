@@ -280,26 +280,52 @@ const assert = require('assert');
     console.log(`CCTV image source: "${imgSrc}"`);
     assert.ok(imgSrc.startsWith('https://tdcctv.data.gov.hk/BC_TEST.JPG'));
 
-    // 10. Verify Visual Progress Bar presence
-    console.log('Verifying visual refresh progress bar renders...');
-    const progressBar = page.locator('#refresh-progress-bar');
+    // 10. Verify Visual Progress Bar presence inside <header>
+    console.log('Verifying visual refresh progress bar renders inside <header>...');
+    const progressBar = page.locator('header #refresh-progress-bar');
     await progressBar.waitFor({ state: 'attached' });
     
-    // Let it tick slightly and check width transitions from 0%
-    await page.waitForTimeout(2000);
-    const widthText = await progressBar.evaluate(el => el.style.width);
-    console.log(`Progress bar width style after 2s: "${widthText}"`);
-    assert.ok(widthText !== '0%', 'Progress bar should have ticked forward');
+    // Wait for progress bar width to tick forward (become non-zero)
+    console.log('Waiting for progress bar to tick forward...');
+    await page.waitForFunction(() => {
+        const bar = document.getElementById('refresh-progress-bar');
+        return bar && bar.style.width !== '0%';
+    }, { timeout: 5000 });
+
+    // 11. Verify ticking badges update their text content over time
+    console.log('Clicking the first stop card to open its ETA drawer...');
+    await page.locator('.station-card .station-main').first().click({ position: { x: 10, y: 10 } });
+
+    // Wait for the drawer to render and the ETA countdown badge to appear
+    console.log('Waiting for ETA countdown badge...');
+    const tickingBadge = page.locator('.station-card .eta-countdown').first();
+    await tickingBadge.waitFor({ state: 'visible', timeout: 5000 });
+    
+    const initialCountdownText = await tickingBadge.innerText();
+    console.log(`Initial countdown badge text: "${initialCountdownText}"`);
+    assert.ok(initialCountdownText.includes('m') || initialCountdownText.includes('s'), 'Countdown text should contain minutes or seconds unit');
+
+    // Wait for the countdown to tick (its text changes)
+    console.log('Waiting for countdown to tick...');
+    await page.waitForFunction((initial) => {
+        const badge = document.querySelector('.station-card .eta-countdown');
+        return badge && badge.innerText !== initial;
+    }, initialCountdownText, { timeout: 5000 });
+    
+    const tickedCountdownText = await tickingBadge.innerText();
+    console.log(`Ticked countdown badge text: "${tickedCountdownText}"`);
 
     // Click manual refresh button and check progress bar resets to 0%
     console.log('Clicking manual refresh to verify progress bar resets...');
     // Return to home view so the refresh button is visible and clickable
     await page.click('.back-btn');
     await page.click('#refresh-btn');
-    await page.waitForTimeout(100);
-    const widthAfterReset = await progressBar.evaluate(el => el.style.width);
-    console.log(`Progress bar width style immediately after manual refresh: "${widthAfterReset}"`);
-    assert.strictEqual(widthAfterReset, '0%', 'Progress bar should reset to 0%');
+    
+    // Wait for progress bar width to reset to 0%
+    await page.waitForFunction(() => {
+        const bar = document.getElementById('refresh-progress-bar');
+        return bar && bar.style.width === '0%';
+    }, { timeout: 2000 });
 
     console.log('All Playwright UI tests completed successfully!');
     await browser.close();

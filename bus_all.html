@@ -2254,6 +2254,7 @@
         // Ticking engine and progress bar manager
         let secondsElapsed = 0;
         const REFRESH_INTERVAL_SEC = 30;
+        let _tickerIntervalId = null;
 
         function tickETACountdowns() {
             const now = new Date();
@@ -2275,14 +2276,17 @@
                 bar.style.transition = 'width 1s linear';
             }
             secondsElapsed = 0;
+            // Re-align the interval to start from 0 at the reset moment
+            startTickerLoop();
         }
 
         function startTickerLoop() {
-            // 1. Tick countdowns every second
-            setInterval(() => {
+            if (_tickerIntervalId) {
+                clearInterval(_tickerIntervalId);
+            }
+            _tickerIntervalId = setInterval(() => {
                 tickETACountdowns();
                 
-                // 2. Increment and update progress bar
                 secondsElapsed++;
                 const bar = document.getElementById('refresh-progress-bar');
                 if (bar) {
@@ -2290,19 +2294,18 @@
                     bar.style.width = `${pct}%`;
                 }
 
-                // 3. Trigger auto-refresh when limit reached
                 if (secondsElapsed >= REFRESH_INTERVAL_SEC) {
                     refreshAllETAs();
                 }
             }, 1000);
-
-            // 4. Handle tab visibility change
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    refreshAllETAs();
-                }
-            });
         }
+
+        // Handle tab visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshAllETAs();
+            }
+        });
 
         function copyServerCmd() {
             const cmd = document.getElementById('local-server-cmd').textContent;
