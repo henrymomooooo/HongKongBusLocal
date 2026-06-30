@@ -1568,8 +1568,9 @@
                     }
                     
                     etaEl.innerHTML = etas.slice(0, 3).map(i => {
-                        const relTime = getRelativeTime(s.co === 'NLB' ? i.estimatedArrivalTime : i.eta);
-                        return `<span>${relTime}</span>`;
+                        const targetTime = s.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
                     }).join(', ');
                     
                     if (s.co === 'CTB') etaEl.style.color = 'var(--ctb-blue)';
@@ -2086,7 +2087,11 @@
                             card.dataset.skipObserver = "true";
                             const etaList = card.querySelector(`.eta-list`);
                             if (etaList) {
-                                etaList.innerHTML = cached.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', ');
+                                etaList.innerHTML = cached.slice(0, 3).map(i => {
+                                    const targetTime = f.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                                    const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                                    return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
+                                }).join(', ');
                             }
                         }
                     }
@@ -2185,7 +2190,14 @@
             try {
                 const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
                 const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
-                const r = (etas) => { if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); };
+                const r = (etas) => {
+                    if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; }
+                    c.innerHTML = etas.slice(0, 3).map(i => {
+                        const targetTime = f.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
+                    }).join(', ');
+                };
                 if (cached) r(cached); const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
                 if (etas !== null) { setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); r(etas); }
             } catch (e) {}
@@ -2207,7 +2219,11 @@
             const render = (etas) => {
                 if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
                 content.style.opacity = '0.5'; setTimeout(() => {
-                    content.innerHTML = etas.slice(0, 3).map(i => `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span style='font-weight:bold'>${getRelativeTime(r.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`).join('');
+                    content.innerHTML = etas.slice(0, 3).map(i => {
+                        const targetTime = r.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span class="eta-countdown" data-eta-time="${targetTime || ''}" style='font-weight:bold'>${initialText}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`;
+                    }).join('');
                     content.style.opacity = '1';
                 }, 50);
                 const i = document.createElement('i'); i.className = 'fas fa-sync-alt'; i.style.cssText = 'cursor:pointer;margin-left:8px;transition:opacity 0.3s';
