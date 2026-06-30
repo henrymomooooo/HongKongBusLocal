@@ -44,6 +44,8 @@ const getDistanceCode = extractFunction('getDistance');
 const getDistanceToSegmentCode = extractFunction('getDistanceToSegment');
 const getSegmentTrafficColorCode = extractFunction('getSegmentTrafficColor');
 
+const getRelativeCountdownTimeCode = extractFunction('getRelativeCountdownTime');
+
 // Create a VM context to run the code
 const context = {
     console: console,
@@ -54,10 +56,27 @@ vm.createContext(context);
 vm.runInContext(getDistanceCode, context);
 vm.runInContext(getDistanceToSegmentCode, context);
 vm.runInContext(getSegmentTrafficColorCode, context);
+vm.runInContext(getRelativeCountdownTimeCode, context);
 
-const { getDistance, getDistanceToSegment, getSegmentTrafficColor } = context;
+const { getDistance, getDistanceToSegment, getSegmentTrafficColor, getRelativeCountdownTime } = context;
 
 test('HK Bus Traffic & Map Math Tests', async (t) => {
+
+    await t.test('getRelativeCountdownTime: formats remaining time correctly', () => {
+        const now = new Date('2026-06-30T04:00:00Z');
+        
+        // Test cases for English (en)
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:12:45', now, 'en'), '12m 45s');
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:00:45', now, 'en'), '45s');
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 11:59:59', now, 'en'), 'Arrived');
+        assert.strictEqual(getRelativeCountdownTime('', now, 'en'), 'Scheduled');
+        
+        // Test cases for Traditional Chinese (tc)
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:12:45', now, 'tc'), '12分45秒');
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:00:45', now, 'tc'), '45秒');
+        assert.strictEqual(getRelativeCountdownTime('2026-06-30 11:59:59', now, 'tc'), '已到站');
+        assert.strictEqual(getRelativeCountdownTime('', now, 'tc'), '預定班次');
+    });
 
     await t.test('getDistance: accurately calculates distance between two points', () => {
         // Hong Kong Observatory to Tsim Sha Tsui MTR Station

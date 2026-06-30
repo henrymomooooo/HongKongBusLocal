@@ -233,6 +233,30 @@
             }
         }
 
+        function getRelativeCountdownTime(targetTimeStr, nowObj, locale) {
+            if (!targetTimeStr) return locale === 'tc' ? '預定班次' : 'Scheduled';
+            
+            const normalized = targetTimeStr.replace(' ', 'T');
+            let target;
+            if (!normalized.endsWith('Z') && !normalized.includes('+') && normalized.indexOf('-', 11) === -1) {
+                target = new Date(normalized + '+08:00');
+            } else {
+                target = new Date(normalized);
+            }
+            
+            if (isNaN(target.getTime())) return locale === 'tc' ? '預定班次' : 'Scheduled';
+            const diffMs = target - nowObj;
+            if (diffMs <= 0) return locale === 'tc' ? '已到站' : 'Arrived';
+            const totalSec = Math.floor(diffMs / 1000);
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            if (mins >= 1) {
+                return locale === 'tc' ? `${mins}分${secs}秒` : `${mins}m ${secs}s`;
+            } else {
+                return locale === 'tc' ? `${secs}秒` : `${secs}s`;
+            }
+        }
+
         window.toggleTimelineCCTV = function(e, key, idx) {
             e.stopPropagation();
             const drawer = document.getElementById(`timeline-cctv-drawer-${idx}-${key}`);
