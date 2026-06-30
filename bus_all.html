@@ -2178,10 +2178,17 @@
             return card;
         }
 
+        let _isRefreshingAll = false;
         async function refreshAllETAs() {
+            if (_isRefreshingAll) return;
+            _isRefreshingAll = true;
+            resetProgressBar();
             const b = document.getElementById('refresh-btn'); if (b) b.classList.add('fa-spin');
-            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); }
-            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
+            try { 
+                const fs = await BusDB.getAll('favorites'); 
+                await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); 
+            }
+            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); _isRefreshingAll = false; }
         }
 
         function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
@@ -2244,7 +2251,59 @@
         }
 
         async function migrateFavorites() { const j = localStorage.getItem('bus_favs'); if (j) { try { const f = JSON.parse(j); if (f.length > 0) await BusDB.putAll('favorites', f.map(x => ({...x, path_desc: x.path_desc || '', groupId: x.groupId || 1}))); localStorage.removeItem('bus_favs'); } catch (e) {} } }
-        setInterval(() => refreshAllETAs(), 60000);
+        // Ticking engine and progress bar manager
+        let secondsElapsed = 0;
+        const REFRESH_INTERVAL_SEC = 30;
+
+        function tickETACountdowns() {
+            const now = new Date();
+            document.querySelectorAll('.eta-countdown').forEach(el => {
+                const targetTime = el.getAttribute('data-eta-time');
+                if (targetTime) {
+                    el.textContent = getRelativeCountdownTime(targetTime, now, userLang);
+                }
+            });
+        }
+
+        function resetProgressBar() {
+            const bar = document.getElementById('refresh-progress-bar');
+            if (bar) {
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+                // Force reflow
+                bar.offsetHeight;
+                bar.style.transition = 'width 1s linear';
+            }
+            secondsElapsed = 0;
+        }
+
+        function startTickerLoop() {
+            // 1. Tick countdowns every second
+            setInterval(() => {
+                tickETACountdowns();
+                
+                // 2. Increment and update progress bar
+                secondsElapsed++;
+                const bar = document.getElementById('refresh-progress-bar');
+                if (bar) {
+                    const pct = Math.min((secondsElapsed / REFRESH_INTERVAL_SEC) * 100, 100);
+                    bar.style.width = `${pct}%`;
+                }
+
+                // 3. Trigger auto-refresh when limit reached
+                if (secondsElapsed >= REFRESH_INTERVAL_SEC) {
+                    refreshAllETAs();
+                }
+            }, 1000);
+
+            // 4. Handle tab visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    refreshAllETAs();
+                }
+            });
+        }
+
         function copyServerCmd() {
             const cmd = document.getElementById('local-server-cmd').textContent;
             navigator.clipboard.writeText(cmd).then(() => {
@@ -2258,7 +2317,7 @@
                 const banner = document.getElementById('local-server-warning');
                 if (banner) banner.classList.remove('hidden');
             }
-            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); }
+            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); startTickerLoop(); }
         });
         let tapCount = 0, lastTap = 0; document.querySelector('header h1').addEventListener('click', () => { const now = Date.now(); if (now - lastTap > 500) tapCount = 1; else tapCount++; lastTap = now; if (tapCount === 10) { tapCount = 0; DebugLogger.toggle(true); } });
     </script>
