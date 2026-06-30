@@ -280,6 +280,27 @@ const assert = require('assert');
     console.log(`CCTV image source: "${imgSrc}"`);
     assert.ok(imgSrc.startsWith('https://tdcctv.data.gov.hk/BC_TEST.JPG'));
 
+    // 10. Verify Visual Progress Bar presence
+    console.log('Verifying visual refresh progress bar renders...');
+    const progressBar = page.locator('#refresh-progress-bar');
+    await progressBar.waitFor({ state: 'attached' });
+    
+    // Let it tick slightly and check width transitions from 0%
+    await page.waitForTimeout(2000);
+    const widthText = await progressBar.evaluate(el => el.style.width);
+    console.log(`Progress bar width style after 2s: "${widthText}"`);
+    assert.ok(widthText !== '0%', 'Progress bar should have ticked forward');
+
+    // Click manual refresh button and check progress bar resets to 0%
+    console.log('Clicking manual refresh to verify progress bar resets...');
+    // Return to home view so the refresh button is visible and clickable
+    await page.click('.back-btn');
+    await page.click('#refresh-btn');
+    await page.waitForTimeout(100);
+    const widthAfterReset = await progressBar.evaluate(el => el.style.width);
+    console.log(`Progress bar width style immediately after manual refresh: "${widthAfterReset}"`);
+    assert.strictEqual(widthAfterReset, '0%', 'Progress bar should reset to 0%');
+
     console.log('All Playwright UI tests completed successfully!');
     await browser.close();
     process.exit(0);
