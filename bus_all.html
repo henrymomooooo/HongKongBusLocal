@@ -2191,8 +2191,6 @@
             catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); _isRefreshingAll = false; }
         }
 
-        function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
-
         async function updateETA(f) {
             try {
                 const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
@@ -2284,6 +2282,10 @@
             if (_tickerIntervalId) {
                 clearInterval(_tickerIntervalId);
             }
+            
+            // Check if tab is active before starting loop
+            if (document.visibilityState === 'hidden') return;
+            
             _tickerIntervalId = setInterval(() => {
                 tickETACountdowns();
                 
@@ -2304,6 +2306,12 @@
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 refreshAllETAs();
+                startTickerLoop();
+            } else {
+                if (_tickerIntervalId) {
+                    clearInterval(_tickerIntervalId);
+                    _tickerIntervalId = null;
+                }
             }
         });
 
