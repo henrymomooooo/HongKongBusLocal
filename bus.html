@@ -1735,7 +1735,7 @@
             catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
         }
 
-        function getRelativeTime(s) { if (!s) return t('scheduled'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
+        function getRelativeTime(s) { if (!s) return t('noETA'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
 
         async function updateETA(f) {
             try {
