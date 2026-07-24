@@ -145,7 +145,7 @@ const assert = require('assert');
     });
 
     // 8. Mock CCTV Camera Registry API
-    await page.route('https://tdcctv.data.gov.hk/key-cctv-locations.json', async (route) => {
+    await page.route('https://tdcctv.data.one.gov.hk/key-cctv-locations.json', async (route) => {
         console.log(`Mocking CCTV locations call: ${route.request().url()}`);
         await route.fulfill({
             status: 200,
@@ -278,7 +278,7 @@ const assert = require('assert');
     // Verify image source was set
     const imgSrc = await page.getAttribute('#cctv-img-1-BC_TEST', 'src');
     console.log(`CCTV image source: "${imgSrc}"`);
-    assert.ok(imgSrc.startsWith('https://tdcctv.data.gov.hk/BC_TEST.JPG'));
+    assert.ok(imgSrc.startsWith('https://tdcctv.data.one.gov.hk/BC_TEST.JPG'));
 
     // 10. Verify Visual Progress Bar presence inside <header>
     console.log('Verifying visual refresh progress bar renders inside <header>...');
