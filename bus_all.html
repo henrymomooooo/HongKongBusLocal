@@ -580,10 +580,13 @@
         function setFlashCache(co, sid, r, st, d) { _etaFlashCache.set(`${co}-${sid}-${r}-${st || 1}`, { data: d, timestamp: Date.now() }); }
 
         const BusDB = {
-            DB_NAME: 'HKBusDB_enhanced', DB_VERSION: 7, db: null,
+            DB_NAME: 'HKBusDB_enhanced', DB_VERSION: 7, db: null, _memDb: {},
             async init() {
                 return new Promise((resolve) => {
-                    if (!window.indexedDB) return resolve();
+                    if (typeof indexedDB === 'undefined' || !window.indexedDB) {
+                        this.putAll('favorite_groups', [{ id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 }, { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }]).then(resolve);
+                        return;
+                    }
                     const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
@@ -682,7 +685,35 @@
             },
             async _op(storeName, mode, callback) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) return resolve(mode === 'readonly' ? [] : null);
+                    if (!this.db) {
+                        if (!this._memDb) this._memDb = {};
+                        if (!this._memDb[storeName]) this._memDb[storeName] = [];
+                        const mem = this._memDb[storeName];
+                        const keyField = (storeName === 'routes' || storeName === 'route_stops' || storeName === 'stops' || storeName === 'route_shapes' ? 'id' : (storeName === 'favorites' ? 'favId' : (storeName === 'favorite_groups' ? 'id' : 'key')));
+                        if (mode === 'readonly') {
+                            const fakeStore = {
+                                get: (k) => mem.find(x => x[keyField] === k) || null,
+                                getAll: () => [...mem]
+                            };
+                            return resolve(callback(fakeStore));
+                        }
+                        const fakeStore = {
+                            put: (item) => {
+                                const key = item[keyField] || (mem.length > 0 ? Math.max(...mem.map(x => (typeof x[keyField] === 'number' ? x[keyField] : 0))) + 1 : 1);
+                                const toSave = { ...item, [keyField]: key };
+                                const idx = mem.findIndex(x => x[keyField] === key);
+                                if (idx >= 0) mem[idx] = toSave; else mem.push(toSave);
+                                return key;
+                            },
+                            clear: () => { this._memDb[storeName] = []; },
+                            delete: (k) => {
+                                const idx = mem.findIndex(x => x[keyField] === key);
+                                if (idx >= 0) mem.splice(idx, 1);
+                            }
+                        };
+                        const res = callback(fakeStore);
+                        return resolve(res);
+                    }
                     try {
                         const tx = this.db.transaction(storeName, mode), store = tx.objectStore(storeName), res = callback(store);
                         if (res instanceof IDBRequest) {
@@ -1526,10 +1557,14 @@
                                 <i class="fas fa-spinner fa-spin"></i> Loading ETA...
                             </div>
                         </div>
-                        <div class="fav-star ${isFav ? 'active' : ''}" id="stop-star-${s.co}-${s.stopId}-${r.route}-${st}" style="font-size:20px; color:${isFav ? '#ffc107' : '#ccc'}; cursor:pointer; padding:10px;" onclick="handleStopRouteFavorite(event, '${s.co}', '${s.stopId}', '${r.route}', ${st}, '${s.name_tc}', '${s.name_en}', '${r.routeId || ''}', '${r.bound || 'O'}')">
+                        <div class="fav-star ${isFav ? 'active' : ''}" id="stop-star-${s.co}-${s.stopId}-${r.route}-${st}" style="font-size:20px; color:${isFav ? '#ffc107' : '#ccc'}; cursor:pointer; padding:10px;">
                              <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
                         </div>
                     `;
+                    const starEl = card.querySelector('.fav-star');
+                    if (starEl) {
+                        starEl.onclick = (e) => handleStopRouteFavorite(e, s.co, s.stopId, r.route, st, s.name_tc, s.name_en, r.routeId || '', r.bound || 'O');
+                    }
                     listContainer.appendChild(card);
                 });
                 
@@ -1926,21 +1961,49 @@
 
         async function showGroupSelector(r, s, moveFav = null) {
             _currentFavContext = { r, s }; _currentMoveContext = moveFav;
-            const groups = await BusDB.getAll('favorite_groups');
+            let groups = (await BusDB.getAll('favorite_groups')) || [];
+            if (!groups || groups.length === 0) {
+                const defaultGroups = [
+                    { id: 1, name_tc: '去程', name_en: 'Outgoing', sortOrder: 1 },
+                    { id: 2, name_tc: '回程', name_en: 'Back Home', sortOrder: 2 }
+                ];
+                try {
+                    await BusDB.putAll('favorite_groups', defaultGroups);
+                    groups = (await BusDB.getAll('favorite_groups')) || [];
+                } catch (e) {
+                    console.warn('Failed seeding default groups in showGroupSelector:', e);
+                }
+                if (!groups || groups.length === 0) groups = defaultGroups;
+            }
             const body = `<div id='group-list'>${groups.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(g => `<div class='group-item' onclick='selectGroup(${g.id})'><i class='fas fa-folder'></i> <span>${localized(g, 'name')}</span></div>`).join('')}</div>`;
             const footer = `<div style='width:100%'><input type='text' id='new-group-input' placeholder='${t('newGroupName')}' style='width:100%;margin-bottom:8px'><button class='btn btn-save' style='width:100%' onclick='createNewGroupAndSave()'><i class='fas fa-plus'></i> ${t('addGroup')}</button></div>`;
             openGenericModal(t('selectGroup'), body, footer);
-            setTimeout(() => document.getElementById('new-group-input').addEventListener('keyup', e => { if (e.key === 'Enter') createNewGroupAndSave(); }), 100);
+            setTimeout(() => document.getElementById('new-group-input')?.addEventListener('keyup', e => { if (e.key === 'Enter') createNewGroupAndSave(); }), 100);
         }
         window.selectGroup = async (id) => { if (_currentMoveContext) { _currentMoveContext.groupId = id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = id; } else await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, id); closeGenericModal(); renderFavorites(); };
 
         async function createNewGroupAndSave() {
-            const name = document.getElementById('new-group-input').value.trim(); if (!name) return alert(t('invalidName'));
-            const groups = await BusDB.getAll('favorite_groups'), next = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
-            await BusDB.put('favorite_groups', { name_tc: name, name_en: name, sortOrder: next });
-            const all = await BusDB.getAll('favorite_groups'), saved = all.reduce((p, c) => (p.id > c.id) ? p : c);
-            if (_currentMoveContext) { _currentMoveContext.groupId = saved.id; await BusDB.put('favorites', _currentMoveContext); activeGroupId = saved.id; }
-            else if (_currentFavContext) await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, saved.id);
+            const input = document.getElementById('new-group-input');
+            const name = input ? input.value.trim() : '';
+            if (!name) return alert(t('invalidName'));
+            let groups = [];
+            try { groups = (await BusDB.getAll('favorite_groups')) || []; } catch (e) { console.warn(e); }
+            const next = groups.length > 0 ? Math.max(...groups.map(g => g.sortOrder || 0)) + 1 : 1;
+            let savedId = null;
+            try {
+                savedId = await BusDB.put('favorite_groups', { id: next, name_tc: name, name_en: name, sortOrder: next });
+            } catch (e) {
+                console.warn('Failed saving new favorite group to BusDB:', e);
+            }
+            let all = [];
+            try { all = (await BusDB.getAll('favorite_groups')) || []; } catch (e) { console.warn(e); }
+            let saved = savedId ? all.find(g => g.id === savedId) : null;
+            if (!saved && all.length > 0) {
+                saved = all.reduce((p, c) => ((p.id || 0) > (c.id || 0)) ? p : c, all[0]);
+            }
+            const targetGroupId = (saved && saved.id) || savedId || next || 1;
+            if (_currentMoveContext) { _currentMoveContext.groupId = targetGroupId; await BusDB.put('favorites', _currentMoveContext); activeGroupId = targetGroupId; }
+            else if (_currentFavContext) await saveFavorite(_currentFavContext.r, _currentFavContext.s, true, targetGroupId);
             closeGenericModal(); renderFavorites();
         }
 
