@@ -81,7 +81,6 @@
         .modal-header { padding: 15px; background: var(--kmb-red); color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .modal-content { padding: 15px; max-height: 60vh; overflow-y: auto; }
         .group-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .add-group-area { padding: 15px; border-top: 1px solid #eee; background: #f9f9f9; }
         .modal-footer { padding: 10px 15px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; }
         .btn { padding: 8px 16px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #eee; color: #666; }
@@ -95,12 +94,6 @@
         
         /* GPS & Sort controls */
         .fav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; user-select: none; -webkit-user-select: none; }
-        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-        .switch input:checked + .slider { background-color: var(--kmb-red); }
-        .switch input:checked + .slider:before { transform: translateX(16px); }
         #sort-mode-btn { padding: 4px 8px; font-size: 12px; border-radius: 12px; display: flex; align-items: center; gap: 4px; background: #eee; color: #666; border: 1px solid #ddd; cursor: pointer; font-weight: bold; transition: all 0.2s; }
         #sort-mode-btn.active { background-color: var(--kmb-red); color: white; border-color: var(--kmb-red); }
         
@@ -149,8 +142,6 @@
             </h2>
             <div id="favorites-tabs" class="fav-tab-bar"></div>
             <div class="fav-controls" style="justify-content: flex-end;">
-                <!-- Hidden GPS checkbox to preserve existing JS logic compatibility -->
-                <input type="checkbox" id="gps-toggle" style="display: none;">
                 <!-- Sort Mode Toggle Button -->
                 <button id="sort-mode-btn" onclick="toggleSortMode()">
                     <i class="fas fa-sort"></i> <span id="sort-mode-text" data-i18n="sortCustom">Custom</span>
@@ -188,7 +179,6 @@
     </div>
     <script>
         const APP_VERSION = '1.3.0';
-        const UNIFIED_STOPS_DATA = [];
         let activeGroupId = null, _editingGroupId = null, _etaObserver = null;
         const _visibleFavIds = new Set();
         let activeTimelineMap = null;
@@ -379,7 +369,6 @@
         function startGPS() {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by this browser.");
-                document.getElementById('gps-toggle').checked = false;
                 gpsEnabled = false;
                 localStorage.setItem('app_gps_enabled', 'false');
                 updateGPSUI(false);
@@ -401,8 +390,6 @@
                     console.error("GPS Error:", error);
                     gpsEnabled = false;
                     localStorage.setItem('app_gps_enabled', 'false');
-                    const toggle = document.getElementById('gps-toggle');
-                    if (toggle) toggle.checked = false;
                     updateGPSUI(false);
                     userCoords = null;
                     if (error.code === error.PERMISSION_DENIED) {
@@ -436,18 +423,14 @@
         }
 
         function toggleHeaderGPS() {
-            const toggle = document.getElementById('gps-toggle');
-            if (toggle) {
-                toggleGPS(!toggle.checked);
-            }
+            toggleGPS(!gpsEnabled);
         }
 
         function updateGPSUI(state) {
             const icon = document.getElementById('gps-icon');
             const text = document.getElementById('gps-status-text');
-            const toggle = document.getElementById('gps-toggle');
             const pill = document.getElementById('gps-toggle-pill');
-            if (!icon || !text || !toggle) return;
+            if (!icon || !text) return;
             if (pill) {
                 pill.classList.remove('active', 'connecting');
             }
@@ -455,19 +438,16 @@
                 icon.className = 'fas fa-spinner fa-spin';
                 icon.style.color = '#ff9800'; // Match orange on header
                 text.textContent = t('gpsAcquiring');
-                toggle.checked = true;
                 if (pill) pill.classList.add('connecting');
             } else if (state === true) {
                 icon.className = 'fas fa-location-crosshairs';
                 icon.style.color = '#fff'; // White color on header
                 text.textContent = t('gpsEnabled');
-                toggle.checked = true;
                 if (pill) pill.classList.add('active');
             } else {
                 icon.className = 'fas fa-location-arrow';
                 icon.style.color = 'rgba(255,255,255,0.6)'; // Translucent white on header
                 text.textContent = t('gpsDisabled');
-                toggle.checked = false;
             }
         }
 
@@ -487,9 +467,6 @@
         function toggleSortMode() {
             if (favSortMode === 'custom') {
                 if (!gpsEnabled) {
-                    gpsEnabled = true;
-                    const toggle = document.getElementById('gps-toggle');
-                    if (toggle) toggle.checked = true;
                     startGPS();
                 }
                 favSortMode = 'distance';
@@ -2246,20 +2223,8 @@
             }
         });
 
-        function copyServerCmd() {
-            const cmd = document.getElementById('local-server-cmd').textContent;
-            navigator.clipboard.writeText(cmd).then(() => {
-                alert(t('copied'));
-            }).catch(err => {
-                console.error('Failed to copy command:', err);
-            });
-        }
         document.addEventListener('DOMContentLoaded', async () => {
-            if (window.location.protocol === 'file:') {
-                const banner = document.getElementById('local-server-warning');
-                if (banner) banner.classList.remove('hidden');
-            }
-            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); startTickerLoop(); }
+            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { startGPS(); } else { updateGPSUI(false); } renderFavorites(); startTickerLoop(); }
         });
         let tapCount = 0, lastTap = 0; document.querySelector('header h1').addEventListener('click', () => { const now = Date.now(); if (now - lastTap > 500) tapCount = 1; else tapCount++; lastTap = now; if (tapCount === 10) { tapCount = 0; DebugLogger.toggle(true); } });
     </script>
