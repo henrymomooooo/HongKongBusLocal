@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "node --test test_proxy.js test_traffic_map.js test_back_button.js test_station_eta_update.js test_favorite_save.js"
+    "test": "node --test test_proxy.js test_traffic_map.js test_back_button.js test_station_eta_update.js test_favorite_save.js test_background_api.js"
   },
   "repository": {
     "type": "git",
