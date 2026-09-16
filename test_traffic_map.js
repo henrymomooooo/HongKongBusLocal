@@ -69,13 +69,13 @@ test('HK Bus Traffic & Map Math Tests', async (t) => {
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:12:45', now, 'en'), '12m 45s');
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:00:45', now, 'en'), '45s');
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 11:59:59', now, 'en'), 'Arrived');
-        assert.strictEqual(getRelativeCountdownTime('', now, 'en'), 'Scheduled');
+        assert.strictEqual(getRelativeCountdownTime('', now, 'en'), 'No ETA');
         
         // Test cases for Traditional Chinese (tc)
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:12:45', now, 'tc'), '12分45秒');
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 12:00:45', now, 'tc'), '45秒');
         assert.strictEqual(getRelativeCountdownTime('2026-06-30 11:59:59', now, 'tc'), '已到站');
-        assert.strictEqual(getRelativeCountdownTime('', now, 'tc'), '預定班次');
+        assert.strictEqual(getRelativeCountdownTime('', now, 'tc'), '暫無預計到站時間');
     });
 
     await t.test('getDistance: accurately calculates distance between two points', () => {

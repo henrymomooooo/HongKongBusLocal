@@ -53,6 +53,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; }
+        #refresh-progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255, 255, 255, 0.7); width: 0%; transition: width 1s linear; pointer-events: none; }
         header h1 { margin: 0; font-size: 24px; padding: 5px 0; }
         .lang-switch { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; min-width: 28px; text-align: center; line-height: 1; }
         .header-gps { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; line-height: 1; transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
@@ -161,6 +162,7 @@
         </div>
         <h1><i class="fas fa-bus"></i> <span data-i18n="title">HK Bus Arrivals</span></h1>
         <div class="lang-switch" id="lang-switch" onclick="toggleLanguage()"></div>
+        <div id="refresh-progress-bar"></div>
     </header>
     <div class="container">
         <div id="favorites-section" class="section">
@@ -1366,8 +1368,9 @@
                     }
                     
                     etaEl.innerHTML = etas.slice(0, 3).map(i => {
-                        const relTime = getRelativeTime(s.co === 'NLB' ? i.estimatedArrivalTime : i.eta);
-                        return `<span>${relTime}</span>`;
+                        const targetTime = s.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
                     }).join(', ');
                     
                     if (s.co === 'CTB') etaEl.style.color = 'var(--ctb-blue)';
@@ -1434,7 +1437,8 @@
 
         async function selectRoute(r) {
             document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
-            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingDirections')}</p>`;
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden');
+            sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div><div id='directions-loading-container' style='text-align:center;padding:20px 0;color:#666;'><i class='fas fa-spinner fa-spin' style='font-size:24px;margin-bottom:10px;color:var(--kmb-red);display:block;'></i>${t('loadingDirections')}</div>`;
             try {
                 const container = document.createElement('div');
                 if (r.co === 'KMB') {
@@ -1450,7 +1454,9 @@
                     }
                 } else if (r.co === 'NLB') { allRoutes.filter(v => v.co === 'NLB' && v.route === r.route).forEach(v => { const card = document.createElement('div'); card.className = 'card co-NLB'; card.innerHTML = localized(v, 'dest'); card.onclick = () => showStops(v); container.appendChild(card); }); }
                 sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div>`; sResults.appendChild(container);
-            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedDirections')}</p>`; }
+            } catch (e) {
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div><p style='text-align:center;color:red'>${t('failedDirections')}</p>`;
+            }
         }
 
         async function swapDirection(curr) {
@@ -1463,7 +1469,10 @@
 
         async function showStops(r) {
             document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden');
-            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden'); sResults.innerHTML = `<p style='text-align:center'>${t('loadingStops')}</p>`;
+            const sResults = document.getElementById('stop-selection-results'); sResults.classList.remove('hidden');
+            sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div><div id='stops-loading-container' style='text-align:center;padding:20px 0;color:#666;'><i class='fas fa-spinner fa-spin' style='font-size:24px;margin-bottom:10px;color:var(--kmb-red);display:block;'></i>${t('loadingStops')}</div>`;
+            const swapBtnInit = sResults.querySelector('#swap-dir-btn');
+            if (swapBtnInit) swapBtnInit.onclick = () => swapDirection(r);
             try {
                 const dir = r.co === 'KMB' ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound'), stops = await BusAPI.getStops(r.co, r.route, dir, r.service_type, r.routeId);
                 sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div>`;
@@ -1492,7 +1501,9 @@
                     sResults.appendChild(card);
                 });
                 if (r.targetStopId) setTimeout(() => { const tc = sResults.querySelector(`.station-card[data-stop-id='${r.targetStopId}']`); if (tc) { tc.scrollIntoView({ behavior: 'smooth', block: 'center' }); tc.style.backgroundColor = '#fff3cd'; setTimeout(() => tc.style.backgroundColor = '', 2000); toggleETADrawer(tc, r, stops.find(i => i.stop === r.targetStopId)); } }, 50);
-            } catch (e) { sResults.innerHTML = `<p style='text-align:center;color:red'>${t('failedStops')}</p>`; }
+            } catch (e) {
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span></div></div><p style='text-align:center;color:red'>${t('failedStops')}</p>`;
+            }
         }
 
         function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
@@ -1680,7 +1691,11 @@
                             card.dataset.skipObserver = "true";
                             const etaList = card.querySelector(`.eta-list`);
                             if (etaList) {
-                                etaList.innerHTML = cached.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', ');
+                                etaList.innerHTML = cached.slice(0, 3).map(i => {
+                                    const targetTime = f.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                                    const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                                    return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
+                                }).join(', ');
                             }
                         }
                     }
@@ -1767,11 +1782,43 @@
             return card;
         }
 
+        let _isRefreshingAll = false;
         async function refreshAllETAs() {
+            if (_isRefreshingAll) return;
+            _isRefreshingAll = true;
+            resetProgressBar();
             const b = document.getElementById('refresh-btn'); if (b) b.classList.add('fa-spin');
-            try { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } const fs = await BusDB.getAll('favorites'); await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); }
-            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); }
+            try { 
+                const fs = await BusDB.getAll('favorites'); 
+                await Promise.all(fs.filter(f => f.groupId === activeGroupId && _visibleFavIds.has(f.favId)).map(f => updateETA(f))); 
+            }
+            catch (e) { console.error('Refresh Error:', e); } finally { if (b) b.classList.remove('fa-spin'); _isRefreshingAll = false; }
         }
+
+        function getRelativeCountdownTime(targetTimeStr, nowObj, locale) {
+            if (!targetTimeStr) return locale === 'tc' ? '暫無預計到站時間' : 'No ETA';
+            
+            const normalized = targetTimeStr.replace(' ', 'T');
+            let target;
+            if (!normalized.endsWith('Z') && !normalized.includes('+') && normalized.indexOf('-', 11) === -1) {
+                target = new Date(normalized + '+08:00');
+            } else {
+                target = new Date(normalized);
+            }
+            
+            if (isNaN(target.getTime())) return locale === 'tc' ? '暫無預計到站時間' : 'No ETA';
+            const diffMs = target - nowObj;
+            if (diffMs <= 0) return locale === 'tc' ? '已到站' : 'Arrived';
+            const totalSec = Math.floor(diffMs / 1000);
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            if (mins >= 1) {
+                return locale === 'tc' ? `${mins}分${secs}秒` : `${mins}m ${secs}s`;
+            } else {
+                return locale === 'tc' ? `${secs}秒` : `${secs}s`;
+            }
+        }
+        window.getRelativeCountdownTime = getRelativeCountdownTime;
 
         function getRelativeTime(s) { if (!s) return t('noETA'); const d = Math.floor((new Date(s.replace(' ', 'T')) - new Date()) / 60000); return d <= 0 ? `0 ${t('min')}` : `${d} ${t('min')}`; }
 
@@ -1779,7 +1826,14 @@
             try {
                 const c = document.getElementById(`eta-${f.favId}`); if (!c) return;
                 const cached = getFlashCache(f.co, f.stopId, f.route, f.serviceType || 1);
-                const r = (etas) => { if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; } c.innerHTML = etas.slice(0, 3).map(i => `<span>${getRelativeTime(f.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span>`).join(', '); };
+                const r = (etas) => {
+                    if (!etas || etas.length === 0) { c.textContent = t('noETA'); return; }
+                    c.innerHTML = etas.slice(0, 3).map(i => {
+                        const targetTime = f.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<span class="eta-countdown" data-eta-time="${targetTime || ''}">${initialText}</span>`;
+                    }).join(', ');
+                };
                 if (cached) r(cached); const etas = await BusAPI.getETA(f.co, f.stopId, f.route, f.serviceType || 1, f.routeId, f.bound, f.direction);
                 if (etas !== null) { setFlashCache(f.co, f.stopId, f.route, f.serviceType || 1, etas); r(etas); }
             } catch (e) {}
@@ -1801,7 +1855,11 @@
             const render = (etas) => {
                 if (!etas || etas.length === 0) { content.textContent = t('noETA'); return; }
                 content.style.opacity = '0.5'; setTimeout(() => {
-                    content.innerHTML = etas.slice(0, 3).map(i => `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span style='font-weight:bold'>${getRelativeTime(r.co === 'NLB' ? i.estimatedArrivalTime : i.eta)}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`).join('');
+                    content.innerHTML = etas.slice(0, 3).map(i => {
+                        const targetTime = r.co === 'NLB' ? i.estimatedArrivalTime : i.eta;
+                        const initialText = getRelativeCountdownTime(targetTime, new Date(), userLang);
+                        return `<div style='display:flex;justify-content:space-between;margin-bottom:4px'><span class="eta-countdown" data-eta-time="${targetTime || ''}" style='font-weight:bold'>${initialText}</span><span style='font-size:12px;color:#777'>${(r.co === 'NLB' ? (userLang === 'tc' ? i.remark_c : i.remark_e) : localized(i, 'rmk')) || ''}</span></div>`;
+                    }).join('');
                     content.style.opacity = '1';
                 }, 50);
                 const i = document.createElement('i'); i.className = 'fas fa-sync-alt'; i.style.cssText = 'cursor:pointer;margin-left:8px;transition:opacity 0.3s';
@@ -1810,9 +1868,30 @@
                 status.innerHTML = ''; status.textContent = `${t('lastUpdated')} ${new Date().toLocaleTimeString()}`; status.appendChild(i);
             };
             if (cached) render(cached); else content.textContent = t('loadingStops');
-            const etas = await BusAPI.getETA(r.co, s.stop, r.route, st, r.routeId, r.bound, r.direction);
-            if (etas !== null) { setFlashCache(r.co, s.stop, r.route, st, etas); render(etas); }
-            _drawerFetching.delete(key); if (manual) { const now = Date.now(); _stationRefreshCooldowns.set(key, now); setTimeout(() => { const i = status.querySelector('.fa-sync-alt'); if (i) { i.classList.remove('fa-spin'); i.style.opacity = '0.3'; i.style.cursor = 'not-allowed'; setTimeout(() => { if (status.contains(i) && _stationRefreshCooldowns.get(key) === now) { i.style.opacity = '1'; i.style.cursor = 'pointer'; } }, 5000); } }, 500); }
+            try {
+                const etas = await BusAPI.getETA(r.co, s.stop, r.route, st, r.routeId, r.bound, r.direction);
+                if (etas !== null) { setFlashCache(r.co, s.stop, r.route, st, etas); render(etas); }
+            } finally {
+                _drawerFetching.delete(key);
+                if (manual) {
+                    const now = Date.now();
+                    _stationRefreshCooldowns.set(key, now);
+                    setTimeout(() => {
+                        const i = status.querySelector('.fa-sync-alt');
+                        if (i) {
+                            i.classList.remove('fa-spin');
+                            i.style.opacity = '0.3';
+                            i.style.cursor = 'not-allowed';
+                            setTimeout(() => {
+                                if (status.contains(i) && _stationRefreshCooldowns.get(key) === now) {
+                                    i.style.opacity = '1';
+                                    i.style.cursor = 'pointer';
+                                }
+                            }, 5000);
+                        }
+                    }, 500);
+                }
+            }
         }
 
         async function handleFavoriteClick(star, r, s) {
@@ -1822,7 +1901,68 @@
         }
 
         async function migrateFavorites() { const j = localStorage.getItem('bus_favs'); if (j) { try { const f = JSON.parse(j); if (f.length > 0) await BusDB.putAll('favorites', f.map(x => ({...x, path_desc: x.path_desc || '', groupId: x.groupId || 1}))); localStorage.removeItem('bus_favs'); } catch (e) {} } }
-        setInterval(() => refreshAllETAs(), 60000);
+        // Ticking engine and progress bar manager
+        let secondsElapsed = 0;
+        const REFRESH_INTERVAL_SEC = 30;
+        let _tickerIntervalId = null;
+
+        function tickETACountdowns() {
+            const now = new Date();
+            document.querySelectorAll('.eta-countdown').forEach(el => {
+                const targetTime = el.getAttribute('data-eta-time');
+                if (targetTime) {
+                    el.textContent = getRelativeCountdownTime(targetTime, now, userLang);
+                }
+            });
+        }
+        window.tickETACountdowns = tickETACountdowns;
+
+        function resetProgressBar() {
+            const bar = document.getElementById('refresh-progress-bar');
+            if (bar) {
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+                bar.offsetHeight;
+                bar.style.transition = 'width 1s linear';
+            }
+            secondsElapsed = 0;
+            startTickerLoop();
+        }
+
+        function startTickerLoop() {
+            if (_tickerIntervalId) {
+                clearInterval(_tickerIntervalId);
+            }
+            if (document.visibilityState === 'hidden') return;
+            
+            _tickerIntervalId = setInterval(() => {
+                tickETACountdowns();
+                
+                secondsElapsed++;
+                const bar = document.getElementById('refresh-progress-bar');
+                if (bar) {
+                    const pct = Math.min((secondsElapsed / REFRESH_INTERVAL_SEC) * 100, 100);
+                    bar.style.width = `${pct}%`;
+                }
+
+                if (secondsElapsed >= REFRESH_INTERVAL_SEC) {
+                    refreshAllETAs();
+                }
+            }, 1000);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshAllETAs();
+                startTickerLoop();
+            } else {
+                if (_tickerIntervalId) {
+                    clearInterval(_tickerIntervalId);
+                    _tickerIntervalId = null;
+                }
+            }
+        });
+
         function copyServerCmd() {
             const cmd = document.getElementById('local-server-cmd').textContent;
             navigator.clipboard.writeText(cmd).then(() => {
@@ -1836,7 +1976,7 @@
                 const banner = document.getElementById('local-server-warning');
                 if (banner) banner.classList.remove('hidden');
             }
-            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); }
+            try { setupETAObserver(); await BusDB.init(); await migrateFavorites(); await syncRoutes(); updateLabels(); } catch (e) { console.error(e); } finally { const l = document.getElementById('initial-loading'); if (l) l.classList.add('hidden'); updateSortModeUI(); if (gpsEnabled) { const t = document.getElementById('gps-toggle'); if (t) t.checked = true; startGPS(); } else { updateGPSUI(false); } renderFavorites(); startTickerLoop(); }
         });
         let tapCount = 0, lastTap = 0; document.querySelector('header h1').addEventListener('click', () => { const now = Date.now(); if (now - lastTap > 500) tapCount = 1; else tapCount++; lastTap = now; if (tapCount === 10) { tapCount = 0; DebugLogger.toggle(true); } });
     </script>
