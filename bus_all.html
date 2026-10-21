@@ -17,7 +17,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); }
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         header { background: var(--kmb-red); color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
-        header h1 { margin: 0; font-size: 24px; padding: 5px 0; }
+        header h1 { margin: 0; font-size: 24px; padding: 5px 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
         #refresh-progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255, 255, 255, 0.7); width: 0%; transition: width 1s linear; pointer-events: none; }
         .lang-switch { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; min-width: 28px; text-align: center; line-height: 1; }
         .header-gps { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; line-height: 1; transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
@@ -130,7 +130,7 @@
             <i class="fas fa-location-arrow" id="gps-icon" style="color: rgba(255,255,255,0.6);"></i>
             <span id="gps-status-text" data-i18n="gpsDisabled">GPS Off</span>
         </div>
-        <h1><i class="fas fa-bus"></i> <span data-i18n="title">HK Bus Arrivals</span></h1>
+        <h1 onclick="showHome()"><i class="fas fa-bus"></i> <span data-i18n="title">HK Bus Arrivals</span></h1>
         <div class="lang-switch" id="lang-switch" onclick="toggleLanguage()"></div>
         <div id="refresh-progress-bar"></div>
     </header>
@@ -296,7 +296,7 @@
                 enterRoute: "輸入路線 (例如 1A, 962X, 3M)...", enterStop: "輸入車站名稱...",
                 refreshETAs: "重新整理到站時間", refreshCache: "更新路線緩存",
                 loadingStops: "正在載入車站...", loadingDirections: "正在載入方向...",
-                failedStops: "載入車站失敗。", failedDirections: "載入方向失敗。",
+                failedStops: "載入車站失敗。", failedDirections: "載入方向失敗。", retry: "重試",
                 noFavorites: "尚未有最愛車站。請搜尋路線並添加！", emptyGroup: "搜尋路線以加入此群組",
                 removeFavorite: "移除此最愛車站？", syncing: "正在從 API 同步路線...",
                 initializing: "正在初始化路線...", next: "下班車:", noETA: "暫無預計到站時間",
@@ -314,7 +314,7 @@
                 enterRoute: "Enter Route (e.g. 1A, 962X, 3M)...", enterStop: "Enter Stop Name...",
                 refreshETAs: "Refresh ETAs", refreshCache: "Refresh Route Cache",
                 loadingStops: "Loading stops...", loadingDirections: "Loading directions...",
-                failedStops: "Failed to load stops.", failedDirections: "Failed to load directions.",
+                failedStops: "Failed to load stops.", failedDirections: "Failed to load directions.", retry: "Retry",
                 noFavorites: "No favorites yet. Search a route to add one!", emptyGroup: "Search for a route to add it to this group",
                 removeFavorite: "Remove this favorite?", syncing: "Syncing routes from API...",
                 initializing: "Initializing routes...", next: "Next:", noETA: "No ETA",
@@ -906,6 +906,7 @@
         function switchTab(e, type) {
             if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; }
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.currentTarget.classList.add('active');
+            document.getElementById('favorites-section').classList.remove('hidden');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
             if (type === 'route') { document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); }
@@ -1505,9 +1506,21 @@
                         const d2 = document.createElement('div'); d2.className = 'card co-CTB'; d2.innerHTML = `${t('to')} ${localized(r, 'orig')} <small>(${t('inbound')})</small>`; d2.onclick = () => showStops({...r, direction: 'inbound', dest_tc: r.orig_tc, orig_tc: r.dest_tc, dest_en: r.orig_en, orig_en: r.dest_en}); container.appendChild(d2);
                     }
                 } else if (r.co === 'NLB') { allRoutes.filter(v => v.co === 'NLB' && v.route === r.route).forEach(v => { const card = document.createElement('div'); card.className = 'card co-NLB'; card.innerHTML = localized(v, 'dest'); card.onclick = () => showStops(v); container.appendChild(card); }); }
-                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div>`; sResults.appendChild(container);
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div>`;
+                if (container.children.length === 0) {
+                    const errDiv = document.createElement('div');
+                    errDiv.style.cssText = 'text-align:center;padding:20px 0;color:red';
+                    errDiv.innerHTML = `<p style='margin:0 0 10px 0'>${t('failedDirections')}</p><button class='btn btn-save' id='retry-dir-btn'><i class='fas fa-sync-alt'></i> ${t('retry')}</button>`;
+                    sResults.appendChild(errDiv);
+                    const retryBtn = sResults.querySelector('#retry-dir-btn');
+                    if (retryBtn) retryBtn.onclick = () => selectRoute(r);
+                } else {
+                    sResults.appendChild(container);
+                }
             } catch (e) {
-                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div><p style='text-align:center;color:red'>${t('failedDirections')}</p>`;
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><span style='font-weight:bold'>${r.route} (${r.co})</span></div><div style='text-align:center;padding:20px 0;color:red'><p style='margin:0 0 10px 0'>${t('failedDirections')}</p><button class='btn btn-save' id='retry-dir-btn'><i class='fas fa-sync-alt'></i> ${t('retry')}</button></div>`;
+                const retryBtn = sResults.querySelector('#retry-dir-btn');
+                if (retryBtn) retryBtn.onclick = () => selectRoute(r);
             }
         }
 
@@ -1667,6 +1680,7 @@
             
             try {
                 const dir = r.co === 'KMB' ? (r.bound === 'O' ? 'outbound' : 'inbound') : (r.direction || 'outbound'), stops = await BusAPI.getStops(r.co, r.route, dir, r.service_type, r.routeId);
+                if (!stops || stops.length === 0) throw new Error('Empty stops');
                 sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div>`;
                 sResults.querySelector('#swap-dir-btn').onclick = () => swapDirection(r);
                 
@@ -1757,11 +1771,15 @@
                 }, 50);
 
             } catch (e) {
-                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span></div></div><p style='text-align:center;color:red'>${t('failedStops')}</p>`;
+                sResults.innerHTML = `<div class='results-header'><button class='back-btn' onclick='showHome()'><i class='fas fa-arrow-left'></i> ${t('back')}</button><div style='display:flex;align-items:center;gap:10px'><span style='font-weight:bold'>${r.route} ${t('to')} ${localized(r, 'dest')}</span><i class='fas fa-right-left' id='swap-dir-btn' style='cursor:pointer;color:var(--kmb-red)' title='Swap Direction'></i></div></div><div style='text-align:center;padding:20px 0;color:red'><p style='margin:0 0 10px 0'>${t('failedStops')}</p><button class='btn btn-save' id='retry-stops-btn'><i class='fas fa-sync-alt'></i> ${t('retry')}</button></div>`;
+                const swapBtnErr = sResults.querySelector('#swap-dir-btn');
+                if (swapBtnErr) swapBtnErr.onclick = () => swapDirection(r);
+                const retryBtn = sResults.querySelector('#retry-stops-btn');
+                if (retryBtn) retryBtn.onclick = () => showStops(r);
             }
         }
 
-        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
+        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } exitStopDetails(); document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
 
         async function goToRouteStopsFromFav(f) {
             document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden'); document.getElementById('stop-selection-results').classList.remove('hidden');

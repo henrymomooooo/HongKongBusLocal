@@ -71,6 +71,18 @@ function createTestEnv(htmlContent) {
                 }
                 return null;
             }
+            if (sel === '#retry-stops-btn') {
+                if (this._innerHTML.includes("id='retry-stops-btn'") || this._innerHTML.includes('id="retry-stops-btn"')) {
+                    return new MockElement('retry-stops-btn');
+                }
+                return null;
+            }
+            if (sel === '#retry-dir-btn') {
+                if (this._innerHTML.includes("id='retry-dir-btn'") || this._innerHTML.includes('id="retry-dir-btn"')) {
+                    return new MockElement('retry-dir-btn');
+                }
+                return null;
+            }
             if (sel === '#stops-loading-container') {
                 if (this._innerHTML.includes("id='stops-loading-container'") || this._innerHTML.includes('id="stops-loading-container"')) {
                     const el = new MockElement('stops-loading-container');
@@ -198,6 +210,33 @@ test('Back Button Immediate Availability Test', async (t) => {
             const backBtnOnError = env.sResults.querySelector('.back-btn');
             assert.ok(backBtnOnError, `Expected back button to remain present on error in ${fileName}`);
             assert.ok(env.sResults.innerHTML.includes('failedStops'), `Expected failed message in ${fileName}`);
+            const retryBtnOnError = env.sResults.querySelector('#retry-stops-btn');
+            assert.ok(retryBtnOnError, `Expected retry button on error in ${fileName}`);
+        });
+
+        await t.test(`${fileName}: renders error and retry button when getStops returns empty array`, async () => {
+            const html = fs.readFileSync(path.join(__dirname, fileName), 'utf8');
+            const env = createTestEnv(html);
+
+            const routeObj = {
+                co: 'KMB',
+                route: '1A',
+                bound: 'O',
+                dest: '尖沙咀碼頭',
+                service_type: 1
+            };
+
+            const showStopsPromise = env.context.showStops(routeObj);
+
+            // Resolve with empty array (simulating silent API/proxy failure)
+            env.triggerStopsResolve([]);
+            await showStopsPromise;
+
+            const backBtnOnEmpty = env.sResults.querySelector('.back-btn');
+            assert.ok(backBtnOnEmpty, `Expected back button to remain present on empty stops in ${fileName}`);
+            assert.ok(env.sResults.innerHTML.includes('failedStops'), `Expected failedStops message when stops is empty in ${fileName}`);
+            const retryBtnOnEmpty = env.sResults.querySelector('#retry-stops-btn');
+            assert.ok(retryBtnOnEmpty, `Expected retry button when stops is empty in ${fileName}`);
         });
 
         await t.test(`${fileName}: renders back button immediately during selectRoute loading and error`, async () => {
@@ -240,6 +279,19 @@ test('Back Button Immediate Availability Test', async (t) => {
             const backBtnOnError = env.sResults.querySelector('.back-btn');
             assert.ok(backBtnOnError, `Expected back button on selectRoute error in ${fileName}`);
             assert.ok(env.sResults.innerHTML.includes('failedDirections'), `Expected failedDirections text in ${fileName}`);
+            const retryBtnOnError = env.sResults.querySelector('#retry-dir-btn');
+            assert.ok(retryBtnOnError, `Expected retry button on selectRoute error in ${fileName}`);
+        });
+
+        await t.test(`${fileName}: header h1 has onclick="showHome()" and switchTab unhides favorites-section`, () => {
+            const html = fs.readFileSync(path.join(__dirname, fileName), 'utf8');
+            assert.ok(html.includes('<h1 onclick="showHome()">'), `Expected header h1 to have onclick="showHome()" in ${fileName}`);
+            const switchTabMatch = /function switchTab\s*\([^)]*\)\s*\{([\s\S]*?)\n        \}/.exec(html);
+            assert.ok(switchTabMatch, `Expected switchTab function in ${fileName}`);
+            assert.ok(
+                switchTabMatch[1].includes("getElementById('favorites-section').classList.remove('hidden')"),
+                `Expected switchTab to unhide favorites-section in ${fileName}`
+            );
         });
     }
 });
