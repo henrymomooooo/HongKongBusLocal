@@ -769,7 +769,7 @@
             document.getElementById('favorites-section').classList.remove('hidden');
             document.getElementById('route-search-ui').classList.toggle('hidden', type !== 'route');
             document.getElementById('stop-search-ui').classList.toggle('hidden', type !== 'stop');
-            if (type === 'route') { document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); }
+            if (type === 'route') { showHome(); }
             if (type === 'stop') { loadStopsIntoMemory().then(() => { searchStops(document.getElementById('stop-input').value.trim().toUpperCase()); }); }
         }
 
@@ -1378,7 +1378,7 @@
             }
         }
 
-        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } exitStopDetails(); document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
+        function showHome() { if (_drawerInterval) { clearInterval(_drawerInterval); _drawerInterval = null; } exitStopDetails(); document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); const tr = document.getElementById('tab-route'); if (tr) tr.classList.add('active'); document.getElementById('route-search-ui').classList.remove('hidden'); document.getElementById('stop-search-ui').classList.add('hidden'); document.getElementById('search-input-area').classList.remove('hidden'); document.getElementById('route-results').classList.remove('hidden'); document.getElementById('favorites-section').classList.remove('hidden'); document.getElementById('stop-selection-results').classList.add('hidden'); renderFavorites(); }
 
         async function goToRouteStopsFromFav(f) {
             document.getElementById('search-input-area').classList.add('hidden'); document.getElementById('route-results').classList.add('hidden'); document.getElementById('favorites-section').classList.add('hidden'); document.getElementById('stop-selection-results').classList.remove('hidden');

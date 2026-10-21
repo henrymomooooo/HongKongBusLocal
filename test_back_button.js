@@ -6,8 +6,12 @@ const assert = require('node:assert');
 
 // Helper to extract a function definition from HTML content
 function extractFunction(htmlContent, functionName) {
-    const startTag = `async function ${functionName}(` ;
-    const startIndex = htmlContent.indexOf(startTag);
+    let startTag = `async function ${functionName}(`;
+    let startIndex = htmlContent.indexOf(startTag);
+    if (startIndex === -1) {
+        startTag = `function ${functionName}(`;
+        startIndex = htmlContent.indexOf(startTag);
+    }
     if (startIndex === -1) {
         throw new Error(`Function ${functionName} not found in HTML`);
     }
@@ -32,6 +36,8 @@ function extractFunction(htmlContent, functionName) {
 function createTestEnv(htmlContent) {
     const showStopsCode = extractFunction(htmlContent, 'showStops');
     const selectRouteCode = extractFunction(htmlContent, 'selectRoute');
+    const switchTabCode = extractFunction(htmlContent, 'switchTab');
+    const showHomeCode = extractFunction(htmlContent, 'showHome');
 
     class MockElement {
         constructor(id) {
@@ -42,8 +48,14 @@ function createTestEnv(htmlContent) {
                 classes: new Set(),
                 add: (c) => this.classList.classes.add(c),
                 remove: (c) => this.classList.classes.delete(c),
-                contains: (c) => this.classList.classes.has(c)
+                contains: (c) => this.classList.classes.has(c),
+                toggle: (c, force) => {
+                    const shouldHave = force !== undefined ? Boolean(force) : !this.classList.classes.has(c);
+                    if (shouldHave) this.classList.classes.add(c);
+                    else this.classList.classes.delete(c);
+                }
             };
+            this.value = '';
         }
 
         get innerHTML() {
@@ -99,14 +111,22 @@ function createTestEnv(htmlContent) {
         'search-input-area': new MockElement('search-input-area'),
         'route-results': new MockElement('route-results'),
         'favorites-section': new MockElement('favorites-section'),
-        'stop-selection-results': new MockElement('stop-selection-results')
+        'stop-selection-results': new MockElement('stop-selection-results'),
+        'route-search-ui': new MockElement('route-search-ui'),
+        'stop-search-ui': new MockElement('stop-search-ui'),
+        'stop-input': new MockElement('stop-input'),
+        'tab-route': new MockElement('tab-route'),
+        'tab-stop': new MockElement('tab-stop')
     };
+    elements['stop-search-ui'].classList.add('hidden');
+    elements['tab-route'].classList.add('active');
 
     const sResults = elements['stop-selection-results'];
 
     let getStopsPromiseResolve = null;
     let getStopsPromiseReject = null;
     let getStopsCalled = false;
+    let renderFavoritesCount = 0;
 
     const mockBusAPI = {
         getStops: () => {
@@ -122,9 +142,11 @@ function createTestEnv(htmlContent) {
     const context = {
         document: {
             getElementById: (id) => elements[id] || new MockElement(id),
-            createElement: (tag) => new MockElement(tag)
+            createElement: (tag) => new MockElement(tag),
+            querySelectorAll: (sel) => sel === '.tab' ? [elements['tab-route'], elements['tab-stop']] : []
         },
         window: {},
+        _drawerInterval: null,
         BusAPI: mockBusAPI,
         t: (key) => key === 'back' ? '返回' : key,
         localized: (obj, field) => obj[field] || '',
@@ -133,17 +155,25 @@ function createTestEnv(htmlContent) {
         userCoords: null,
         _isFavorited: () => false,
         swapDirection: () => {},
-        showHome: () => {},
-        setTimeout: (fn) => setTimeout(fn, 0)
+        exitStopDetails: () => {},
+        renderFavorites: () => { renderFavoritesCount++; },
+        loadStopsIntoMemory: () => Promise.resolve([]),
+        searchStops: () => {},
+        setTimeout: (fn) => setTimeout(fn, 0),
+        clearInterval: () => {}
     };
 
     vm.createContext(context);
+    vm.runInContext(showHomeCode, context);
+    vm.runInContext(switchTabCode, context);
     vm.runInContext(showStopsCode, context);
     vm.runInContext(selectRouteCode, context);
 
     return {
         context,
+        elements,
         sResults,
+        getRenderFavoritesCount: () => renderFavoritesCount,
         triggerStopsResolve: (data) => getStopsPromiseResolve(data),
         triggerStopsReject: (err) => getStopsPromiseReject(err)
     };
@@ -283,15 +313,41 @@ test('Back Button Immediate Availability Test', async (t) => {
             assert.ok(retryBtnOnError, `Expected retry button on selectRoute error in ${fileName}`);
         });
 
-        await t.test(`${fileName}: header h1 has onclick="showHome()" and switchTab unhides favorites-section`, () => {
+        await t.test(`${fileName}: header h1 has onclick="showHome()" and 4-step reproduction (showStops -> tab-stop -> tab-route) restores home page`, async () => {
             const html = fs.readFileSync(path.join(__dirname, fileName), 'utf8');
             assert.ok(html.includes('<h1 onclick="showHome()">'), `Expected header h1 to have onclick="showHome()" in ${fileName}`);
-            const switchTabMatch = /function switchTab\s*\([^)]*\)\s*\{([\s\S]*?)\n        \}/.exec(html);
-            assert.ok(switchTabMatch, `Expected switchTab function in ${fileName}`);
-            assert.ok(
-                switchTabMatch[1].includes("getElementById('favorites-section').classList.remove('hidden')"),
-                `Expected switchTab to unhide favorites-section in ${fileName}`
-            );
+
+            const env = createTestEnv(html);
+
+            // Step 1: Click a bus route (e.g. 40) and load bus stations
+            const showStopsPromise = env.context.showStops({
+                co: 'KMB',
+                route: '40',
+                bound: 'O',
+                dest: '麗港城',
+                service_type: 1
+            });
+            env.triggerStopsResolve([{ stop: 'S1', name_tc: '荃灣（如心廣場）', name_en: 'Tsuen Wan (Nina Tower)' }]);
+            await showStopsPromise;
+
+            assert.strictEqual(env.elements['favorites-section'].classList.contains('hidden'), true);
+            assert.strictEqual(env.elements['stop-selection-results'].classList.contains('hidden'), false);
+
+            // Step 2: Click the search bus station tab
+            env.context.switchTab({ currentTarget: env.elements['tab-stop'] }, 'stop');
+            assert.strictEqual(env.elements['stop-search-ui'].classList.contains('hidden'), false);
+            assert.strictEqual(env.elements['route-search-ui'].classList.contains('hidden'), true);
+
+            // Step 3: Click the search bus route tab
+            env.context.switchTab({ currentTarget: env.elements['tab-route'] }, 'route');
+
+            // Step 4: Verify home page is restored (favorites visible, search input visible, renderFavorites called)
+            assert.strictEqual(env.elements['favorites-section'].classList.contains('hidden'), false, `Expected favorites-section to be visible in ${fileName}`);
+            assert.strictEqual(env.elements['route-search-ui'].classList.contains('hidden'), false, `Expected route-search-ui to be visible in ${fileName}`);
+            assert.strictEqual(env.elements['search-input-area'].classList.contains('hidden'), false, `Expected search-input-area to be visible in ${fileName}`);
+            assert.strictEqual(env.elements['route-results'].classList.contains('hidden'), false, `Expected route-results to be visible in ${fileName}`);
+            assert.strictEqual(env.elements['stop-selection-results'].classList.contains('hidden'), true, `Expected stop-selection-results to be hidden in ${fileName}`);
+            assert.ok(env.getRenderFavoritesCount() >= 1, `Expected renderFavorites() to be called when returning to route tab in ${fileName}`);
         });
     }
 });
